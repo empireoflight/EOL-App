@@ -12,15 +12,25 @@ export default function SignUpPage() {
   const [form, setForm] = useState({ name: '', email: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [awaitingConfirmation, setAwaitingConfirmation] = useState(false)
+
+  // A plain signup lands on "create a team" (there's nothing else to do
+  // yet); signing up to accept an invite carries the invite page here as
+  // `from`, so that's honored instead.
+  const from = (location.state as { from?: { pathname: string } })?.from?.pathname ?? '/onboarding'
 
   const handleSubmit = async (ev: React.FormEvent) => {
     ev.preventDefault()
     setLoading(true)
     setError('')
     try {
-      await signUp(form)
-      const from = (location.state as { from?: { pathname: string } })?.from?.pathname ?? '/teams'
-      navigate(from, { replace: true })
+      const { session } = await signUp({ ...form, redirectPath: from })
+      if (session) {
+        // Confirmations disabled (local dev) — already signed in.
+        navigate(from, { replace: true })
+      } else {
+        setAwaitingConfirmation(true)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't create an account.")
     } finally {
@@ -30,6 +40,30 @@ export default function SignUpPage() {
 
   const set = (field: keyof typeof form) => (ev: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [field]: ev.target.value }))
+
+  if (awaitingConfirmation) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4 py-16">
+        <div className="w-full max-w-sm">
+          <div className="mb-8 flex flex-col items-center gap-3 text-center">
+            <Logo size={36} />
+            <h1
+              className="m-0 text-[28px] font-semibold"
+              style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}
+            >
+              Check your email
+            </h1>
+          </div>
+          <div className="rounded-2xl border p-6 text-center" style={{ background: 'var(--color-eol-surface)', borderColor: 'var(--color-eol-border)' }}>
+            <p className="m-0 text-[13.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
+              We sent a confirmation link to <strong>{form.email}</strong>. Click it to finish setting up your
+              account — you'll land right back here, signed in.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-16">

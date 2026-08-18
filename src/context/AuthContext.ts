@@ -14,7 +14,7 @@ export type AuthContextValue = {
   profile: Profile | null
   loading: boolean
   profileLoading: boolean
-  signUp: (args: { email: string; password: string; name: string }) => Promise<unknown>
+  signUp: (args: { email: string; password: string; name: string; redirectPath?: string }) => Promise<{ session: Session | null }>
   signIn: (args: { email: string; password: string }) => Promise<unknown>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<void>

@@ -81,17 +81,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user?.id])
 
-  const signUp = async ({ email, password, name }: { email: string; password: string; name: string }) => {
+  const signUp = async ({
+    email,
+    password,
+    name,
+    redirectPath = '/onboarding',
+  }: {
+    email: string
+    password: string
+    name: string
+    redirectPath?: string
+  }) => {
     if (!isSupabaseConfigured || !supabase) throw new Error('Supabase is not configured')
     // The public.users profile row is created server-side by the
     // handle_new_user() trigger on auth.users, not here — signUp() may
     // return with no active session yet (email confirmation required), so
     // a client-side insert right after this call has no JWT to
     // authenticate with and hits RLS. See migration 20260818040000.
+    //
+    // emailRedirectTo sends the confirmation link straight to where the
+    // user was headed (the invite they were accepting, or onboarding for a
+    // plain signup) instead of the bare Site URL — detectSessionInUrl
+    // (see lib/supabase.ts) picks the session up from the link automatically,
+    // so confirming lands them signed in, not back at the login form.
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name } },
+      options: { data: { name }, emailRedirectTo: `${window.location.origin}${redirectPath}` },
     })
     if (error) throw error
     return data
