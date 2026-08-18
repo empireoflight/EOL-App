@@ -53,7 +53,7 @@ Deno.serve(async (req: Request) => {
 
   const recipients = (members ?? []).filter((m) => m.users?.email) as { user_id: string; users: { email: string; name: string } }[]
 
-  await Promise.allSettled(
+  const results = await Promise.allSettled(
     recipients.map((m) =>
       sendEmail({
         to: m.users.email,
@@ -69,8 +69,10 @@ Deno.serve(async (req: Request) => {
       })
     )
   )
+  const sent = results.filter((r) => r.status === 'fulfilled').length
+  const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map((r) => String(r.reason))
 
-  return new Response(JSON.stringify({ ok: true, sent: recipients.length }), {
+  return new Response(JSON.stringify({ ok: errors.length === 0, sent, attempted: recipients.length, errors }), {
     headers: { ...corsHeaders, 'content-type': 'application/json' },
   })
 })

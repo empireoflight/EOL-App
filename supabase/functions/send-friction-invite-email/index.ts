@@ -65,7 +65,7 @@ Deno.serve(async (req: Request) => {
     <p style="margin:16px 0 0 0;">This starts private for each person — nothing is shared until everyone's processed it on their own.</p>
   `
 
-  await Promise.allSettled(
+  const results = await Promise.allSettled(
     recipients.map((p) =>
       sendEmail({
         to: p.users.email,
@@ -81,8 +81,10 @@ Deno.serve(async (req: Request) => {
       })
     )
   )
+  const sent = results.filter((r) => r.status === 'fulfilled').length
+  const errors = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected').map((r) => String(r.reason))
 
-  return new Response(JSON.stringify({ ok: true, sent: recipients.length }), {
+  return new Response(JSON.stringify({ ok: errors.length === 0, sent, attempted: recipients.length, errors }), {
     headers: { ...corsHeaders, 'content-type': 'application/json' },
   })
 })
