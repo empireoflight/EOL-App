@@ -11,7 +11,7 @@
 -- ============================================================
 
 begin;
-select plan(9);
+select plan(10);
 
 -- ------------------------------------------------------------
 -- Fixtures: one org, one team, four users.
@@ -31,7 +31,8 @@ insert into public.users (id, email, name) values
   ('88888888-8888-8888-8888-888888888888', 'friction-a@test.eol', 'Friction A'),
   ('99999999-9999-9999-9999-999999999999', 'friction-b@test.eol', 'Friction B'),
   ('aaaaaaaa-1111-1111-1111-111111111111', 'friction-c@test.eol', 'Friction C'),
-  ('bbbbbbbb-1111-1111-1111-111111111111', 'friction-d@test.eol', 'Friction D');
+  ('bbbbbbbb-1111-1111-1111-111111111111', 'friction-d@test.eol', 'Friction D')
+on conflict (id) do update set email = excluded.email, name = excluded.name;
 
 insert into public.organizations (id, name) values ('cccccccc-1111-1111-1111-111111111111', 'Friction Test Org');
 insert into public.org_members (org_id, user_id, org_role) values
@@ -108,7 +109,25 @@ select is(
 );
 
 -- ------------------------------------------------------------
--- 4) Now B can read A's response, and A can read B's response.
+-- 3b) Reveal stays gated on the discussion guide, not just submission
+--     completeness — everyone has submitted, but no guide exists yet.
+-- ------------------------------------------------------------
+set local role authenticated;
+set local request.jwt.claim.sub = '99999999-9999-9999-9999-999999999999';
+
+select is(
+  (select count(*)::int from public.friction_session_responses where id = 'ffffffff-1111-1111-1111-111111111111'),
+  0,
+  'A fellow participant still cannot read another''s response once submitted but before the guide is generated'
+);
+
+reset role;
+
+update public.convergence_sessions set discussion_guide = '{"summary": "test", "talkingPoints": ["a"]}'::jsonb
+  where id = 'eeeeeeee-1111-1111-1111-111111111111';
+
+-- ------------------------------------------------------------
+-- 4) Now that the guide exists, B can read A's response and A can read B's.
 -- ------------------------------------------------------------
 set local role authenticated;
 set local request.jwt.claim.sub = '99999999-9999-9999-9999-999999999999';

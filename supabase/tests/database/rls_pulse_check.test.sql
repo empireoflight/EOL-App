@@ -24,7 +24,8 @@ values
 
 insert into public.users (id, email, name) values
   ('cccccccc-2222-2222-2222-222222222222', 'pulse-a@test.eol', 'Pulse A'),
-  ('dddddddd-2222-2222-2222-222222222222', 'pulse-admin@test.eol', 'Pulse Admin');
+  ('dddddddd-2222-2222-2222-222222222222', 'pulse-admin@test.eol', 'Pulse Admin')
+on conflict (id) do update set email = excluded.email, name = excluded.name;
 
 insert into public.organizations (id, name) values ('eeeeeeee-2222-2222-2222-222222222222', 'Pulse Test Org');
 insert into public.org_members (org_id, user_id, org_role) values

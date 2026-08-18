@@ -83,27 +83,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async ({ email, password, name }: { email: string; password: string; name: string }) => {
     if (!isSupabaseConfigured || !supabase) throw new Error('Supabase is not configured')
+    // The public.users profile row is created server-side by the
+    // handle_new_user() trigger on auth.users, not here — signUp() may
+    // return with no active session yet (email confirmation required), so
+    // a client-side insert right after this call has no JWT to
+    // authenticate with and hits RLS. See migration 20260818040000.
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { name } },
     })
     if (error) throw error
-
-    if (data.user) {
-      // Must not be swallowed: an unchecked failure here leaves a real
-      // auth.users row with no public.users profile — the account can sign
-      // in, but every later feature that needs a profile (team creation,
-      // the team_members->users FK PostgREST relies on for embedding member
-      // names, anything using useAuth().profile) breaks in ways that look
-      // unrelated to signup. Fail loudly here instead.
-      const { error: profileError } = await supabase.from('users').insert({
-        id: data.user.id,
-        email,
-        name,
-      })
-      if (profileError) throw profileError
-    }
     return data
   }
 

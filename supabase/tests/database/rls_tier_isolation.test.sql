@@ -26,10 +26,13 @@ values
   ('22222222-2222-2222-2222-222222222222', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'user-b@test.eol', 'x', now(), now(), now(), '{}', '{}'),
   ('33333333-3333-3333-3333-333333333333', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'user-admin@test.eol', 'x', now(), now(), now(), '{}', '{}');
 
+-- handle_new_user() already inserted a row per fixture off the raw_user_meta_data-less
+-- auth.users insert above; this overwrites it with the human-readable test names.
 insert into public.users (id, email, name) values
   ('11111111-1111-1111-1111-111111111111', 'user-a@test.eol', 'User A'),
   ('22222222-2222-2222-2222-222222222222', 'user-b@test.eol', 'User B'),
-  ('33333333-3333-3333-3333-333333333333', 'user-admin@test.eol', 'User Admin');
+  ('33333333-3333-3333-3333-333333333333', 'user-admin@test.eol', 'User Admin')
+on conflict (id) do update set email = excluded.email, name = excluded.name;
 
 insert into public.organizations (id, name) values
   ('aaaaaaaa-0000-0000-0000-000000000001', 'Test Org');
@@ -127,7 +130,8 @@ reset role;
 -- ------------------------------------------------------------
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data)
 values ('44444444-4444-4444-4444-444444444444', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'user-outsider@test.eol', 'x', now(), now(), now(), '{}', '{}');
-insert into public.users (id, email, name) values ('44444444-4444-4444-4444-444444444444', 'user-outsider@test.eol', 'User Outsider');
+insert into public.users (id, email, name) values ('44444444-4444-4444-4444-444444444444', 'user-outsider@test.eol', 'User Outsider')
+  on conflict (id) do update set email = excluded.email, name = excluded.name;
 
 set local role authenticated;
 set local request.jwt.claim.sub = '44444444-4444-4444-4444-444444444444';

@@ -21,7 +21,8 @@ values
 insert into public.users (id, email, name) values
   ('55555555-5555-5555-5555-555555555555', 'session-a@test.eol', 'Session A'),
   ('66666666-6666-6666-6666-666666666666', 'session-b@test.eol', 'Session B'),
-  ('77777777-7777-7777-7777-777777777777', 'session-outsider@test.eol', 'Session Outsider');
+  ('77777777-7777-7777-7777-777777777777', 'session-outsider@test.eol', 'Session Outsider')
+on conflict (id) do update set email = excluded.email, name = excluded.name;
 
 insert into public.organizations (id, name) values ('aaaaaaaa-0000-0000-0000-000000000002', 'Session Test Org');
 insert into public.org_members (org_id, user_id, org_role) values
