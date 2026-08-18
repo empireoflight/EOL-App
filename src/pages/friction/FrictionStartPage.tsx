@@ -80,6 +80,9 @@ export default function FrictionStartPage() {
         .insert(participantIds.map((userId) => ({ session_id: session.id, user_id: userId })))
       if (participantsError) throw participantsError
 
+      // Fire-and-forget — the session already exists even if the email call fails.
+      void supabase.functions.invoke('send-friction-invite-email', { body: { sessionId: session.id } })
+
       navigate(`/teams/${teamId}/friction/sessions/${session.id}/mitigate`)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't start.")

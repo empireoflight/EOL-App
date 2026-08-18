@@ -83,6 +83,9 @@ export function useSendVisionForApproval(visionId: string | undefined, teamId?: 
       if (!supabase || !visionId) throw new Error('Not ready')
       const { error } = await supabase.rpc('send_vision_for_approval', { p_vision_id: visionId })
       if (error) throw error
+      // Fire-and-forget — the vision is already sent for approval even if
+      // the email call fails, same pattern as team invites.
+      void supabase.functions.invoke('send-vision-ready-email', { body: { visionId } })
     },
     onSuccess: invalidate,
   })

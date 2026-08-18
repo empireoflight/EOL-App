@@ -54,6 +54,14 @@ export default function FrictionRespondPage() {
         .eq('user_id', user.id)
       if (participantError) throw participantError
 
+      // Only the one submission that completes the readiness gate gets
+      // `true` back — see migration 20260818050000 for why this can't be a
+      // client-side count check.
+      const { data: justCompleted } = await supabase.rpc('claim_session_completion', { p_session_id: sessionId })
+      if (justCompleted) {
+        void supabase.functions.invoke('send-friction-discussion-ready-email', { body: { sessionId } })
+      }
+
       discard()
       navigate(`/teams/${teamId}/friction/sessions/${sessionId}`)
     } catch (err) {

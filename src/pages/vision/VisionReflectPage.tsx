@@ -51,6 +51,16 @@ export default function VisionReflectPage() {
         .update({ submitted_at: new Date().toISOString() })
         .eq('session_id', sessionId)
         .eq('user_id', user.id)
+
+      // Only the one submission that completes the readiness gate gets
+      // `true` back — see migration 20260818050000 for why this can't be a
+      // client-side count check (the last two submitters racing would both
+      // see "complete" and double-email the facilitator).
+      const { data: justCompleted } = await supabase.rpc('claim_session_completion', { p_session_id: sessionId })
+      if (justCompleted) {
+        void supabase.functions.invoke('send-vision-survey-complete-email', { body: { sessionId } })
+      }
+
       discard()
       navigate(`/teams/${teamId}/vision/sessions/${sessionId}`)
     } catch (err) {
@@ -66,7 +76,7 @@ export default function VisionReflectPage() {
 
       <div>
         <div className="mb-2 flex items-center gap-2">
-          <TierBadge tier={1} />
+          <TierBadge tier={4} />
           <span className="text-[11px]" style={{ color: 'var(--color-eol-text-faint)' }}>
             {saveState === 'saving' ? 'Saving…' : saveState === 'saved' || saveState === 'local-only' ? 'Saved' : ''}
           </span>
