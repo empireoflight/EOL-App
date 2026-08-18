@@ -8,6 +8,7 @@ import { Button } from '../../components/shared/Button'
 import { Textarea } from '../../components/shared/Input'
 import { Card } from '../../components/shared/Card'
 import { TierBadge } from '../../components/shared/TierBadge'
+import { VisionFramingSummary } from '../../components/session/VisionFramingSummary'
 import { getVisionQuestions } from '../../lib/visionQuestions'
 
 export default function VisionReflectPage() {
@@ -61,6 +62,8 @@ export default function VisionReflectPage() {
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
+      <VisionFramingSummary sessionId={sessionId} />
+
       <div>
         <div className="mb-2 flex items-center gap-2">
           <TierBadge tier={1} />
