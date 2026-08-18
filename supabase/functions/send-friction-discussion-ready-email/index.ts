@@ -56,6 +56,7 @@ Deno.serve(async (req: Request) => {
     to: facilitator.email,
     subject: `${envSubjectPrefix()}Everyone's responded — time to talk it through`,
     html: renderEmail({
+      appBaseUrl,
       preheader: `Everyone in the ${teamName} friction session has responded.`,
       heading: "Everyone's responded",
       bodyHtml: `<p style="margin:0;">Everyone you brought into this conversation has shared their point of view. You can generate the discussion guide and set up a time to talk it through.</p>`,

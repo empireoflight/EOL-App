@@ -6,6 +6,7 @@
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { sendEmail, envSubjectPrefix } from '../_shared/email/resend.ts'
+import { renderEmail } from '../_shared/email/template.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -57,11 +58,14 @@ Deno.serve(async (req: Request) => {
     await sendEmail({
       to: invite.email,
       subject: `${envSubjectPrefix()}${inviterName} invited you to ${teamName} on Empire of Light`,
-      html: `
-        <p>${inviterName} invited you to join <strong>${teamName}</strong> on Empire of Light.</p>
-        <p><a href="${inviteUrl}">Accept the invite</a></p>
-        <p style="color:#888;font-size:12px;">${inviteUrl}</p>
-      `,
+      html: renderEmail({
+        appBaseUrl,
+        preheader: `${inviterName} invited you to join ${teamName} on Empire of Light.`,
+        heading: `You're invited to ${teamName}`,
+        bodyHtml: `<p style="margin:0;">${inviterName} invited you to join <strong style="color:#271d17;">${teamName}</strong> on Empire of Light.</p>`,
+        ctaLabel: 'Accept the invite',
+        ctaUrl: inviteUrl,
+      }),
     })
   } catch (err) {
     return new Response(JSON.stringify({ error: err instanceof Error ? err.message : 'send failed' }), {

@@ -71,6 +71,7 @@ Deno.serve(async (req: Request) => {
         to: p.users.email,
         subject: `${envSubjectPrefix()}${initiatorName} wants to talk something through with you`,
         html: renderEmail({
+          appBaseUrl,
           preheader: `${initiatorName} raised something about: ${topic ?? ''}`,
           heading: `${initiatorName} wants to talk something through`,
           bodyHtml,

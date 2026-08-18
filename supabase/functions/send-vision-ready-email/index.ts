@@ -59,6 +59,7 @@ Deno.serve(async (req: Request) => {
         to: m.users.email,
         subject: `${envSubjectPrefix()}${teamName}'s vision is ready for commitment`,
         html: renderEmail({
+          appBaseUrl,
           preheader: `${teamName}'s vision is ready for everyone to commit to.`,
           heading: `${teamName}'s vision is ready for commitment`,
           bodyHtml: `<p style="margin:0;">Someone on your team sent the vision for approval. Once everyone commits, it becomes the shared reference point for tasks, check-ins, and the cycle ahead.</p>`,
