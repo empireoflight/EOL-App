@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
-import { useMyTeams } from '../../hooks/useMyTeams'
+import { useMyTeams, useTeamMembers } from '../../hooks/useMyTeams'
 import { useMyPendingInvites } from '../../hooks/useTeamInvites'
 import { Logo } from './Logo'
 import { Button } from './Button'
@@ -256,6 +256,11 @@ type AppShellProps = {
 
 export function AppShell({ teamId, teamName, children }: AppShellProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const { user } = useAuth()
+  const { data: members } = useTeamMembers(teamId)
+  // Mirrors the RLS policy on team_invites (facilitators only) — see
+  // TeamInvitePanel.tsx for the same check on the page this links to.
+  const canInvite = members?.find((m) => m.user_id === user?.id)?.team_role === 'facilitator'
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -308,7 +313,7 @@ export function AppShell({ teamId, teamName, children }: AppShellProps) {
           </div>
           <nav className="flex gap-4 text-[12.5px]" style={{ color: 'var(--color-eol-text-muted)' }}>
             <Link to={`/teams/${teamId}/pulse`}>Vibe check</Link>
-            <Link to={`/teams/${teamId}/invite`}>Invite</Link>
+            {canInvite && <Link to={`/teams/${teamId}/invite`}>Invite</Link>}
           </nav>
         </header>
         <main className="min-w-0 flex-1 overflow-auto">{children}</main>

@@ -43,31 +43,43 @@ export function TeamInvitePanel({ teamId }: { teamId: string }) {
   })
 
   const inviteUrl = (token: string) => `${window.location.origin}/invite/${token}`
+  // Mirrors the RLS policy on team_invites (facilitators only) — a member
+  // hitting "Invite" would otherwise just get a generic insert failure with
+  // no clue why, since they can't even read the pending-invites list either.
+  const canInvite = members?.find((m) => m.user_id === user?.id)?.team_role === 'facilitator'
 
   return (
     <div className="flex flex-col gap-4">
-      <Card>
-        {error && (
-          <div className="mb-3 text-[12.5px]" style={{ color: 'var(--color-eol-pink-strong)' }}>
-            {error}
-          </div>
-        )}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            setError('')
-            createInvite.mutate(email)
-          }}
-          className="flex items-end gap-2"
-        >
-          <div className="flex-1">
-            <Input label="Email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-          </div>
-          <Button type="submit" loading={createInvite.isPending}>
-            Invite
-          </Button>
-        </form>
-      </Card>
+      {canInvite ? (
+        <Card>
+          {error && (
+            <div className="mb-3 text-[12.5px]" style={{ color: 'var(--color-eol-pink-strong)' }}>
+              {error}
+            </div>
+          )}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              setError('')
+              createInvite.mutate(email)
+            }}
+            className="flex items-end gap-2"
+          >
+            <div className="flex-1">
+              <Input label="Email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+            </div>
+            <Button type="submit" loading={createInvite.isPending}>
+              Invite
+            </Button>
+          </form>
+        </Card>
+      ) : (
+        <Card>
+          <p className="m-0 text-[12.5px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+            Only your team's facilitator can invite new members.
+          </p>
+        </Card>
+      )}
 
       {invites && invites.length > 0 && (
         <Card>
