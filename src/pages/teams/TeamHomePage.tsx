@@ -6,6 +6,7 @@ import { useTeamFrictionSessions } from '../../hooks/useConvergenceSession'
 import { Card } from '../../components/shared/Card'
 import { Button } from '../../components/shared/Button'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
+import { OpenVisionSessionBanner } from '../../components/session/OpenVisionSessionBanner'
 import type { Experiment, TeamSignal } from '../../lib/types'
 
 const LOOP = [
@@ -70,6 +71,7 @@ export default function TeamHomePage() {
   if (!vision) {
     return (
       <div className="mx-auto flex max-w-2xl flex-col gap-5 px-6 py-10">
+        <OpenVisionSessionBanner teamId={teamId} />
         <Card>
           <h2 className="m-0 mb-2 text-[18px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
             What are we creating?
@@ -87,6 +89,8 @@ export default function TeamHomePage() {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 px-6 py-10">
+      <OpenVisionSessionBanner teamId={teamId} />
+
       <Link to={`/teams/${teamId}/vision`}>
         <div
           className="rounded-2xl border p-5 transition-opacity hover:opacity-90"

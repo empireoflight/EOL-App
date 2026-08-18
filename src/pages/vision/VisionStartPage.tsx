@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { useOpenVisionSession } from '../../hooks/useConvergenceSession'
@@ -69,25 +69,18 @@ export default function VisionStartPage() {
     }
   }
 
+  // Starting a second session here would fork the reflections people have
+  // already submitted to the open one — go straight there instead of
+  // making the user read a message and click through.
+  useEffect(() => {
+    if (openSession && teamId) {
+      navigate(`/teams/${teamId}/vision/sessions/${openSession.id}`, { replace: true })
+    }
+  }, [openSession, teamId, navigate])
+
   if (step === null || !teamId) return null
 
-  if (openSessionLoading) return <LoadingScreen />
-
-  if (openSession) {
-    return (
-      <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
-        <Card>
-          <p className="m-0 mb-4 text-[13.5px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-            There's already an open vision session for this team — starting another would fork the reflections
-            people have already submitted.
-          </p>
-          <Link to={`/teams/${teamId}/vision/sessions/${openSession.id}`}>
-            <Button className="w-full">View that session</Button>
-          </Link>
-        </Card>
-      </div>
-    )
-  }
+  if (openSessionLoading || openSession) return <LoadingScreen />
 
   if (step === 'invite') {
     return (
