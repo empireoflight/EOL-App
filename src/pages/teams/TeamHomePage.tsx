@@ -2,7 +2,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
 import { useTeamVision } from '../../hooks/useVision'
-import { useTeamFrictionSessions } from '../../hooks/useConvergenceSession'
+import { useTeamFrictionSessions, useMyPendingVisionSession, useOpenVisionSession } from '../../hooks/useConvergenceSession'
 import { Card } from '../../components/shared/Card'
 import { Button } from '../../components/shared/Button'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
@@ -60,6 +60,8 @@ export default function TeamHomePage() {
   const { data: experiments } = useTeamExperiments(teamId)
   const { data: frictionSessions } = useTeamFrictionSessions(teamId)
   const { data: narratives } = useLatestNarrative(teamId)
+  const { data: pendingVisionSession } = useMyPendingVisionSession(teamId)
+  const { data: openVisionSession } = useOpenVisionSession(teamId)
 
   if (isLoading) return <LoadingScreen />
 
@@ -69,18 +71,25 @@ export default function TeamHomePage() {
   const latest = narratives?.[0]?.value as { pattern?: string; visionInsight?: string | null } | undefined
 
   if (!vision) {
+    // A session already collecting reflections (or one this person still
+    // owes an answer to) makes "start a vision session" redundant — and
+    // actively wrong, since starting another would fork what people have
+    // already submitted. The banner above already covers both cases.
+    const sessionAlreadyInFlight = !!pendingVisionSession || !!openVisionSession
     return (
       <div className="mx-auto flex max-w-2xl flex-col gap-5 px-6 py-10">
         <OpenVisionSessionBanner teamId={teamId} />
-        <Card>
-          <h2 className="m-0 mb-2 text-[18px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-            What are we creating?
-          </h2>
-          <p className="m-0 mb-4 text-[13.5px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-            Start a vision session to co-create what this team is building together — everything else in the cycle takes its shape from here.
-          </p>
-          <Button onClick={() => navigate(`/teams/${teamId}/vision/start`)}>Start a vision session</Button>
-        </Card>
+        {!sessionAlreadyInFlight && (
+          <Card>
+            <h2 className="m-0 mb-2 text-[18px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
+              What are we creating?
+            </h2>
+            <p className="m-0 mb-4 text-[13.5px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
+              Start a vision session to co-create what this team is building together — everything else in the cycle takes its shape from here.
+            </p>
+            <Button onClick={() => navigate(`/teams/${teamId}/vision/start`)}>Start a vision session</Button>
+          </Card>
+        )}
       </div>
     )
   }
