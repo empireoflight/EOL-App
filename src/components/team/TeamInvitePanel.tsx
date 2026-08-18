@@ -25,10 +25,15 @@ export function TeamInvitePanel({ teamId }: { teamId: string }) {
   const createInvite = useMutation({
     mutationFn: async (inviteEmail: string) => {
       if (!supabase || !teamId || !user) throw new Error('Not ready')
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('team_invites')
         .insert({ team_id: teamId, email: inviteEmail, invited_by: user.id })
+        .select('id')
+        .single()
       if (error) throw error
+      // Non-blocking: the invite (and its shareable link) already exists
+      // and works even if sending the notification email fails.
+      void supabase.functions.invoke('send-team-invite-email', { body: { inviteId: data.id } })
     },
     onSuccess: () => {
       setEmail('')
