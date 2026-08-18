@@ -6,9 +6,9 @@
 
 const RESEND_API_URL = 'https://api.resend.com/emails'
 
-// Root domain, not the `app.` subdomain the frontend is served from — kept
-// separate so email sending reputation/DNS never entangles with app hosting.
-const FROM_ADDRESS = 'Empire of Light <notifications@empireoflightcollective.com>'
+// Matches the domain actually verified in Resend (app.empireoflightcollective.com,
+// not the root) — sending from an unverified domain gets hard-rejected.
+const FROM_ADDRESS = 'Empire of Light <notifications@app.empireoflightcollective.com>'
 
 export type SendEmailInput = {
   to: string
