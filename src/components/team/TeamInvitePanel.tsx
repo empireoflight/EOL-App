@@ -1,0 +1,112 @@
+import { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../hooks/useAuth'
+import { useTeamMembers } from '../../hooks/useMyTeams'
+import { useTeamInvites } from '../../hooks/useTeamInvites'
+import { Button } from '../shared/Button'
+import { Input } from '../shared/Input'
+import { Card } from '../shared/Card'
+import { Avatar } from '../shared/Avatar'
+
+/**
+ * Shared invite UI — the standalone Invite page and the vision-start flow's
+ * "who's doing this with you?" step both render this, so the two never
+ * drift out of sync.
+ */
+export function TeamInvitePanel({ teamId }: { teamId: string }) {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  const { data: members } = useTeamMembers(teamId)
+  const { data: invites } = useTeamInvites(teamId)
+  const [email, setEmail] = useState('')
+  const [error, setError] = useState('')
+
+  const createInvite = useMutation({
+    mutationFn: async (inviteEmail: string) => {
+      if (!supabase || !teamId || !user) throw new Error('Not ready')
+      const { error } = await supabase
+        .from('team_invites')
+        .insert({ team_id: teamId, email: inviteEmail, invited_by: user.id })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      setEmail('')
+      queryClient.invalidateQueries({ queryKey: ['team-invites', teamId] })
+    },
+    onError: (err) => setError(err instanceof Error ? err.message : "Couldn't create invite."),
+  })
+
+  const inviteUrl = (token: string) => `${window.location.origin}/invite/${token}`
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Card>
+        {error && (
+          <div className="mb-3 text-[12.5px]" style={{ color: 'var(--color-eol-pink-strong)' }}>
+            {error}
+          </div>
+        )}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            setError('')
+            createInvite.mutate(email)
+          }}
+          className="flex items-end gap-2"
+        >
+          <div className="flex-1">
+            <Input label="Email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <Button type="submit" loading={createInvite.isPending}>
+            Invite
+          </Button>
+        </form>
+      </Card>
+
+      {invites && invites.length > 0 && (
+        <Card>
+          <div className="mb-3 text-[13px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
+            Pending invites
+          </div>
+          <div className="flex flex-col gap-2">
+            {invites.map((invite) => (
+              <div key={invite.id} className="flex items-center justify-between gap-3 text-[12.5px]">
+                <span style={{ color: 'var(--color-eol-text-secondary)' }}>{invite.email}</span>
+                <button
+                  type="button"
+                  className="rounded-md border px-2.5 py-1 text-[11px]"
+                  style={{ borderColor: 'var(--color-eol-border-strong)', color: 'var(--color-eol-text-muted)' }}
+                  onClick={() => navigator.clipboard.writeText(inviteUrl(invite.token))}
+                >
+                  Copy link
+                </button>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      <Card>
+        <div className="mb-3 text-[13px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
+          Team members
+        </div>
+        <div className="flex flex-col gap-3">
+          {(members ?? []).map((m) => (
+            <div key={m.user_id} className="flex items-center gap-3">
+              <Avatar name={m.users?.name ?? '?'} />
+              <div className="text-[13px]" style={{ color: 'var(--color-eol-text)' }}>
+                {m.users?.name}
+                {m.team_role === 'facilitator' && (
+                  <span className="ml-2 text-[11px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+                    facilitator
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  )
+}
