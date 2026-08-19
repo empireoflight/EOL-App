@@ -140,6 +140,12 @@ export async function synthesizeRollup(input: {
   // Computed numerically by the caller from stored vibe_avg values — the
   // model narrates a trend that's already established, it never invents one.
   vibeTrend?: 'declining' | 'improving'
+  // Counted numerically by the caller (aggregate-weekly-pulse) from
+  // already-team-visible tier-4 data (completed experiments, closed/
+  // discussed friction sessions) — facts to work into "pattern", not
+  // something the model infers.
+  completedTaskCount?: number
+  frictionProcessedCount?: number
 }): Promise<RollupResult> {
   const raw = await callAnthropic({
     model: MODELS.synthesis,
@@ -163,8 +169,11 @@ export async function synthesizeRollup(input: {
             ? `\n\nTeam energy has been numerically ${input.vibeTrend} across the last ${input.priorPatterns.length + 1} periods. ` +
               `Prior periods' already-paraphrased patterns:\n` + JSON.stringify(input.priorPatterns, null, 2)
             : '') +
+          (input.completedTaskCount || input.frictionProcessedCount
+            ? `\n\nThis period the team also completed ${input.completedTaskCount ?? 0} task(s) and processed ${input.frictionProcessedCount ?? 0} friction session(s) — both tier-4, already team-visible facts, not private data. Worth naming and celebrating in "pattern" when non-zero: completed tasks and processed friction are progress, not something to downplay or treat as failure.`
+            : '') +
           `\n\nProduce:\n` +
-          `- "pattern": a short paragraph (2-3 sentences) naming what's actually happening this period. Paraphrase and synthesize, never quote a response verbatim. Never attribute a theme to one person ("one person is frustrated with…") — use "several responses mention…" or similar.\n` +
+          `- "pattern": a short paragraph (2-3 sentences) naming what's actually happening this period. Paraphrase and synthesize, never quote a response verbatim. Never attribute a theme to one person ("one person is frustrated with…") — use "several responses mention…" or similar. If task/friction counts were given above and are non-zero, weave them in as things worth celebrating.\n` +
           `- "gaveThemes": 2-4 short paraphrased theme bullets from what gave energy (omit if no gave texts were provided).\n` +
           `- "drainedThemes": 2-4 short paraphrased theme bullets from what drained energy (omit if no drained texts were provided).\n` +
           `- "visionInsight": one sentence tying this period's signals back to the team's vision — alignment or tension worth naming — or null if no vision context was given.\n` +

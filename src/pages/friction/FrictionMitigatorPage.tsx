@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { useConvergenceSession } from '../../hooks/useConvergenceSession'
 import { useDurableForm } from '../../hooks/useDurableForm'
@@ -15,6 +16,7 @@ export default function FrictionMitigatorPage() {
   const { user } = useAuth()
   const { data: sessionData } = useConvergenceSession(sessionId)
   const [stageIndex, setStageIndex] = useState(0)
+  const [finishing, setFinishing] = useState(false)
   const stage: FrictionStage = FRICTION_STAGES[stageIndex].id
 
   const variant = (sessionData?.totalParticipants ?? 0) > 2 ? 'team' : 'two_person'
@@ -37,7 +39,7 @@ export default function FrictionMitigatorPage() {
   const questions = frictionQuestionsForStage(stage)
   const stageComplete = questions.every((q) => answers[q.id]?.trim())
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (stageIndex < FRICTION_STAGES.length - 1) {
       setStageIndex(stageIndex + 1)
       return
@@ -48,9 +50,18 @@ export default function FrictionMitigatorPage() {
     discard()
     if (sessionId) {
       navigate(`/teams/${teamId}/friction/sessions/${sessionId}/respond`)
-    } else {
-      navigate(`/teams/${teamId}/friction/tools`)
+      return
     }
+    // Solo path: the answers themselves never leave this device (see the
+    // notice below), but a bare, content-free timestamp is recorded so this
+    // completion can count toward the weekly "friction processed" number on
+    // the Evolve page — see friction_grounding_completions' table comment.
+    if (supabase && teamId && user) {
+      setFinishing(true)
+      await supabase.from('friction_grounding_completions').insert({ user_id: user.id, team_id: teamId })
+      setFinishing(false)
+    }
+    navigate(`/teams/${teamId}/friction/tools`)
   }
 
   const handleExit = () => {
@@ -113,7 +124,7 @@ export default function FrictionMitigatorPage() {
       </p>
 
       <div className="mt-auto flex flex-col gap-2.5">
-        <Button onClick={handleNext} disabled={!stageComplete} className="w-full">
+        <Button onClick={() => void handleNext()} disabled={!stageComplete} loading={finishing} className="w-full">
           {stageIndex < FRICTION_STAGES.length - 1 ? `Next: ${FRICTION_STAGES[stageIndex + 1].label}` : 'Continue'}
         </Button>
         <button type="button" onClick={handleExit} className="text-center text-[12.5px]" style={{ color: 'var(--color-eol-text-muted)' }}>

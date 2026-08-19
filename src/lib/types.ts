@@ -121,6 +121,7 @@ export type Experiment = {
   due_date: string | null
   cycle_start: string | null
   cycle_end: string | null
+  completed_at: string | null
   created_by: string
   created_at: string
 }

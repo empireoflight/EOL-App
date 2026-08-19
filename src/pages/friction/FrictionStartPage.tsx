@@ -107,7 +107,15 @@ export default function FrictionStartPage() {
           <form
             onSubmit={(e) => {
               e.preventDefault()
-              if (topic.trim()) setStep('help')
+              if (!topic.trim()) return
+              // Nobody else to loop in — "Talk about it"/"Bring it to the
+              // team" would be two meaningless options on a one-person
+              // screen, so skip straight to the only real path.
+              if (otherMembers.length === 0) {
+                void createSession({ kind: 'just_me' })
+              } else {
+                setStep('help')
+              }
             }}
             className="flex flex-col gap-4"
           >

@@ -142,6 +142,34 @@ Deno.serve(async (req: Request) => {
     else if (strictlyIncreasing) vibeTrend = 'improving'
   }
 
+  const periodEnd = new Date(weekOf)
+  periodEnd.setUTCDate(periodEnd.getUTCDate() + 6)
+  const periodEndStr = periodEnd.toISOString().slice(0, 10)
+
+  // Already-team-visible tier-4 facts, not private data — safe to count
+  // across the whole team via service_role. Deliberately does NOT touch
+  // friction_grounding_completions (the tier-0 "Ground first" completion
+  // log): that table is owner-only by design, and aggregating it across
+  // every member here would leak an individual-identifiable signal about
+  // who did private processing and how often, exactly what team_signals'
+  // n>=3 rule exists to prevent. Only real, already-shared group sessions
+  // count toward the team-level number.
+  const { count: completedTaskCount } = await db
+    .from('experiments')
+    .select('id', { count: 'exact', head: true })
+    .eq('team_id', teamId)
+    .gte('completed_at', weekOf)
+    .lte('completed_at', `${periodEndStr}T23:59:59.999Z`)
+
+  const { count: frictionProcessedCount } = await db
+    .from('convergence_sessions')
+    .select('id', { count: 'exact', head: true })
+    .eq('team_id', teamId)
+    .eq('session_type', 'friction')
+    .in('status', ['discussed', 'closed'])
+    .gte('updated_at', weekOf)
+    .lte('updated_at', `${periodEndStr}T23:59:59.999Z`)
+
   const rollup = await synthesizeRollup({
     teamName: team.name,
     periodLabel: `Week of ${weekOf}`,
@@ -151,11 +179,9 @@ Deno.serve(async (req: Request) => {
     visionContext,
     priorPatterns: vibeTrend ? priorPatterns : undefined,
     vibeTrend,
+    completedTaskCount: completedTaskCount ?? 0,
+    frictionProcessedCount: frictionProcessedCount ?? 0,
   })
-
-  const periodEnd = new Date(weekOf)
-  periodEnd.setUTCDate(periodEnd.getUTCDate() + 6)
-  const periodEndStr = periodEnd.toISOString().slice(0, 10)
 
   const rows = []
   if (avgVibe !== null) {

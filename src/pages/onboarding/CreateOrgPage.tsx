@@ -16,11 +16,15 @@ function isStaleSessionError(err: unknown): boolean {
   return typeof err === 'object' && err !== null && 'code' in err && (err as { code?: string }).code === '23503'
 }
 
+type Mode = 'team' | 'solo'
+
 export default function CreateOrgPage() {
   const navigate = useNavigate()
   const { signOut } = useAuth()
+  const [mode, setMode] = useState<Mode>('team')
   const [orgName, setOrgName] = useState('')
   const [teamName, setTeamName] = useState('')
+  const [spaceName, setSpaceName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [staleSession, setStaleSession] = useState(false)
@@ -32,13 +36,16 @@ export default function CreateOrgPage() {
     setError('')
     setStaleSession(false)
     try {
+      // A solo space is a team of one — same create_organization/create_team
+      // RPCs, just with one name reused for both (the org itself is never
+      // surfaced anywhere in the UI, so there's nothing to name separately).
       const { data: org, error: orgError } = await supabase
-        .rpc('create_organization', { p_name: orgName })
+        .rpc('create_organization', { p_name: mode === 'solo' ? spaceName : orgName })
         .single<Organization>()
       if (orgError) throw orgError
 
       const { data: team, error: teamError } = await supabase
-        .rpc('create_team', { p_org_id: org.id, p_name: teamName })
+        .rpc('create_team', { p_org_id: org.id, p_name: mode === 'solo' ? spaceName : teamName })
         .single<Team>()
       if (teamError) throw teamError
 
@@ -61,11 +68,31 @@ export default function CreateOrgPage() {
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <Logo size={36} />
           <h1 className="m-0 text-[26px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-            Set up your team
+            {mode === 'solo' ? 'Set up your space' : 'Set up your team'}
           </h1>
           <p className="m-0 text-[13px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-            This creates your organization and your first pilot team together.
+            {mode === 'solo'
+              ? 'A private space just for you — clarify your own vision, run your own tasks and weekly check-ins, and process friction on your own terms. You can invite others any time.'
+              : 'This creates your organization and your first pilot team together.'}
           </p>
+        </div>
+
+        <div className="mb-4 flex rounded-lg border p-1" style={{ borderColor: 'var(--color-eol-border)', background: 'var(--color-eol-surface)' }}>
+          {(['team', 'solo'] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setMode(m)}
+              className="flex-1 rounded-md py-2 text-[13px] font-semibold transition-opacity"
+              style={
+                mode === m
+                  ? { background: 'var(--color-eol-accent)', color: 'var(--color-eol-ink)' }
+                  : { color: 'var(--color-eol-text-secondary)' }
+              }
+            >
+              {m === 'team' ? 'Team' : 'Just for me'}
+            </button>
+          ))}
         </div>
 
         <div className="rounded-2xl border p-6" style={{ background: 'var(--color-eol-surface)', borderColor: 'var(--color-eol-border)' }}>
@@ -83,13 +110,28 @@ export default function CreateOrgPage() {
               )}
             </div>
           )}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <Input label="Organization name" placeholder="Lumen" required value={orgName} onChange={(e) => setOrgName(e.target.value)} />
-            <Input label="Team name" placeholder="Lumen Product Team" required value={teamName} onChange={(e) => setTeamName(e.target.value)} />
-            <Button type="submit" loading={loading} className="w-full">
-              Create team
-            </Button>
-          </form>
+          {mode === 'solo' ? (
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <Input
+                label="What should we call this?"
+                placeholder="My personal space"
+                required
+                value={spaceName}
+                onChange={(e) => setSpaceName(e.target.value)}
+              />
+              <Button type="submit" loading={loading} className="w-full">
+                Create my space
+              </Button>
+            </form>
+          ) : (
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <Input label="Organization name" placeholder="Lumen" required value={orgName} onChange={(e) => setOrgName(e.target.value)} />
+              <Input label="Team name" placeholder="Lumen Product Team" required value={teamName} onChange={(e) => setTeamName(e.target.value)} />
+              <Button type="submit" loading={loading} className="w-full">
+                Create team
+              </Button>
+            </form>
+          )}
         </div>
 
         <button
