@@ -102,7 +102,23 @@ const FAQS = [
 ]
 
 const navLink = 'text-[14px]'
-const navLinkStyle = { color: 'rgba(251,247,242,.72)', borderBottom: 'none' }
+const navLinkStyle = { color: 'rgba(19,17,20,.68)', borderBottom: 'none' }
+
+const HEADER_GRADIENT = 'linear-gradient(90deg,#FFF6AD 0%,#FFD0D3 50%,#FFA9F8 100%)'
+
+// Matches Button.tsx's shape/colors (rounded-lg, --color-eol-accent/--color-eol-ink)
+// so every CTA on the landing page reads as the same button as the rest of the app.
+const primaryButton = (extra?: React.CSSProperties): React.CSSProperties => ({
+  ...DISPLAY,
+  color: 'var(--color-eol-ink)',
+  background: 'var(--color-eol-accent)',
+  ...extra,
+})
+const secondaryButtonOnDark: React.CSSProperties = {
+  ...DISPLAY,
+  color: '#FBF7F2',
+  border: '1px solid rgba(251,247,242,.32)',
+}
 
 export default function LandingPage() {
   return (
@@ -110,12 +126,12 @@ export default function LandingPage() {
       {/* Header */}
       <header
         className="sticky top-0 z-20 border-b"
-        style={{ background: 'rgba(0,0,0,.72)', backdropFilter: 'blur(12px)', borderColor: 'rgba(251,247,242,.12)' }}
+        style={{ background: HEADER_GRADIENT, backdropFilter: 'blur(12px)', borderColor: 'rgba(19,17,20,.12)' }}
       >
         <div className="mx-auto flex max-w-[1120px] items-center gap-6 px-6 py-3.5 md:px-8">
           <div className="flex items-center gap-3">
             <img src={logoMark} alt="" width={28} height={28} style={{ display: 'block', borderRadius: 7 }} />
-            <span className="text-[14px] font-semibold uppercase tracking-[0.14em]" style={{ ...DISPLAY, color: '#FBF7F2' }}>
+            <span className="text-[14px] font-semibold uppercase tracking-[0.14em]" style={{ ...DISPLAY, color: '#131114' }}>
               Empire of Light
             </span>
           </div>
@@ -132,19 +148,11 @@ export default function LandingPage() {
             <a href="#faq" className={navLink} style={navLinkStyle}>
               FAQ
             </a>
-            <Link
-              to="/signup"
-              className="rounded-full px-4.5 py-2 text-[14px] font-semibold"
-              style={{ ...DISPLAY, color: '#131114', background: '#FEE16A', borderBottom: 'none' }}
-            >
+            <Link to="/signup" className="rounded-lg px-4.5 py-2 text-[14px] font-semibold" style={primaryButton()}>
               Get started
             </Link>
           </nav>
-          <Link
-            to="/signup"
-            className="ml-auto rounded-full px-4 py-2 text-[13px] font-semibold md:hidden"
-            style={{ ...DISPLAY, color: '#131114', background: '#FEE16A', borderBottom: 'none' }}
-          >
+          <Link to="/signup" className="ml-auto rounded-lg px-4 py-2 text-[13px] font-semibold md:hidden" style={primaryButton()}>
             Get started
           </Link>
         </div>
@@ -174,18 +182,10 @@ export default function LandingPage() {
             Bring more ambitious visions to life faster, with more unity.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3.5">
-            <Link
-              to="/signup"
-              className="rounded-full px-8 py-4 text-[15px] font-semibold uppercase tracking-[0.06em]"
-              style={{ ...DISPLAY, color: '#131114', background: '#FEE16A', borderBottom: 'none', boxShadow: '0 0 40px rgba(254,225,106,.28)' }}
-            >
+            <Link to="/signup" className="rounded-lg px-8 py-4 text-[15px] font-semibold" style={primaryButton({ boxShadow: '0 0 40px rgba(254,225,106,.28)' })}>
               Get started
             </Link>
-            <Link
-              to="/login"
-              className="rounded-full px-8 py-4 text-[15px] font-semibold uppercase tracking-[0.06em]"
-              style={{ ...DISPLAY, color: '#FBF7F2', border: '1px solid rgba(251,247,242,.32)' }}
-            >
+            <Link to="/login" className="rounded-lg px-8 py-4 text-[15px] font-semibold" style={secondaryButtonOnDark}>
               Sign in
             </Link>
           </div>
@@ -485,18 +485,10 @@ export default function LandingPage() {
             Create your team, send the questionnaire, and we&rsquo;ll take it from there.
           </p>
           <div className="flex flex-wrap justify-center gap-3.5">
-            <Link
-              to="/signup"
-              className="rounded-full px-8 py-4 text-[15px] font-semibold uppercase tracking-[0.06em]"
-              style={{ ...DISPLAY, color: '#131114', background: '#FEE16A', boxShadow: '0 0 40px rgba(254,225,106,.28)' }}
-            >
+            <Link to="/signup" className="rounded-lg px-8 py-4 text-[15px] font-semibold" style={primaryButton({ boxShadow: '0 0 40px rgba(254,225,106,.28)' })}>
               Get started
             </Link>
-            <Link
-              to="/login"
-              className="rounded-full px-8 py-4 text-[15px] font-semibold uppercase tracking-[0.06em]"
-              style={{ ...DISPLAY, color: '#FBF7F2', border: '1px solid rgba(251,247,242,.32)' }}
-            >
+            <Link to="/login" className="rounded-lg px-8 py-4 text-[15px] font-semibold" style={secondaryButtonOnDark}>
               Sign in
             </Link>
           </div>
