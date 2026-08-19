@@ -1,8 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
-import { Logo } from './components/shared/Logo'
-import { TierBadge } from './components/shared/TierBadge'
 import { ProtectedRoute, GuestRoute } from './components/auth/ProtectedRoute'
 
+import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/auth/LoginPage'
 import SignUpPage from './pages/auth/SignUpPage'
 import InviteLandingPage from './pages/InviteLandingPage'
@@ -25,40 +24,6 @@ import FrictionStartPage from './pages/friction/FrictionStartPage'
 import FrictionMitigatorPage from './pages/friction/FrictionMitigatorPage'
 import FrictionRespondPage from './pages/friction/FrictionRespondPage'
 import FrictionSessionStatusPage from './pages/friction/FrictionSessionStatusPage'
-
-function LandingPage() {
-  return (
-    <main className="flex min-h-screen flex-col items-center gap-4 px-6 py-24 text-center">
-      <Logo size={44} />
-      <div className="text-[11px] font-semibold uppercase tracking-[0.16em]" style={{ color: 'var(--color-eol-accent-label)' }}>
-        Collective Intelligence Platform
-      </div>
-      <h1 className="m-0 text-[46px] font-semibold leading-tight" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-        Empire of Light
-      </h1>
-      <p className="max-w-xl text-[15px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
-        Reimagine &rarr; Do &rarr; Unlearn &rarr; Evolve &mdash; vision co-creation, task
-        rhythm, and friction processing, with privacy tiers built into the
-        product itself.
-      </p>
-      <div className="mt-2 flex flex-wrap justify-center gap-2">
-        <TierBadge tier={0} />
-        <TierBadge tier={1} />
-        <TierBadge tier={2} />
-        <TierBadge tier={3} />
-        <TierBadge tier={4} />
-      </div>
-      <div className="mt-4 flex gap-3">
-        <a href="/signup" className="rounded-lg px-4 py-2.5 text-[13px] font-semibold" style={{ background: 'var(--color-eol-accent)', color: 'var(--color-eol-ink)' }}>
-          Get started
-        </a>
-        <a href="/login" className="rounded-lg px-4 py-2.5 text-[13px] font-semibold" style={{ border: '1px solid var(--color-eol-border-strong)', color: 'var(--color-eol-text-secondary)' }}>
-          Sign in
-        </a>
-      </div>
-    </main>
-  )
-}
 
 function App() {
   return (
