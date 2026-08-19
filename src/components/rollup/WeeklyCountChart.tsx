@@ -42,7 +42,7 @@ export function WeeklyCountChart({ label, description, points, emptyLabel, accen
       <p className="m-0 mb-3 text-[11.5px]" style={{ color: 'var(--color-eol-text-faint)' }}>
         {description}
       </p>
-      <div className="flex items-end gap-3 border-l pl-3" style={{ height: 60, borderColor: 'var(--color-eol-border)' }}>
+      <div className="flex items-end gap-3 border-l pl-3" style={{ borderColor: 'var(--color-eol-border)' }}>
         {[...points].reverse().map((p) => (
           <div key={p.period_start} className="flex flex-col items-center gap-1">
             <span className="text-[10px] font-semibold" style={{ color: 'var(--color-eol-text-muted)' }}>
