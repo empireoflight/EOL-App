@@ -31,7 +31,7 @@ const HOW_STEPS = [
   {
     n: '02',
     title: 'Everyone completes the vision questionnaire',
-    body: 'Async, private, individual. This is where the intelligence that never makes it into meetings gets written down.',
+    body: 'Async individual reflection first. This is where the intelligence that never makes it into meetings gets written down.',
   },
   {
     n: '03',
@@ -85,7 +85,7 @@ const FAQS = [
   },
   {
     q: 'Can we just use the app?',
-    a: 'You can sign up and start the vision questionnaire today. Teams get considerably more out of the first cycle when we facilitate it, which is why onboarding includes it.',
+    a: 'No, teams get considerably more out of the first cycle when we facilitate it, and we want to set you up well!',
   },
   {
     q: 'How much time does it take?',
@@ -189,9 +189,6 @@ export default function LandingPage() {
               Sign in
             </Link>
           </div>
-          <p className="mt-7 text-[14px]" style={{ color: 'rgba(251,247,242,.5)' }}>
-            Free to start. Guided onboarding for teams joining the founding cohort.
-          </p>
         </div>
       </section>
 
