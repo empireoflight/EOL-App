@@ -225,3 +225,30 @@ export function useSynthesisJobPolling(sessionId: string | undefined, status: Se
     },
   })
 }
+
+// When a guide already exists, "gate met" alone isn't enough to know it's
+// safe to show — someone can join and submit *after* the last generation
+// completed (facilitator invites someone new post-generation), which meets
+// the gate again without the guide actually reflecting their input. This
+// compares the last successful synthesis run's completed_at against every
+// current participant's submitted_at, so a resubmission after generation is
+// caught even though "everyone has submitted" is technically true.
+export function useLatestGuideCompletion(sessionId: string | undefined) {
+  return useQuery({
+    queryKey: ['latest-guide-completion', sessionId],
+    queryFn: async (): Promise<string | null> => {
+      if (!supabase) throw new Error('Supabase is not configured')
+      const { data, error } = await supabase
+        .from('synthesis_jobs')
+        .select('completed_at')
+        .eq('session_id', sessionId as string)
+        .eq('status', 'succeeded')
+        .order('completed_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (error) throw error
+      return data?.completed_at ?? null
+    },
+    enabled: !!sessionId,
+  })
+}

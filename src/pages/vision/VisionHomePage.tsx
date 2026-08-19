@@ -9,7 +9,7 @@ import {
   useSendVisionForApproval,
   useReviseVision,
 } from '../../hooks/useVision'
-import { useConvergenceSession, useOpenVisionSession, useSynthesisJobPolling } from '../../hooks/useConvergenceSession'
+import { useConvergenceSession, useOpenVisionSession, useSynthesisJobPolling, useLatestGuideCompletion } from '../../hooks/useConvergenceSession'
 import { useTeamMembers } from '../../hooks/useMyTeams'
 import { useAuth } from '../../hooks/useAuth'
 import { getVisionQuestions } from '../../lib/visionQuestions'
@@ -218,24 +218,16 @@ function RawAnswers({ sessionId }: { sessionId: string | null }) {
   )
 }
 
-// Readiness + generate/regenerate, shared between the pre-guide in-progress
-// view and the post-guide "still draft" regenerate strip (facilitator
-// inviting more people after generating is a real case — accept_team_invite
-// adds them to the still-open session, so this needs to work in both spots
-// with identical logic, not two copies that can drift apart).
-function VisionSessionProgress({ teamId, sessionId }: { teamId: string | undefined; sessionId: string }) {
-  const { user } = useAuth()
-  const navigate = useNavigate()
+// Shared data/mutation for the readiness-and-generate flow — used by both
+// the pre-guide in-progress view and the post-guide "still draft" panel
+// (facilitator inviting more people after generating is a real case —
+// accept_team_invite adds them to the still-open session, so both spots
+// need this, not two copies that can drift apart).
+function useVisionSessionProgress(sessionId: string) {
   const { data, isLoading, refetch } = useConvergenceSession(sessionId)
   const jobQuery = useSynthesisJobPolling(sessionId, data?.session.status)
   const [error, setError] = useState('')
   const [starting, setStarting] = useState(false)
-
-  if (isLoading || !data) return <LoadingScreen />
-
-  const { session, participants, submittedCount, totalParticipants, gateMet, participantNames } = data
-  const isFacilitator = session.initiator_id === user?.id
-  const myParticipant = participants.find((p) => p.user_id === user?.id)
 
   const handleGenerate = async () => {
     if (!supabase) return
@@ -272,6 +264,30 @@ function VisionSessionProgress({ teamId, sessionId }: { teamId: string | undefin
     }
   }
 
+  return {
+    data,
+    isLoading,
+    error,
+    handleGenerate,
+    generating: starting || data?.session.status === 'synthesizing' || jobQuery.data?.status === 'running',
+  }
+}
+
+// Pre-guide in-progress view — no canvas exists yet, so this is the whole
+// page. `canManage` (team facilitator, or the vision's original creator once
+// one exists) drives the generate button, replacing the old per-session
+// "session.initiator_id === me" check so this and the canvas-visibility
+// gate below use one consistent notion of "who's managing this."
+function VisionSessionProgress({ teamId, sessionId, canManage }: { teamId: string | undefined; sessionId: string; canManage: boolean }) {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const { data, isLoading, error, handleGenerate, generating } = useVisionSessionProgress(sessionId)
+
+  if (isLoading || !data) return <LoadingScreen />
+
+  const { session, participants, submittedCount, totalParticipants, gateMet, participantNames } = data
+  const myParticipant = participants.find((p) => p.user_id === user?.id)
+
   return (
     <div className="flex flex-col gap-4">
       {error && (
@@ -295,9 +311,9 @@ function VisionSessionProgress({ teamId, sessionId }: { teamId: string | undefin
         submittedCount={submittedCount}
         totalParticipants={totalParticipants}
         gateMet={gateMet}
-        isFacilitator={isFacilitator}
+        isFacilitator={canManage}
         onGenerate={handleGenerate}
-        generating={starting || session.status === 'synthesizing' || jobQuery.data?.status === 'running'}
+        generating={generating}
         regenerate={session.status === 'guide_ready'}
       />
       {Object.keys(participantNames).length > 0 && (
@@ -318,40 +334,129 @@ function VisionSessionProgress({ teamId, sessionId }: { teamId: string | undefin
   )
 }
 
-// Draft: facilitator/creator can send it for approval. Pending: everyone
-// (including the sender) sees who's committed and can add their own
-// commitment. Committed: read-only, with a way back to draft.
+// Post-guide, still-draft status: readiness/regenerate + participants +
+// "ready to commit?", collapsed into one card the facilitator can hide
+// during a live workshop to just look at the canvas. Only ever rendered
+// when vision.status === 'draft', so unlike VisionSessionProgress this also
+// owns the "send for approval" action (CommitmentPanel below only handles
+// pending_commitment/committed now).
+function VisionStatusPanel({
+  teamId,
+  sessionId,
+  vision,
+  canManage,
+}: {
+  teamId: string | undefined
+  sessionId: string
+  vision: Vision
+  canManage: boolean
+}) {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [collapsed, setCollapsed] = useState(false)
+  const { data, isLoading, error, handleGenerate, generating } = useVisionSessionProgress(sessionId)
+  const sendForApproval = useSendVisionForApproval(vision.id, teamId)
+
+  if (isLoading || !data) return <LoadingScreen />
+
+  const { session, participants, submittedCount, totalParticipants, gateMet, participantNames } = data
+  const myParticipant = participants.find((p) => p.user_id === user?.id)
+  const regenerate = session.status === 'guide_ready'
+
+  return (
+    <Card>
+      <button type="button" onClick={() => setCollapsed((c) => !c)} className="flex w-full items-center justify-between gap-3 text-left">
+        <div className="text-[13px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
+          Vision status &middot; {submittedCount} of {totalParticipants} submitted
+        </div>
+        <span className="shrink-0 text-[11px] font-semibold" style={{ color: 'var(--color-eol-accent-label)' }}>
+          {collapsed ? 'Show' : 'Hide'}
+        </span>
+      </button>
+
+      {!collapsed && (
+        <div className="mt-4 flex flex-col gap-4 border-t pt-4" style={{ borderColor: 'var(--color-eol-border)' }}>
+          {error && (
+            <div className="rounded-lg border px-3 py-2 text-[12.5px]" style={{ borderColor: 'var(--color-eol-pink)', color: 'var(--color-eol-pink-strong)' }}>
+              {error}
+            </div>
+          )}
+
+          {myParticipant && !myParticipant.submitted_at && (
+            <div>
+              <p className="m-0 mb-3 text-[13.5px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
+                You haven't submitted your reflection yet.
+              </p>
+              <Button onClick={() => navigate(`/teams/${teamId}/vision/sessions/${sessionId}/reflect`)} className="w-full">
+                Submit your reflection
+              </Button>
+            </div>
+          )}
+
+          {gateMet && canManage && (
+            <button
+              type="button"
+              onClick={handleGenerate}
+              disabled={generating}
+              className="self-start rounded-lg px-4 py-2 text-[13px] font-semibold disabled:opacity-60"
+              style={{ background: 'var(--color-eol-accent)', color: 'var(--color-eol-ink)' }}
+            >
+              {generating ? (regenerate ? 'Regenerating…' : 'Generating…') : regenerate ? 'Regenerate discussion guide' : 'Generate discussion guide'}
+            </button>
+          )}
+          {gateMet && !canManage && (
+            <div className="text-[13px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+              Waiting on the facilitator to generate the guide
+            </div>
+          )}
+
+          {Object.keys(participantNames).length > 0 && (
+            <div className="flex flex-wrap gap-3">
+              {Object.entries(participantNames).map(([id, name]) => (
+                <div key={id} className="flex items-center gap-2">
+                  <Avatar name={name} size={26} />
+                  <span className="text-[12px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
+                    {name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {canManage && (
+            <div className="flex items-center justify-between gap-4 border-t pt-4" style={{ borderColor: 'var(--color-eol-border)' }}>
+              <div>
+                <div className="text-[14px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
+                  Ready for the team to commit?
+                </div>
+                <div className="text-[12.5px]" style={{ color: 'var(--color-eol-text-muted)' }}>
+                  This sends the vision above to everyone for approval and locks editing until it's resolved.
+                </div>
+              </div>
+              <Button onClick={() => sendForApproval.mutate()} loading={sendForApproval.isPending}>
+                Send to everyone for approval
+              </Button>
+            </div>
+          )}
+          {sendForApproval.isError && (
+            <p className="m-0 text-[12.5px]" style={{ color: 'var(--color-eol-pink-strong)' }}>
+              {sendForApproval.error instanceof Error ? sendForApproval.error.message : "Couldn't send for approval."}
+            </p>
+          )}
+        </div>
+      )}
+    </Card>
+  )
+}
+
+// Pending: everyone (including the sender) sees who's committed and can add
+// their own commitment. Committed: read-only, with a way back to draft.
+// Draft is handled by VisionStatusPanel above instead — this is never
+// called with vision.status === 'draft'.
 function CommitmentPanel({ teamId, vision, canManage }: { teamId: string | undefined; vision: Vision; canManage: boolean }) {
   const { user } = useAuth()
-  const { data: commitments } = useVisionCommitments(vision.status === 'draft' ? undefined : vision.id)
-  const sendForApproval = useSendVisionForApproval(vision.id, teamId)
+  const { data: commitments } = useVisionCommitments(vision.id)
   const revise = useReviseVision(vision.id, teamId)
-
-  if (vision.status === 'draft') {
-    if (!canManage) return null
-    return (
-      <Card>
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <div className="text-[14px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
-              Ready for the team to commit?
-            </div>
-            <div className="text-[12.5px]" style={{ color: 'var(--color-eol-text-muted)' }}>
-              This sends the vision above to everyone for approval and locks editing until it's resolved.
-            </div>
-          </div>
-          <Button onClick={() => sendForApproval.mutate()} loading={sendForApproval.isPending}>
-            Send to everyone for approval
-          </Button>
-        </div>
-        {sendForApproval.isError && (
-          <p className="m-0 mt-3 text-[12.5px]" style={{ color: 'var(--color-eol-pink-strong)' }}>
-            {sendForApproval.error instanceof Error ? sendForApproval.error.message : "Couldn't send for approval."}
-          </p>
-        )}
-      </Card>
-    )
-  }
 
   const committedCount = (commitments ?? []).filter((c) => c.status === 'committed').length
   const myCommitment = user ? (commitments ?? []).find((c) => c.user_id === user.id) : undefined
@@ -400,19 +505,37 @@ export default function VisionHomePage() {
   const { user } = useAuth()
   const { data: vision, isLoading } = useTeamVision(teamId)
   const { data: openSession, isLoading: openSessionLoading } = useOpenVisionSession(teamId)
+  const { data: openSessionData } = useConvergenceSession(openSession?.id)
+  const { data: lastGuideCompletedAt } = useLatestGuideCompletion(openSession?.id)
   const { data: members } = useTeamMembers(teamId)
   const saveLayout = useSaveVisionLayout(vision?.id, teamId)
 
   if (isLoading || openSessionLoading) return <LoadingScreen />
 
-  // No guide generated yet for the currently open session — never show a
-  // vision canvas here, including a stale one left over from an earlier
-  // committed cycle (visions.team_id has no uniqueness; a revise session
-  // inserts a fresh row only once its own guide is ready). This is the only
-  // "in progress" messaging on this page now — the old separate status page
+  const myMembership = user ? (members ?? []).find((m) => m.user_id === user.id) : undefined
+  const isTeamFacilitator = myMembership?.team_role === 'facilitator'
+  const canManage = isTeamFacilitator || (!!vision && vision.created_by === user?.id)
+
+  // Three reasons nobody should see the canvas, facilitator included: (1) no
+  // guide exists yet for the currently open session; (2) one does, but not
+  // everyone currently in the session has submitted (e.g. the facilitator
+  // invited someone new after generating, per accept_team_invite); or (3)
+  // everyone HAS submitted, but at least one of those submissions happened
+  // *after* the last successful generation completed — "gate met" alone
+  // can't tell the difference between "always been met" and "just became
+  // met again via a late resubmission the existing guide doesn't reflect."
+  // Nobody sees stale content in any of these cases — the moment a guide
+  // exists that postdates every current submission, everyone sees it
+  // together. Also covers a stale vision left over from an earlier
+  // committed cycle (visions.team_id has no uniqueness) — this is the only
+  // "in progress" messaging on this page now, the old separate status page
   // is gone.
-  const sessionInFlight = !!openSession && openSession.status !== 'guide_ready'
-  if (sessionInFlight) {
+  const gateCurrentlyMet = openSessionData?.gateMet ?? true
+  const guideStale =
+    !!lastGuideCompletedAt &&
+    (openSessionData?.participants ?? []).some((p) => p.submitted_at && new Date(p.submitted_at) > new Date(lastGuideCompletedAt))
+  const blockedFromCanvas = !!openSession && (openSession.status !== 'guide_ready' || !gateCurrentlyMet || guideStale)
+  if (blockedFromCanvas) {
     return (
       <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
         <div>
@@ -420,7 +543,7 @@ export default function VisionHomePage() {
             Vision creation process is in progress
           </h1>
         </div>
-        <VisionSessionProgress teamId={teamId} sessionId={openSession.id} />
+        <VisionSessionProgress teamId={teamId} sessionId={openSession.id} canManage={canManage} />
       </div>
     )
   }
@@ -452,18 +575,19 @@ export default function VisionHomePage() {
 
   const northStar = vision.layout.nodes.find((n) => n.kind === 'north_star')
   const editable = vision.status === 'draft'
-  const myMembership = user ? (members ?? []).find((m) => m.user_id === user.id) : undefined
-  const canManage = myMembership?.team_role === 'facilitator' || vision.created_by === user?.id
   const updateNodes = (nodes: VisionNode[]) => saveLayout.mutate({ nodes, edges: vision.layout.edges })
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-10">
-      {/* openSession is only ever non-null here once its guide is ready
-          (sessionInFlight already returned early otherwise) — this is the
-          regenerate path: lets a facilitator who invited more people after
-          generating re-run synthesis with their input included. */}
-      {openSession && vision.status === 'draft' && <VisionSessionProgress teamId={teamId} sessionId={openSession.id} />}
-      <CommitmentPanel teamId={teamId} vision={vision} canManage={canManage} />
+      {/* openSession is only ever non-null here once its guide is ready and
+          blockedFromCanvas above already excluded the "not everyone's in
+          yet" case for non-managers — this is the regenerate path, letting
+          a manager who invited more people after generating re-run
+          synthesis with their input included. */}
+      {openSession && vision.status === 'draft' && (
+        <VisionStatusPanel teamId={teamId} sessionId={openSession.id} vision={vision} canManage={canManage} />
+      )}
+      {vision.status !== 'draft' && <CommitmentPanel teamId={teamId} vision={vision} canManage={canManage} />}
 
       <div>
         <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-accent-label)' }}>
