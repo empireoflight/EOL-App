@@ -30,12 +30,12 @@ export function OpenVisionSessionBanner({ teamId }: { teamId: string | undefined
   if (openSession) {
     return (
       <Link
-        to={`/teams/${teamId}/vision/sessions/${openSession.id}`}
+        to={`/teams/${teamId}/vision`}
         className="flex items-center justify-between gap-3 rounded-2xl border p-4"
         style={{ background: 'var(--color-eol-surface)', borderColor: 'var(--color-eol-border)' }}
       >
         <div className="text-[13.5px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
-          A vision session is already in progress
+          Vision creation process is in progress
         </div>
         <span className="shrink-0 text-[12.5px] font-semibold" style={{ color: 'var(--color-eol-text-muted)' }}>
           View status &rarr;

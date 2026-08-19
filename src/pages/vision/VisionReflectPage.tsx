@@ -62,7 +62,7 @@ export default function VisionReflectPage() {
       }
 
       discard()
-      navigate(`/teams/${teamId}/vision/sessions/${sessionId}`)
+      navigate(`/teams/${teamId}/vision`)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't save your answers.")
     } finally {

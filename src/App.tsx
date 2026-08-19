@@ -12,7 +12,6 @@ import TeamHomePage from './pages/teams/TeamHomePage'
 import InvitePage from './pages/teams/InvitePage'
 import VisionStartPage from './pages/vision/VisionStartPage'
 import VisionReflectPage from './pages/vision/VisionReflectPage'
-import VisionSessionStatusPage from './pages/vision/VisionSessionStatusPage'
 import VisionHomePage from './pages/vision/VisionHomePage'
 import VisionCommitPage from './pages/vision/VisionCommitPage'
 import ExperimentsPage from './pages/experiments/ExperimentsPage'
@@ -42,7 +41,6 @@ function App() {
         <Route path="invite" element={<InvitePage />} />
         <Route path="vision/start" element={<VisionStartPage />} />
         <Route path="vision/sessions/:sessionId/reflect" element={<VisionReflectPage />} />
-        <Route path="vision/sessions/:sessionId" element={<VisionSessionStatusPage />} />
         <Route path="vision/commit" element={<VisionCommitPage />} />
         <Route path="vision" element={<VisionHomePage />} />
         <Route path="experiments" element={<ExperimentsPage />} />

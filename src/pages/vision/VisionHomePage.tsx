@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
 import {
   useTeamVision,
   useSaveVisionLayout,
@@ -8,7 +9,7 @@ import {
   useSendVisionForApproval,
   useReviseVision,
 } from '../../hooks/useVision'
-import { useConvergenceSession, useOpenVisionSession } from '../../hooks/useConvergenceSession'
+import { useConvergenceSession, useOpenVisionSession, useSynthesisJobPolling } from '../../hooks/useConvergenceSession'
 import { useTeamMembers } from '../../hooks/useMyTeams'
 import { useAuth } from '../../hooks/useAuth'
 import { getVisionQuestions } from '../../lib/visionQuestions'
@@ -18,7 +19,7 @@ import { Input } from '../../components/shared/Input'
 import { TierBadge } from '../../components/shared/TierBadge'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
 import { Avatar } from '../../components/shared/Avatar'
-import { OpenVisionSessionBanner } from '../../components/session/OpenVisionSessionBanner'
+import { ReadinessBanner } from '../../components/session/ReadinessBanner'
 import type { Vision, VisionNode } from '../../lib/types'
 
 // Click-to-edit span/textarea, saves on blur. `draft` only ever gets
@@ -217,6 +218,106 @@ function RawAnswers({ sessionId }: { sessionId: string | null }) {
   )
 }
 
+// Readiness + generate/regenerate, shared between the pre-guide in-progress
+// view and the post-guide "still draft" regenerate strip (facilitator
+// inviting more people after generating is a real case — accept_team_invite
+// adds them to the still-open session, so this needs to work in both spots
+// with identical logic, not two copies that can drift apart).
+function VisionSessionProgress({ teamId, sessionId }: { teamId: string | undefined; sessionId: string }) {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const { data, isLoading, refetch } = useConvergenceSession(sessionId)
+  const jobQuery = useSynthesisJobPolling(sessionId, data?.session.status)
+  const [error, setError] = useState('')
+  const [starting, setStarting] = useState(false)
+
+  if (isLoading || !data) return <LoadingScreen />
+
+  const { session, participants, submittedCount, totalParticipants, gateMet, participantNames } = data
+  const isFacilitator = session.initiator_id === user?.id
+  const myParticipant = participants.find((p) => p.user_id === user?.id)
+
+  const handleGenerate = async () => {
+    if (!supabase) return
+    setStarting(true)
+    setError('')
+    try {
+      const { data: job, error: jobError } = await supabase
+        .from('synthesis_jobs')
+        .insert({ session_id: sessionId })
+        .select()
+        .single()
+      if (jobError) throw jobError
+
+      await supabase.from('convergence_sessions').update({ status: 'synthesizing' }).eq('id', sessionId)
+
+      const { data: authData } = await supabase.auth.getSession()
+      const { error: invokeError } = await supabase.functions.invoke('process-synthesis-job', {
+        body: { jobId: job.id },
+        headers: { Authorization: `Bearer ${authData.session?.access_token}` },
+      })
+      if (invokeError) {
+        // The edge function never got to run — its own failure path (which
+        // falls back to 'ready') never fires either, so without this the
+        // session gets stuck at 'synthesizing' forever with no retry path.
+        await supabase.from('convergence_sessions').update({ status: 'ready' }).eq('id', sessionId)
+        throw invokeError
+      }
+
+      refetch()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't start synthesis.")
+    } finally {
+      setStarting(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      {error && (
+        <div className="rounded-lg border px-3 py-2 text-[12.5px]" style={{ borderColor: 'var(--color-eol-pink)', color: 'var(--color-eol-pink-strong)' }}>
+          {error}
+        </div>
+      )}
+
+      {myParticipant && !myParticipant.submitted_at && (
+        <Card>
+          <p className="m-0 mb-3 text-[13.5px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
+            You haven't submitted your reflection yet.
+          </p>
+          <Button onClick={() => navigate(`/teams/${teamId}/vision/sessions/${sessionId}/reflect`)} className="w-full">
+            Submit your reflection
+          </Button>
+        </Card>
+      )}
+
+      <ReadinessBanner
+        submittedCount={submittedCount}
+        totalParticipants={totalParticipants}
+        gateMet={gateMet}
+        isFacilitator={isFacilitator}
+        onGenerate={handleGenerate}
+        generating={starting || session.status === 'synthesizing' || jobQuery.data?.status === 'running'}
+        regenerate={session.status === 'guide_ready'}
+      />
+      {Object.keys(participantNames).length > 0 && (
+        <Card>
+          <div className="flex flex-wrap gap-3">
+            {Object.entries(participantNames).map(([id, name]) => (
+              <div key={id} className="flex items-center gap-2">
+                <Avatar name={name} size={26} />
+                <span className="text-[12px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
+                  {name}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
+  )
+}
+
 // Draft: facilitator/creator can send it for approval. Pending: everyone
 // (including the sender) sees who's committed and can add their own
 // commitment. Committed: read-only, with a way back to draft.
@@ -304,6 +405,26 @@ export default function VisionHomePage() {
 
   if (isLoading || openSessionLoading) return <LoadingScreen />
 
+  // No guide generated yet for the currently open session — never show a
+  // vision canvas here, including a stale one left over from an earlier
+  // committed cycle (visions.team_id has no uniqueness; a revise session
+  // inserts a fresh row only once its own guide is ready). This is the only
+  // "in progress" messaging on this page now — the old separate status page
+  // is gone.
+  const sessionInFlight = !!openSession && openSession.status !== 'guide_ready'
+  if (sessionInFlight) {
+    return (
+      <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
+        <div>
+          <h1 className="m-0 text-[24px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
+            Vision creation process is in progress
+          </h1>
+        </div>
+        <VisionSessionProgress teamId={teamId} sessionId={openSession.id} />
+      </div>
+    )
+  }
+
   if (!vision) {
     return (
       <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
@@ -315,19 +436,16 @@ export default function VisionHomePage() {
             No vision yet — everything else in this cycle takes its shape from here.
           </p>
         </div>
-        <OpenVisionSessionBanner teamId={teamId} />
-        {!openSession && (
-          <Card>
-            <div className="flex items-center justify-between gap-4">
-              <p className="m-0 text-[13px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-                Start a vision session to co-create a shared north star with your team.
-              </p>
-              <Link to={`/teams/${teamId}/vision/start`}>
-                <Button>Start</Button>
-              </Link>
-            </div>
-          </Card>
-        )}
+        <Card>
+          <div className="flex items-center justify-between gap-4">
+            <p className="m-0 text-[13px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
+              Start a vision session to co-create a shared north star with your team.
+            </p>
+            <Link to={`/teams/${teamId}/vision/start`}>
+              <Button>Start</Button>
+            </Link>
+          </div>
+        </Card>
       </div>
     )
   }
@@ -340,10 +458,11 @@ export default function VisionHomePage() {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-10">
-      {/* CommitmentPanel already covers "there's a vision in flight" once it's
-          awaiting commitment — showing both is redundant, two banners saying
-          the same thing two different ways. */}
-      {vision.status !== 'pending_commitment' && <OpenVisionSessionBanner teamId={teamId} />}
+      {/* openSession is only ever non-null here once its guide is ready
+          (sessionInFlight already returned early otherwise) — this is the
+          regenerate path: lets a facilitator who invited more people after
+          generating re-run synthesis with their input included. */}
+      {openSession && vision.status === 'draft' && <VisionSessionProgress teamId={teamId} sessionId={openSession.id} />}
       <CommitmentPanel teamId={teamId} vision={vision} canManage={canManage} />
 
       <div>
