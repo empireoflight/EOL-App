@@ -17,6 +17,7 @@ export default function FrictionMitigatorPage() {
   const { data: sessionData } = useConvergenceSession(sessionId)
   const [stageIndex, setStageIndex] = useState(0)
   const [finishing, setFinishing] = useState(false)
+  const [soloDone, setSoloDone] = useState(false)
   const stage: FrictionStage = FRICTION_STAGES[stageIndex].id
 
   const variant = (sessionData?.totalParticipants ?? 0) > 2 ? 'team' : 'two_person'
@@ -61,11 +62,35 @@ export default function FrictionMitigatorPage() {
       await supabase.from('friction_grounding_completions').insert({ user_id: user.id, team_id: teamId })
       setFinishing(false)
     }
-    navigate(`/teams/${teamId}/friction/tools`)
+    // Grounding Tools (friction/tools) is still a "coming soon" stub — land
+    // on a confirmation here instead of dropping someone onto an unbuilt page.
+    setSoloDone(true)
   }
 
   const handleExit = () => {
     navigate(`/teams/${teamId}`)
+  }
+
+  if (soloDone) {
+    return (
+      <div className="mx-auto flex max-w-lg flex-col items-center gap-5 px-6 py-16 text-center">
+        <div
+          className="h-16 w-16 rounded-full"
+          style={{ background: 'radial-gradient(circle, #fff0c0, #ffb3e6)' }}
+        />
+        <div>
+          <h1 className="m-0 text-[20px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
+            Nice work
+          </h1>
+          <p className="m-0 mt-1.5 text-[13.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
+            That's counted toward this week's friction processed — the answers themselves were never sent anywhere.
+          </p>
+        </div>
+        <Button onClick={() => navigate(`/teams/${teamId}/friction`)} className="w-full">
+          Back to Unlearn
+        </Button>
+      </div>
+    )
   }
 
   return (
