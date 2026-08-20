@@ -14,6 +14,28 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Backward-compat fallback only, for vision sessions created before
+// VisionStartPage.tsx started always writing a resolved question list into
+// framing.questions. Kept in sync with getVisionQuestions() in
+// src/lib/visionQuestions.ts — edge functions can't import from src/, and
+// this only ever runs for old sessions, so a duplicate here is simpler than
+// a shared package for one fallback path.
+function defaultVisionQuestions(horizon: string): { id: string; prompt: string; optional?: boolean }[] {
+  return [
+    { id: 'building', prompt: 'What are we building together?' },
+    { id: 'who_for', prompt: "Who is it for, and what's different for them because it exists?" },
+    { id: 'unique', prompt: 'What does it do that nothing else does?', optional: true },
+    { id: 'hardest', prompt: "What's the hardest problem we haven't cracked yet?", optional: true },
+    { id: 'proud', prompt: 'What would make you proud to put your name on this?' },
+    { id: 'not_building', prompt: 'What are we deliberately not building, even if someone asks for it?', optional: true },
+    { id: 'arrival_notice', prompt: `${horizon} from now, you walk in on an ordinary Tuesday. What's the first thing you notice?` },
+    { id: 'arrival_doing', prompt: 'What are people doing differently than they do today?' },
+    { id: 'arrival_feel', prompt: `What does it feel like to be on this team, ${horizon} from now?` },
+    { id: 'negative_space', prompt: "What's gone that's here today? (a meeting, a tension, a way of working, a feeling)" },
+    { id: 'anchors', prompt: "What matters most about how we get there — what wouldn't you trade away even for a better outcome?" },
+  ]
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
@@ -85,10 +107,17 @@ Deno.serve(async (req: Request) => {
       if (participantAnswers.length === 0) throw new Error('no submitted reflections to synthesize')
 
       const horizon = (session.framing as Record<string, unknown>)?.horizon as string | undefined
+      // Every session's framing carries its resolved question list since
+      // VisionStartPage.tsx started writing it (default or facilitator-
+      // edited, no distinction here). This fallback only ever applies to
+      // sessions created before that shipped.
+      const questions =
+        ((session.framing as Record<string, unknown>)?.questions as { id: string; prompt: string }[] | undefined) ??
+        defaultVisionQuestions(horizon ?? '12 months')
 
       const [layout, alignmentGuide] = await Promise.all([
-        generateVisionLayout({ teamName: team?.name ?? 'This team', horizon: horizon ?? '12 months', participantAnswers }),
-        generateVisionAlignmentGuide({ teamName: team?.name ?? 'This team', participantAnswers }),
+        generateVisionLayout({ teamName: team?.name ?? 'This team', horizon: horizon ?? '12 months', questions, participantAnswers }),
+        generateVisionAlignmentGuide({ teamName: team?.name ?? 'This team', questions, participantAnswers }),
       ])
 
       const { data: existingVision } = await db

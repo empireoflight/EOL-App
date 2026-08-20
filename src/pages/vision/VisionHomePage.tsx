@@ -12,7 +12,7 @@ import {
 import { useConvergenceSession, useOpenVisionSession, useSynthesisJobPolling, useLatestGuideCompletion } from '../../hooks/useConvergenceSession'
 import { useTeamMembers } from '../../hooks/useMyTeams'
 import { useAuth } from '../../hooks/useAuth'
-import { getVisionQuestions } from '../../lib/visionQuestions'
+import { resolveVisionQuestions, type VisionQuestion } from '../../lib/visionQuestions'
 import { Card } from '../../components/shared/Card'
 import { Button } from '../../components/shared/Button'
 import { Input } from '../../components/shared/Input'
@@ -176,8 +176,7 @@ function EditableNodeList({
 function RawAnswers({ sessionId }: { sessionId: string | null }) {
   const { data: answers, isLoading } = useVisionAnswers(sessionId ?? undefined)
   const { data: sessionData } = useConvergenceSession(sessionId ?? undefined)
-  const horizon = (sessionData?.session.framing as { horizon?: string } | undefined)?.horizon
-  const questions = getVisionQuestions(horizon)
+  const questions = resolveVisionQuestions(sessionData?.session.framing as { horizon?: string; questions?: VisionQuestion[] } | undefined)
   if (!sessionId) return null
   if (isLoading) return null
   if (!answers || answers.length === 0) return null

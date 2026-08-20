@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { useOpenVisionSession } from '../../hooks/useConvergenceSession'
+import { getVisionQuestions, type VisionQuestion } from '../../lib/visionQuestions'
 import { TeamInvitePanel } from '../../components/team/TeamInvitePanel'
 import { Button } from '../../components/shared/Button'
 import { Input } from '../../components/shared/Input'
@@ -12,7 +13,66 @@ import { LoadingScreen } from '../../components/shared/LoadingScreen'
 
 const HORIZONS = ['6 months', '12 months', '18 months', '3 years']
 
-type Step = 'invite' | 'framing'
+type Step = 'invite' | 'framing' | 'questions'
+
+function QuestionRow({
+  question,
+  index,
+  count,
+  onChange,
+  onRemove,
+  onMove,
+}: {
+  question: VisionQuestion
+  index: number
+  count: number
+  onChange: (patch: Partial<VisionQuestion>) => void
+  onRemove: () => void
+  onMove: (direction: -1 | 1) => void
+}) {
+  return (
+    <div className="flex items-start gap-2 rounded-lg border p-3" style={{ borderColor: 'var(--color-eol-border-strong)' }}>
+      <div className="flex flex-col gap-1">
+        <button
+          type="button"
+          onClick={() => onMove(-1)}
+          disabled={index === 0}
+          aria-label="Move up"
+          className="text-[13px] leading-none disabled:opacity-30"
+          style={{ color: 'var(--color-eol-text-muted)' }}
+        >
+          &uarr;
+        </button>
+        <button
+          type="button"
+          onClick={() => onMove(1)}
+          disabled={index === count - 1}
+          aria-label="Move down"
+          className="text-[13px] leading-none disabled:opacity-30"
+          style={{ color: 'var(--color-eol-text-muted)' }}
+        >
+          &darr;
+        </button>
+      </div>
+      <div className="flex flex-1 flex-col gap-1.5">
+        <Input value={question.prompt} onChange={(e) => onChange({ prompt: e.target.value })} />
+        <label className="flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--color-eol-text-muted)' }}>
+          <input type="checkbox" checked={!!question.optional} onChange={(e) => onChange({ optional: e.target.checked })} />
+          Optional
+        </label>
+      </div>
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label="Remove question"
+        className="shrink-0 text-[15px] opacity-50 hover:opacity-100"
+        style={{ color: 'var(--color-eol-text-muted)' }}
+      >
+        &times;
+      </button>
+    </div>
+  )
+}
 
 export default function VisionStartPage() {
   const { teamId } = useParams<{ teamId: string }>()
@@ -28,8 +88,27 @@ export default function VisionStartPage() {
   const [scope, setScope] = useState('')
   const [horizon, setHorizon] = useState(HORIZONS[1])
   const [whyNow, setWhyNow] = useState('')
+  const [questions, setQuestions] = useState<VisionQuestion[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const updateQuestion = (id: string, patch: Partial<VisionQuestion>) =>
+    setQuestions((qs) => qs.map((q) => (q.id === id ? { ...q, ...patch } : q)))
+  const removeQuestion = (id: string) => setQuestions((qs) => qs.filter((q) => q.id !== id))
+  const moveQuestion = (index: number, direction: -1 | 1) =>
+    setQuestions((qs) => {
+      const next = [...qs]
+      const target = index + direction
+      if (target < 0 || target >= next.length) return qs
+      ;[next[index], next[target]] = [next[target], next[index]]
+      return next
+    })
+  const [newQuestionText, setNewQuestionText] = useState('')
+  const addQuestion = () => {
+    if (!newQuestionText.trim()) return
+    setQuestions((qs) => [...qs, { id: crypto.randomUUID(), prompt: newQuestionText.trim() }])
+    setNewQuestionText('')
+  }
 
   const handleSubmit = async (ev: React.FormEvent) => {
     ev.preventDefault()
@@ -44,7 +123,7 @@ export default function VisionStartPage() {
           session_type: 'vision',
           status: 'collecting',
           initiator_id: user.id,
-          framing: { scope, horizon, whyNow },
+          framing: { scope, horizon, whyNow, questions },
         })
         .select()
         .single()
@@ -104,48 +183,119 @@ export default function VisionStartPage() {
     )
   }
 
+  if (step === 'framing') {
+    return (
+      <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
+        <div>
+          <h1 className="m-0 text-[22px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
+            Start a vision session
+          </h1>
+          <p className="m-0 mt-1 text-[13px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
+            A little framing first, so everyone answers at the same altitude.
+          </p>
+        </div>
+
+        <Card>
+          <form
+            onSubmit={(ev) => {
+              ev.preventDefault()
+              setQuestions(getVisionQuestions(horizon))
+              setManualStep('questions')
+            }}
+            className="flex flex-col gap-4"
+          >
+            <Input label="Scope — this team / project / product" required value={scope} onChange={(e) => setScope(e.target.value)} placeholder="This team" />
+            <label className="flex flex-col gap-1.5 text-left">
+              <span className="text-[11px] font-medium" style={{ color: 'var(--color-eol-text-muted)' }}>
+                Time horizon
+              </span>
+              <select
+                value={horizon}
+                onChange={(e) => setHorizon(e.target.value)}
+                className="rounded-lg border px-3 py-2.5 text-[13px]"
+                style={{ borderColor: 'var(--color-eol-border-strong)', background: 'var(--color-eol-surface-light)', color: 'var(--color-eol-text)' }}
+              >
+                {HORIZONS.map((h) => (
+                  <option key={h} value={h}>
+                    {h}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <Textarea label="Why now" hint="One or two sentences on what prompted this session." required value={whyNow} onChange={(e) => setWhyNow(e.target.value)} />
+            <Button type="submit" className="w-full">
+              Continue
+            </Button>
+          </form>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
       <div>
         <h1 className="m-0 text-[22px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-          Start a vision session
+          Review the questions
         </h1>
         <p className="m-0 mt-1 text-[13px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-          A little framing first, so everyone answers at the same altitude.
+          These are what everyone will answer. Edit, reorder, remove, or add your own — this set is locked in once the
+          session starts.
         </p>
       </div>
 
-      <Card>
-        {error && (
-          <div className="mb-4 rounded-lg border px-3 py-2 text-[12.5px]" style={{ borderColor: 'var(--color-eol-pink)', color: 'var(--color-eol-pink-strong)' }}>
-            {error}
-          </div>
-        )}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <Input label="Scope — this team / project / product" required value={scope} onChange={(e) => setScope(e.target.value)} placeholder="This team" />
-          <label className="flex flex-col gap-1.5 text-left">
-            <span className="text-[11px] font-medium" style={{ color: 'var(--color-eol-text-muted)' }}>
-              Time horizon
-            </span>
-            <select
-              value={horizon}
-              onChange={(e) => setHorizon(e.target.value)}
-              className="rounded-lg border px-3 py-2.5 text-[13px]"
-              style={{ borderColor: 'var(--color-eol-border-strong)', background: 'var(--color-eol-surface-light)', color: 'var(--color-eol-text)' }}
-            >
-              {HORIZONS.map((h) => (
-                <option key={h} value={h}>
-                  {h}
-                </option>
-              ))}
-            </select>
-          </label>
-          <Textarea label="Why now" hint="One or two sentences on what prompted this session." required value={whyNow} onChange={(e) => setWhyNow(e.target.value)} />
-          <Button type="submit" loading={loading} className="w-full">
-            Start the session
+      {error && (
+        <div className="rounded-lg border px-3 py-2 text-[12.5px]" style={{ borderColor: 'var(--color-eol-pink)', color: 'var(--color-eol-pink-strong)' }}>
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2.5">
+          {questions.map((q, i) => (
+            <QuestionRow
+              key={q.id}
+              question={q}
+              index={i}
+              count={questions.length}
+              onChange={(patch) => updateQuestion(q.id, patch)}
+              onRemove={() => removeQuestion(q.id)}
+              onMove={(direction) => moveQuestion(i, direction)}
+            />
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Input
+            value={newQuestionText}
+            onChange={(e) => setNewQuestionText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                addQuestion()
+              }
+            }}
+            placeholder="Add a question"
+            className="flex-1"
+          />
+          <Button type="button" variant="secondary" onClick={addQuestion}>
+            Add
           </Button>
-        </form>
-      </Card>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setQuestions(getVisionQuestions(horizon))}
+          className="self-start text-[12px] font-semibold"
+          style={{ color: 'var(--color-eol-accent-label)' }}
+        >
+          Reset to defaults
+        </button>
+
+        <Button type="submit" loading={loading} disabled={questions.length === 0} className="w-full">
+          Start the session
+        </Button>
+      </form>
     </div>
   )
 }

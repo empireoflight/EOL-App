@@ -236,13 +236,27 @@ export type VisionLayout = {
   edges: VisionEdge[]
 }
 
+// Answers are stored keyed by internal question id ("building", or a
+// crypto.randomUUID() for a facilitator-added custom question — see
+// VisionStartPage.tsx) — neither is meaningful to the model on its own.
+// Remap to the actual prompt text before it goes anywhere near a prompt, so
+// synthesis reads real questions instead of opaque keys. Falls back to the
+// raw id only if a question somehow isn't found (shouldn't happen now that
+// every session's framing always carries its resolved question list).
+function labelAnswersByQuestion(questions: { id: string; prompt: string }[], participantAnswers: Record<string, string>[]): Record<string, string>[] {
+  const promptById = new Map(questions.map((q) => [q.id, q.prompt]))
+  return participantAnswers.map((answers) => Object.fromEntries(Object.entries(answers).map(([id, text]) => [promptById.get(id) ?? id, text])))
+}
+
 export async function generateVisionLayout(input: {
   teamName: string
   horizon: string
+  questions: { id: string; prompt: string }[]
   // One entry per participant — a team synthesis needs everyone's answers,
   // not one person's, to find the shared north star.
   participantAnswers: Record<string, string>[]
 }): Promise<VisionLayout> {
+  const labeledAnswers = labelAnswersByQuestion(input.questions, input.participantAnswers)
   const raw = await callAnthropic({
     model: MODELS.visionLayout,
     system: FRAMEWORK_SYSTEM_PROMPT,
@@ -254,8 +268,9 @@ export async function generateVisionLayout(input: {
         role: 'user',
         content:
           `Team: ${input.teamName}\nHorizon: ${input.horizon}\n\n` +
-          `Individual vision-session answers, one entry per participant (tier-1, about to be aggregated):\n` +
-          JSON.stringify(input.participantAnswers, null, 2) +
+          `Individual vision-session answers, one entry per participant (tier-1, about to be aggregated), ` +
+          `keyed by the question each one answers:\n` +
+          JSON.stringify(labeledAnswers, null, 2) +
           `\n\nDraft a vision layout with four kinds of nodes:\n` +
           `- One "north_star" node: the synthesized north star statement.\n` +
           `- 3-5 "pillar" nodes: short phrases naming the pillars that support it.\n` +
@@ -288,11 +303,13 @@ export type VisionAlignmentGuide = {
 
 export async function generateVisionAlignmentGuide(input: {
   teamName: string
+  questions: { id: string; prompt: string }[]
   // Deliberately unlabeled by real name — "Participant 1/2/3" — the model
   // doesn't need identity to describe where answers converge or diverge.
   participantAnswers: Record<string, string>[]
 }): Promise<VisionAlignmentGuide> {
-  const labeled = input.participantAnswers.map((answers, i) => ({ participant: `Participant ${i + 1}`, answers }))
+  const labeledAnswers = labelAnswersByQuestion(input.questions, input.participantAnswers)
+  const labeled = labeledAnswers.map((answers, i) => ({ participant: `Participant ${i + 1}`, answers }))
   const raw = await callAnthropic({
     model: MODELS.synthesis,
     system: FRAMEWORK_SYSTEM_PROMPT,

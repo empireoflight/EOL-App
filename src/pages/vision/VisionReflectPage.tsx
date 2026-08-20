@@ -9,7 +9,7 @@ import { Textarea } from '../../components/shared/Input'
 import { Card } from '../../components/shared/Card'
 import { TierBadge } from '../../components/shared/TierBadge'
 import { VisionFramingSummary } from '../../components/session/VisionFramingSummary'
-import { getVisionQuestions } from '../../lib/visionQuestions'
+import { resolveVisionQuestions, type VisionQuestion } from '../../lib/visionQuestions'
 
 export default function VisionReflectPage() {
   const { teamId, sessionId } = useParams<{ teamId: string; sessionId: string }>()
@@ -19,8 +19,7 @@ export default function VisionReflectPage() {
   const [error, setError] = useState('')
 
   const { data: sessionData } = useConvergenceSession(sessionId)
-  const horizon = (sessionData?.session.framing as { horizon?: string } | undefined)?.horizon
-  const questions = getVisionQuestions(horizon)
+  const questions = resolveVisionQuestions(sessionData?.session.framing as { horizon?: string; questions?: VisionQuestion[] } | undefined)
 
   const { value: answers, setValue: setAnswers, saveState, discard } = useDurableForm<Record<string, string>>({
     formKey: `vision-reflect-${sessionId}`,

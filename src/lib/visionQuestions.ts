@@ -1,3 +1,5 @@
+export type VisionQuestion = { id: string; prompt: string; optional?: boolean }
+
 // Spec §16 — present tense throughout, sequence matters, don't reorder.
 // Shared between VisionReflectPage (the form) and VisionHomePage (which
 // renders each person's answers, attributed, alongside the prompt text
@@ -7,7 +9,7 @@
 // The two "arrival" questions are anchored to the session's time horizon
 // (set by whoever started the session, in VisionStartPage) rather than a
 // vague "now" — everyone should be picturing the same point in time.
-export function getVisionQuestions(horizon: string = '12 months'): { id: string; prompt: string; optional?: boolean }[] {
+export function getVisionQuestions(horizon: string = '12 months'): VisionQuestion[] {
   return [
     { id: 'building', prompt: 'What are we building together?' },
     { id: 'who_for', prompt: "Who is it for, and what's different for them because it exists?" },
@@ -21,4 +23,12 @@ export function getVisionQuestions(horizon: string = '12 months'): { id: string;
     { id: 'negative_space', prompt: "What's gone that's here today? (a meeting, a tension, a way of working, a feeling)" },
     { id: 'anchors', prompt: "What matters most about how we get there — what wouldn't you trade away even for a better outcome?" },
   ]
+}
+
+// Every session's framing gets a resolved `questions` array written at
+// creation time (VisionStartPage) — default or facilitator-edited, no
+// distinction downstream. This only falls back to the built-in list for
+// sessions created before that existed.
+export function resolveVisionQuestions(framing: { horizon?: string; questions?: VisionQuestion[] } | undefined): VisionQuestion[] {
+  return framing?.questions ?? getVisionQuestions(framing?.horizon)
 }
