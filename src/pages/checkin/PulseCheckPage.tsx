@@ -219,12 +219,15 @@ export default function PulseCheckPage() {
       </Card>
 
       <Card>
-        <div className="mb-2.5 flex items-center gap-2">
+        <div className="mb-1 flex items-center gap-2">
           <div className="text-[13px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
-            How is the team's energy right now?
+            How's your energy right now?
           </div>
-          <TierBadge tier={3} />
+          <TierBadge tier={1} />
         </div>
+        <p className="m-0 mb-2.5 text-[11px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+          Saved privately — only becomes part of a team average once at least 3 people check in that week.
+        </p>
         <div className="flex items-center justify-between">
           {VIBE_LEVELS.map((level) => (
             <BatteryIcon key={level} level={level} active={vibe === level} onClick={() => setVibe(level)} />

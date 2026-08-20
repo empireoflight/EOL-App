@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { useTeamVision } from '../../hooks/useVision'
 import { useDurableForm } from '../../hooks/useDurableForm'
-import { FRICTION_AUTHORED_QUESTIONS } from '../../lib/frictionQuestions'
+import { useConvergenceSession } from '../../hooks/useConvergenceSession'
+import { useTeamMembers } from '../../hooks/useMyTeams'
+import { FRICTION_AUTHORED_QUESTIONS, FRICTION_TYPES } from '../../lib/frictionQuestions'
 import { Button } from '../../components/shared/Button'
 import { Textarea } from '../../components/shared/Input'
 import { Card } from '../../components/shared/Card'
@@ -18,8 +20,26 @@ export default function FrictionRespondPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const { data: vision } = useTeamVision(teamId)
+  const { data: sessionData } = useConvergenceSession(sessionId)
+  const { data: members } = useTeamMembers(teamId)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+
+  // The initiator writes the shared situation description here, after
+  // grounding, now that who's involved is already known (moved from the old
+  // pre-who 'notice' step in FrictionStartPage.tsx). Everyone else just
+  // reads it via FrictionTopicSummary, same as before.
+  const existingTopic = (sessionData?.session.framing as { topic?: string | null } | undefined)?.topic
+  const isInitiator = !!user && sessionData?.session.initiator_id === user.id
+  const needsSituationDescription = isInitiator && !existingTopic
+
+  const [topic, setTopic] = useState('')
+  const [frictionType, setFrictionType] = useState<string | null>(null)
+  const otherMembers = (members ?? []).filter((m) => m.user_id !== user?.id)
+  const mentionsName = useMemo(() => {
+    const lower = topic.toLowerCase()
+    return otherMembers.some((m) => m.users?.name && lower.includes(m.users.name.toLowerCase()))
+  }, [topic, otherMembers])
 
   const { value: answers, setValue: setAnswers, discard } = useDurableForm<AuthoredAnswers>({
     formKey: `friction-respond-${sessionId}`,
@@ -31,7 +51,7 @@ export default function FrictionRespondPage() {
   const setAnswer = (id: keyof AuthoredAnswers) => (ev: React.ChangeEvent<HTMLTextAreaElement>) =>
     setAnswers({ ...answers, [id]: ev.target.value })
 
-  const allAnswered = FRICTION_AUTHORED_QUESTIONS.every((q) => answers[q.id]?.trim())
+  const allAnswered = FRICTION_AUTHORED_QUESTIONS.every((q) => answers[q.id]?.trim()) && (!needsSituationDescription || topic.trim())
 
   const northStar = vision?.layout.nodes.find((n) => n.kind === 'north_star')
 
@@ -40,6 +60,14 @@ export default function FrictionRespondPage() {
     setSubmitting(true)
     setError('')
     try {
+      if (needsSituationDescription) {
+        const { error: framingError } = await supabase
+          .from('convergence_sessions')
+          .update({ framing: { ...(sessionData?.session.framing ?? {}), topic: topic.trim(), frictionType } })
+          .eq('id', sessionId)
+        if (framingError) throw framingError
+      }
+
       const { error: responseError } = await supabase.from('friction_session_responses').insert({
         session_id: sessionId,
         user_id: user.id,
@@ -74,6 +102,57 @@ export default function FrictionRespondPage() {
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
       <FrictionTopicSummary sessionId={sessionId} />
+
+      {needsSituationDescription && (
+        <Card>
+          <div className="mb-3 flex items-center gap-2">
+            <TierBadge tier={4} />
+            <span className="text-[11px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+              Visible to whoever you brought into this session
+            </span>
+          </div>
+          <div className="flex flex-col gap-4">
+            <Textarea
+              label="Describe the situation"
+              hint="Describe the situation neutrally — e.g. 'how we make decisions in standup,' not who did what. Naming someone here colors every answer that follows."
+              required
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+            />
+            {mentionsName && (
+              <div
+                className="rounded-lg border px-3 py-2 text-[12px]"
+                style={{ borderColor: 'var(--color-tier2-dot)', color: 'var(--color-tier2-fg)', background: 'var(--color-tier2-bg)' }}
+              >
+                This mentions a teammate by name — consider rephrasing around the situation instead, so their answers
+                aren't shaped by feeling called out.
+              </div>
+            )}
+            <div className="flex flex-col gap-2">
+              <span className="text-[13px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
+                What kind of friction is this?
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {FRICTION_TYPES.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setFrictionType(frictionType === t ? null : t)}
+                    className="rounded-full px-3.5 py-1.5 text-[12px] font-medium"
+                    style={
+                      frictionType === t
+                        ? { background: 'var(--color-tier4-bg)', color: 'var(--color-tier4-fg)' }
+                        : { border: '1px solid var(--color-eol-border-strong)', color: 'var(--color-eol-text-secondary)' }
+                    }
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {northStar && (
         <Card className="text-center">

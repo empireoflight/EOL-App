@@ -7,6 +7,11 @@
 // local-only path, never sent to the server. Q8-10 are tier 4, authored
 // knowing they'll be shared, submitted by FrictionRespondPage.
 
+// Shared between FrictionRespondPage (where the initiator picks one while
+// describing the situation) and, previously, FrictionStartPage before the
+// situation-description step moved there.
+export const FRICTION_TYPES = ['Vision', 'Relationship', 'Trust', 'Capacity', 'Process', 'Power', 'Unclear direction', 'Something else']
+
 export type FrictionVariant = 'two_person' | 'team'
 
 export type FrictionStage = 'ground' | 'reflect' | 'clarify_needs'
