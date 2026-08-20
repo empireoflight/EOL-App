@@ -4,7 +4,7 @@
  * Colors are oklch to match the source mockup exactly.
  */
 @theme {
-  --font-display: 'Cormorant', serif;
+  --font-display: 'Josefin Sans', sans-serif;
   --font-body: 'Work Sans', sans-serif;
 
   --color-eol-text: oklch(0.24 0.02 50);

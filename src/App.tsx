@@ -1,7 +1,12 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute, GuestRoute } from './components/auth/ProtectedRoute'
+import { ScrollToTop } from './components/shared/ScrollToTop'
 
-import LandingPage from './pages/LandingPage'
+import AppHomePage from './pages/AppHomePage'
+import ThesisPage from './pages/marketing/ThesisPage'
+import AboutPage from './pages/marketing/AboutPage'
+import AdvisoryPage from './pages/marketing/AdvisoryPage'
+import PrivacyPage from './pages/marketing/PrivacyPage'
 import LoginPage from './pages/auth/LoginPage'
 import SignUpPage from './pages/auth/SignUpPage'
 import InviteLandingPage from './pages/InviteLandingPage'
@@ -26,37 +31,44 @@ import FrictionSessionStatusPage from './pages/friction/FrictionSessionStatusPag
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
-      <Route path="/signup" element={<GuestRoute><SignUpPage /></GuestRoute>} />
-      <Route path="/invite/:token" element={<InviteLandingPage />} />
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route path="/" element={<AppHomePage />} />
+        <Route path="/thesis" element={<ThesisPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/advisory" element={<AdvisoryPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
+        <Route path="/signup" element={<GuestRoute><SignUpPage /></GuestRoute>} />
+        <Route path="/invite/:token" element={<InviteLandingPage />} />
 
-      <Route path="/onboarding" element={<ProtectedRoute><CreateOrgPage /></ProtectedRoute>} />
-      <Route path="/teams" element={<ProtectedRoute><TeamListPage /></ProtectedRoute>} />
+        <Route path="/onboarding" element={<ProtectedRoute><CreateOrgPage /></ProtectedRoute>} />
+        <Route path="/teams" element={<ProtectedRoute><TeamListPage /></ProtectedRoute>} />
 
-      <Route path="/teams/:teamId" element={<ProtectedRoute><TeamLayout /></ProtectedRoute>}>
-        <Route index element={<Navigate to="overview" replace />} />
-        <Route path="overview" element={<TeamHomePage />} />
-        <Route path="invite" element={<InvitePage />} />
-        <Route path="vision/start" element={<VisionStartPage />} />
-        <Route path="vision/sessions/:sessionId/reflect" element={<VisionReflectPage />} />
-        <Route path="vision/commit" element={<VisionCommitPage />} />
-        <Route path="vision" element={<VisionHomePage />} />
-        <Route path="experiments" element={<ExperimentsPage />} />
-        <Route path="pulse" element={<PulseCheckPage />} />
-        <Route path="rollup" element={<RollupPage />} />
-        <Route path="friction" element={<FrictionHubPage />} />
-        <Route path="friction/tools" element={<GroundingToolsPage />} />
-        <Route path="friction/start" element={<FrictionStartPage />} />
-        <Route path="friction/mitigate" element={<FrictionMitigatorPage />} />
-        <Route path="friction/sessions/:sessionId/mitigate" element={<FrictionMitigatorPage />} />
-        <Route path="friction/sessions/:sessionId/respond" element={<FrictionRespondPage />} />
-        <Route path="friction/sessions/:sessionId" element={<FrictionSessionStatusPage />} />
-      </Route>
+        <Route path="/teams/:teamId" element={<ProtectedRoute><TeamLayout /></ProtectedRoute>}>
+          <Route index element={<Navigate to="overview" replace />} />
+          <Route path="overview" element={<TeamHomePage />} />
+          <Route path="invite" element={<InvitePage />} />
+          <Route path="vision/start" element={<VisionStartPage />} />
+          <Route path="vision/sessions/:sessionId/reflect" element={<VisionReflectPage />} />
+          <Route path="vision/commit" element={<VisionCommitPage />} />
+          <Route path="vision" element={<VisionHomePage />} />
+          <Route path="experiments" element={<ExperimentsPage />} />
+          <Route path="pulse" element={<PulseCheckPage />} />
+          <Route path="rollup" element={<RollupPage />} />
+          <Route path="friction" element={<FrictionHubPage />} />
+          <Route path="friction/tools" element={<GroundingToolsPage />} />
+          <Route path="friction/start" element={<FrictionStartPage />} />
+          <Route path="friction/mitigate" element={<FrictionMitigatorPage />} />
+          <Route path="friction/sessions/:sessionId/mitigate" element={<FrictionMitigatorPage />} />
+          <Route path="friction/sessions/:sessionId/respond" element={<FrictionRespondPage />} />
+          <Route path="friction/sessions/:sessionId" element={<FrictionSessionStatusPage />} />
+        </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   )
 }
 

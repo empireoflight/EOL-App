@@ -1,57 +1,45 @@
 import { Link } from 'react-router-dom'
-import logoMark from '../assets/logo-mark.png'
-import heartModel from '../assets/landing/heart-model.webp'
-import screenshotVision from '../assets/landing/screenshot-vision.webp'
-import screenshotExperiments from '../assets/landing/screenshot-experiments.webp'
-import screenshotFriction from '../assets/landing/screenshot-friction.webp'
-import founderPhoto from '../assets/landing/founder-photo.jpg'
-
-const DISPLAY = { fontFamily: "'Josefin Sans', sans-serif" }
-
-function OctopusIcon({ size = 40, color = '#D99A22' }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" stroke={color} strokeWidth="1.1" strokeLinecap="round" aria-hidden="true">
-      <path d="M12.5 18.5a7.5 7.5 0 0 1 15 0v2.5h-15z" />
-      <path d="M13.4 21c-2.6 2.9-4.8 4-8.4 4.2" />
-      <path d="M14.8 21.6c-1.8 3.8-3.4 5.8-6.6 7.9" />
-      <path d="M16.8 22c-.9 4-1 6.7-2.7 10" />
-      <path d="M19 22.2c.1 4.2.6 7-.2 11" />
-      <path d="M21 22.2c-.1 4.2.4 7 1.5 10.8" />
-      <path d="M23.2 22c.9 4 2 6.3 4.1 9.3" />
-      <path d="M25.2 21.6c1.8 3.8 3.6 5.2 6.6 7.1" />
-      <path d="M26.6 21c2.6 2.9 4.8 4 8.4 4.2" />
-      <circle cx="17.2" cy="16.4" r=".9" fill={color} stroke="none" />
-      <circle cx="22.8" cy="16.4" r=".9" fill={color} stroke="none" />
-    </svg>
-  )
-}
+import logoMark from '../../assets/logo-mark.png'
+import heartModel from '../../assets/landing/heart-model.webp'
+import shotVision from '../../assets/landing/shot-vision.png'
+import shotFriction from '../../assets/landing/shot-friction.png'
+import shotCheckin from '../../assets/landing/shot-checkin.png'
+import founderPhoto from '../../assets/landing/founder-photo.jpg'
+import { MarketingHeader } from '../../components/marketing/MarketingHeader'
+import { MarketingFooter } from '../../components/marketing/MarketingFooter'
+import { Seo } from '../../components/shared/Seo'
+import { BOOKING_URL, DISPLAY, Eyebrow, OctopusIcon, primaryButton, secondaryButtonOnDark, trackBooking } from '../../components/marketing/shared'
 
 const HOW_STEPS = [
-  { n: '01', title: 'Your team signs up', body: 'One person creates the team and invites everyone in.' },
+  {
+    n: '01',
+    title: 'Book a conversation',
+    body: 'A short call to talk through your team, where you’re stuck, and whether this is the right fit.',
+  },
   {
     n: '02',
-    title: 'Everyone completes the vision questionnaire',
-    body: 'Async individual reflection first. This is where the intelligence that never makes it into meetings gets written down.',
+    title: 'We confirm fit — you invest',
+    body: 'If it’s a match, you commit as a founding co-creator and your team’s spot is secured.',
   },
   {
     n: '03',
+    title: 'Your team is invited in',
+    body: 'Everyone gets access to the app and completes the vision questionnaire — async, individual reflection first. This is where the intelligence that never makes it into meetings gets written down.',
+  },
+  {
+    n: '04',
     title: 'We run the vision workshop together',
     body: 'Facilitated by us, using what the questionnaire surfaced. Convergence and disagreement both go on the table.',
   },
   {
-    n: '04',
+    n: '05',
     title: 'The team commits to the vision',
     body: 'One statement, tangible and emotionally resonant, that everyone agrees to. It lives at the top of the app from then on.',
   },
   {
-    n: '05',
-    title: 'You work the cycle',
-    body: 'Experiments toward the vision, friction logged and processed instead of absorbed, and capacity built deliberately. Biweekly sessions with us, weekly async prompts in the app.',
-  },
-  {
     n: '06',
-    title: 'You evolve, then continue on your own',
-    body: 'One full evolve cycle with us: reflect, integrate, celebrate. Then the team keeps using the app for the next loop, with or without us.',
+    title: 'You work the cycle, then evolve',
+    body: 'Experiments toward the vision, friction logged and processed, biweekly sessions with us. One full evolve cycle, then the team keeps using the app on its own.',
   },
 ]
 
@@ -65,9 +53,9 @@ const PILOT_INCLUDES = [
 const WHO_FOR = ['AI transformation initiatives', 'Leadership teams', 'Product organizations', 'Mission-driven organizations navigating meaningful change']
 
 const APP_SHOTS = [
-  { src: screenshotVision, alt: 'The team vision screen', caption: 'The committed vision, always at the top' },
-  { src: screenshotExperiments, alt: 'Experiments and task rhythm', caption: 'Summaries to see how to evolve' },
-  { src: screenshotFriction, alt: 'Friction and energy log', caption: 'The friction and energy log' },
+  { src: shotVision, alt: 'The team vision screen', caption: 'The committed vision, always at the top', position: 'center' },
+  { src: shotFriction, alt: 'Friction processing with grounding breathwork', caption: 'Friction Processing', position: 'top' },
+  { src: shotCheckin, alt: 'Weekly vibe check', caption: 'Weekly energy check-in', position: 'top' },
 ]
 
 const TIERS = [
@@ -79,6 +67,10 @@ const TIERS = [
 ]
 
 const FAQS = [
+  {
+    q: 'How do we get started?',
+    a: 'Book a short conversation with us. We’ll talk through your team and what you’re navigating, and if it’s a fit, walk you through the founding co-creator investment and get your team invited into the app.',
+  },
   {
     q: 'Is this software or consulting?',
     a: 'Both, plainly. The pilot is facilitated by us — the vision workshop, the biweekly sessions, one full evolve cycle. The app is what carries the work between sessions and what your team keeps afterward.',
@@ -101,62 +93,15 @@ const FAQS = [
   },
 ]
 
-const navLink = 'text-[14px]'
-const navLinkStyle = { color: 'rgba(19,17,20,.68)', borderBottom: 'none' }
-
-const HEADER_GRADIENT = 'linear-gradient(90deg,#FFF6AD 0%,#FFD0D3 50%,#FFA9F8 100%)'
-
-// Matches Button.tsx's shape/colors (rounded-lg, --color-eol-accent/--color-eol-ink)
-// so every CTA on the landing page reads as the same button as the rest of the app.
-const primaryButton = (extra?: React.CSSProperties): React.CSSProperties => ({
-  ...DISPLAY,
-  color: 'var(--color-eol-ink)',
-  background: 'var(--color-eol-accent)',
-  ...extra,
-})
-const secondaryButtonOnDark: React.CSSProperties = {
-  ...DISPLAY,
-  color: '#FBF7F2',
-  border: '1px solid rgba(251,247,242,.32)',
-}
-
-export default function LandingPage() {
+export default function HomePage() {
   return (
     <div style={{ width: '100%', overflowX: 'hidden', background: '#FDFAF4', color: '#131114', fontFamily: "'Work Sans', system-ui, sans-serif" }}>
-      {/* Header */}
-      <header
-        className="sticky top-0 z-20 border-b"
-        style={{ background: HEADER_GRADIENT, backdropFilter: 'blur(12px)', borderColor: 'rgba(19,17,20,.12)' }}
-      >
-        <div className="mx-auto flex max-w-[1120px] items-center gap-6 px-6 py-3.5 md:px-8">
-          <div className="flex items-center gap-3">
-            <img src={logoMark} alt="" width={28} height={28} style={{ display: 'block', borderRadius: 7 }} />
-            <span className="text-[14px] font-semibold uppercase tracking-[0.14em]" style={{ ...DISPLAY, color: '#131114' }}>
-              Empire of Light
-            </span>
-          </div>
-          <nav className="ml-auto hidden items-center gap-7 md:flex">
-            <a href="#framework" className={navLink} style={navLinkStyle}>
-              The cycle
-            </a>
-            <a href="#how" className={navLink} style={navLinkStyle}>
-              How it works
-            </a>
-            <a href="#pilot" className={navLink} style={navLinkStyle}>
-              The pilot
-            </a>
-            <a href="#faq" className={navLink} style={navLinkStyle}>
-              FAQ
-            </a>
-            <Link to="/signup" className="rounded-lg px-4.5 py-2 text-[14px] font-semibold" style={primaryButton()}>
-              Get started
-            </Link>
-          </nav>
-          <Link to="/signup" className="ml-auto rounded-lg px-4 py-2 text-[13px] font-semibold md:hidden" style={primaryButton()}>
-            Get started
-          </Link>
-        </div>
-      </header>
+      <Seo
+        title="Empire of Light | Collective Intelligence Platform for Teams"
+        description="Empire of Light helps teams unlock the collective intelligence already inside them — a facilitated pilot plus app for shared vision, aligned action, and processing friction together. Book a conversation to get started."
+        path="/"
+      />
+      <MarketingHeader />
 
       {/* Hero */}
       <section className="relative overflow-hidden px-6 py-24 md:px-8 md:py-[120px]" style={{ background: '#000000' }}>
@@ -182,12 +127,19 @@ export default function LandingPage() {
             Bring more ambitious visions to life faster, with more unity.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3.5">
-            <Link to="/signup" className="rounded-lg px-8 py-4 text-[15px] font-semibold" style={primaryButton({ boxShadow: '0 0 40px rgba(254,225,106,.28)' })}>
-              Get started
-            </Link>
-            <Link to="/login" className="rounded-lg px-8 py-4 text-[15px] font-semibold" style={secondaryButtonOnDark}>
-              Sign in
-            </Link>
+            <a
+              href={BOOKING_URL}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => trackBooking('hero')}
+              className="rounded-lg px-8 py-4 text-[15px] font-semibold"
+              style={primaryButton({ boxShadow: '0 0 40px rgba(254,225,106,.28)' })}
+            >
+              Book a conversation
+            </a>
+            <a href="#framework" className="rounded-lg px-8 py-4 text-[15px] font-semibold" style={secondaryButtonOnDark}>
+              See how it works
+            </a>
           </div>
         </div>
       </section>
@@ -212,9 +164,7 @@ export default function LandingPage() {
       <section id="framework" className="px-6 pt-16 pb-20 md:px-8 md:py-[88px]" style={{ background: '#FDFAF4' }}>
         <div className="mx-auto grid max-w-[1120px] items-center gap-12 md:grid-cols-2 md:gap-[72px]">
           <div>
-            <div className="mb-5 text-[13px] font-semibold uppercase tracking-[0.16em]" style={{ ...DISPLAY, color: '#A96D0F' }}>
-              The cycle
-            </div>
+            <Eyebrow>The cycle</Eyebrow>
             <h2 className="m-0 mb-6 text-[34px] leading-[1.1] font-light md:text-[44px] md:leading-[1.06]" style={{ ...DISPLAY, letterSpacing: '.02em', color: '#131114' }}>
               Reimagine, Do, Unlearn, Evolve
             </h2>
@@ -222,13 +172,9 @@ export default function LandingPage() {
               The Empire of Light Framework helps teams build a shared vision, take meaningful action, work through friction, and continuously
               evolve together. This is a new rhythm for how teams navigate rapid change together.
             </p>
-            <a
-              href="https://www.empireoflightcollective.com/thesis"
-              className="text-[14px] font-semibold uppercase tracking-[0.1em]"
-              style={DISPLAY}
-            >
+            <Link to="/thesis" className="text-[14px] font-semibold uppercase tracking-[0.1em]" style={DISPLAY}>
               Read the full thesis
-            </a>
+            </Link>
           </div>
           <img
             src={heartModel}
@@ -245,15 +191,13 @@ export default function LandingPage() {
       <section id="how" className="px-6 py-16 md:px-8 md:py-24" style={{ background: '#000000' }}>
         <div className="mx-auto max-w-[1120px]">
           <div className="mb-14 max-w-[720px] md:mb-16">
-            <div className="mb-5 text-[13px] font-semibold uppercase tracking-[0.16em]" style={{ ...DISPLAY, color: '#FEE16A' }}>
-              How it works
-            </div>
+            <Eyebrow color="#FEE16A">How it works</Eyebrow>
             <h2 className="m-0 mb-5 text-[32px] leading-[1.1] font-light md:text-[44px] md:leading-[1.06]" style={{ ...DISPLAY, letterSpacing: '.02em', color: '#FBF7F2' }}>
-              From sign-up to a vision your team is actually moving on
+              From a conversation to a vision your team is actually moving on
             </h2>
             <p className="m-0 text-[17px] leading-[1.62] md:text-[18px]" style={{ color: 'rgba(251,247,242,.72)' }}>
-              We run the first cycle with you. That part is facilitated, in person with your team, not a self-serve onboarding flow. After it,
-              the app is yours to keep running.
+              It starts with a conversation, not a self-serve signup flow. We assess fit together, and once your team is in, we run the first
+              cycle with you. After it, the app is yours to keep running.
             </p>
           </div>
           <div
@@ -275,8 +219,21 @@ export default function LandingPage() {
             ))}
           </div>
           <p className="mt-7 text-center text-[15px]" style={{ color: 'rgba(251,247,242,.5)' }}>
-            Steps 3 through 6 are the consulting engagement. Steps 1, 2 and everything after are the app.
+            Step 1 is a conversation. From step 4 on, it&rsquo;s the facilitated engagement &mdash; the app carries all of it, before, during, and
+            after.
           </p>
+          <div className="mt-9 flex justify-center">
+            <a
+              href={BOOKING_URL}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => trackBooking('how_it_works')}
+              className="rounded-lg px-8 py-4 text-[15px] font-semibold"
+              style={primaryButton({ boxShadow: '0 0 40px rgba(254,225,106,.28)' })}
+            >
+              Book a conversation
+            </a>
+          </div>
         </div>
       </section>
 
@@ -284,9 +241,7 @@ export default function LandingPage() {
       <section id="pilot" className="px-6 py-16 md:px-8 md:py-24" style={{ background: '#FDFAF4' }}>
         <div className="mx-auto grid max-w-[1120px] gap-12 md:grid-cols-2 md:gap-16">
           <div>
-            <div className="mb-5 text-[13px] font-semibold uppercase tracking-[0.16em]" style={{ ...DISPLAY, color: '#A96D0F' }}>
-              What the pilot looks like
-            </div>
+            <Eyebrow>What the pilot looks like</Eyebrow>
             <h2 className="m-0 mb-7 text-[30px] leading-[1.1] font-light md:text-[44px] md:leading-[1.06]" style={{ ...DISPLAY, letterSpacing: '.02em', color: '#131114' }}>
               A 4&ndash;6 week facilitated engagement that includes:
             </h2>
@@ -302,9 +257,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div>
-            <div className="mb-5 text-[13px] font-semibold uppercase tracking-[0.16em]" style={{ ...DISPLAY, color: '#A96D0F' }}>
-              Who this is for
-            </div>
+            <Eyebrow>Who this is for</Eyebrow>
             <div className="grid gap-px overflow-hidden rounded-xl border" style={{ background: '#D8D2DC', borderColor: '#D8D2DC' }}>
               {WHO_FOR.map((item) => (
                 <div key={item} className="px-6 py-5.5 text-[16px] md:text-[17px]" style={{ background: '#FFFFFF', color: '#131114' }}>
@@ -323,9 +276,7 @@ export default function LandingPage() {
       <section className="px-6 pb-16 md:px-8 md:pb-24">
         <div className="mx-auto max-w-[1120px] overflow-hidden rounded-[20px] px-6 py-12 md:px-12 md:py-16" style={{ background: '#000000' }}>
           <div className="mb-10 max-w-[640px] md:mb-12">
-            <div className="mb-5 text-[13px] font-semibold uppercase tracking-[0.16em]" style={{ ...DISPLAY, color: '#FEE16A' }}>
-              The app
-            </div>
+            <Eyebrow color="#FEE16A">The app</Eyebrow>
             <h2 className="m-0 mb-5 text-[28px] leading-[1.1] font-light md:text-[38px]" style={{ ...DISPLAY, letterSpacing: '.02em', color: '#FBF7F2' }}>
               Where the vision, the experiments and the friction all live
             </h2>
@@ -340,7 +291,12 @@ export default function LandingPage() {
                   className="h-[220px] overflow-hidden rounded-2xl border md:h-[300px]"
                   style={{ background: '#FBF7F2', borderColor: 'rgba(251,247,242,.16)' }}
                 >
-                  <img src={shot.src} alt={shot.alt} className="h-full w-full object-cover object-top" />
+                  <img
+                    src={shot.src}
+                    alt={shot.alt}
+                    className="h-full w-full object-cover"
+                    style={{ objectPosition: shot.position, transform: 'scale(1.35)', transformOrigin: shot.position }}
+                  />
                 </div>
                 <div className="mt-3.5 text-[14px]" style={{ color: 'rgba(251,247,242,.6)' }}>
                   {shot.caption}
@@ -355,9 +311,7 @@ export default function LandingPage() {
       <section className="px-6 pb-16 md:px-8 md:pb-24">
         <div className="mx-auto max-w-[1120px]">
           <div className="mb-9 max-w-[720px]">
-            <div className="mb-5 text-[13px] font-semibold uppercase tracking-[0.16em]" style={{ ...DISPLAY, color: '#A96D0F' }}>
-              Privacy tiers
-            </div>
+            <Eyebrow>Privacy tiers</Eyebrow>
             <h2 className="m-0 mb-5 text-[26px] leading-[1.1] font-light md:text-[38px]" style={{ ...DISPLAY, letterSpacing: '.02em', color: '#131114' }}>
               People tell the truth when they have the psychological safety to do so
             </h2>
@@ -387,9 +341,7 @@ export default function LandingPage() {
           style={{ background: 'linear-gradient(90deg,#FFF6AD 0%,#FFD0D3 50%,#FFA9F8 100%)' }}
         >
           <div className="rounded-[20px] px-8 py-10 text-center" style={{ background: '#FFFFFF' }}>
-            <div className="mb-4 text-[13px] font-semibold uppercase tracking-[0.16em]" style={{ ...DISPLAY, color: '#A96D0F' }}>
-              Founding co-creator investment
-            </div>
+            <Eyebrow>Founding co-creator investment</Eyebrow>
             <div className="text-[48px] leading-none font-semibold md:text-[64px]" style={{ ...DISPLAY, letterSpacing: '.02em', color: '#131114' }}>
               $2,000
             </div>
@@ -416,9 +368,7 @@ export default function LandingPage() {
       {/* FAQ */}
       <section id="faq" className="px-6 pb-16 md:px-8 md:pb-24">
         <div className="mx-auto max-w-[840px]">
-          <div className="mb-8 text-[13px] font-semibold uppercase tracking-[0.16em]" style={{ ...DISPLAY, color: '#A96D0F' }}>
-            Questions
-          </div>
+          <Eyebrow>Questions</Eyebrow>
           <div className="grid gap-px border-t border-b" style={{ background: '#D8D2DC', borderColor: '#D8D2DC' }}>
             {FAQS.map((faq) => (
               <div key={faq.q} className="px-0 py-7" style={{ background: '#FDFAF4' }}>
@@ -449,9 +399,7 @@ export default function LandingPage() {
             style={{ height: 180, width: 116 }}
           />
           <div>
-            <div className="mb-4.5 text-[13px] font-semibold uppercase tracking-[0.16em]" style={{ ...DISPLAY, color: '#A96D0F' }}>
-              A note from the founder
-            </div>
+            <Eyebrow>A note from the founder</Eyebrow>
             <p className="m-0 mb-4 text-[17px] leading-[1.62] md:text-[18px]" style={{ color: '#131114' }}>
               I&rsquo;ve seen magic emerge on teams when the right conditions are there: a good vision, a nimble way to work through experiments
               and tasks, a way to process the friction that naturally arises on teams (I see this as a gift, nothing to fear) and a way to evolve
@@ -482,33 +430,24 @@ export default function LandingPage() {
             Start with the vision your team hasn&rsquo;t said out loud yet
           </h2>
           <p className="mx-auto mb-9 max-w-[560px] text-[17px] leading-[1.55] md:text-[19px]" style={{ color: 'rgba(251,247,242,.72)' }}>
-            Create your team, send the questionnaire, and we&rsquo;ll take it from there.
+            Book a conversation, and we&rsquo;ll take it from there.
           </p>
           <div className="flex flex-wrap justify-center gap-3.5">
-            <Link to="/signup" className="rounded-lg px-8 py-4 text-[15px] font-semibold" style={primaryButton({ boxShadow: '0 0 40px rgba(254,225,106,.28)' })}>
-              Get started
-            </Link>
-            <Link to="/login" className="rounded-lg px-8 py-4 text-[15px] font-semibold" style={secondaryButtonOnDark}>
-              Sign in
-            </Link>
+            <a
+              href={BOOKING_URL}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => trackBooking('final_cta')}
+              className="rounded-lg px-8 py-4 text-[15px] font-semibold"
+              style={primaryButton({ boxShadow: '0 0 40px rgba(254,225,106,.28)' })}
+            >
+              Book a conversation
+            </a>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t px-6 py-8 md:px-8" style={{ background: '#000000', borderColor: 'rgba(251,247,242,.12)' }}>
-        <div className="mx-auto flex max-w-[1120px] flex-wrap items-center justify-between gap-5">
-          <span className="text-[13px] font-semibold uppercase tracking-[0.14em]" style={{ ...DISPLAY, color: 'rgba(251,247,242,.6)' }}>
-            Empire of Light
-          </span>
-          <span className="text-[14px]" style={{ color: 'rgba(251,247,242,.45)' }}>
-            Reimagine &middot; Do &middot; Unlearn &middot; Evolve
-          </span>
-          <a href="https://www.empireoflightcollective.com/thesis" className="text-[14px]" style={{ color: '#FEE16A' }}>
-            empireoflightcollective.com/thesis
-          </a>
-        </div>
-      </footer>
+      <MarketingFooter />
     </div>
   )
 }

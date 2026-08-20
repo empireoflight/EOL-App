@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../../components/shared/Button'
 import { Input } from '../../components/shared/Input'
 import { Logo } from '../../components/shared/Logo'
+import { Seo } from '../../components/shared/Seo'
 
 export default function LoginPage() {
   const { signIn } = useAuth()
@@ -33,6 +34,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-16">
+      <Seo title="Sign in | Empire of Light" description="Sign in to your Empire of Light team." path="/login" origin="app" noindex />
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <Logo size={36} />

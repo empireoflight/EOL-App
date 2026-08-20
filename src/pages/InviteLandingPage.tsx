@@ -6,6 +6,7 @@ import { Button } from '../components/shared/Button'
 import { Card } from '../components/shared/Card'
 import { Logo } from '../components/shared/Logo'
 import { LoadingScreen } from '../components/shared/LoadingScreen'
+import { Seo } from '../components/shared/Seo'
 
 type InvitePreview = {
   id: string
@@ -50,6 +51,7 @@ export default function InviteLandingPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-16">
+      <Seo title="Join your team | Empire of Light" description="Accept your invite to join an Empire of Light team." path={`/invite/${token ?? ''}`} origin="app" noindex />
       <div className="w-full max-w-sm text-center">
         <div className="mb-6 flex flex-col items-center gap-3">
           <Logo size={36} />
