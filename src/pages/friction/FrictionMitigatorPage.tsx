@@ -7,6 +7,7 @@ import { FRICTION_STAGES, frictionQuestionsForStage, type FrictionStage } from '
 import { Button } from '../../components/shared/Button'
 import { Textarea } from '../../components/shared/Input'
 import { TierBadge } from '../../components/shared/TierBadge'
+import { LoadingScreen } from '../../components/shared/LoadingScreen'
 import { FrictionTopicSummary } from '../../components/session/FrictionTopicSummary'
 import { useState } from 'react'
 
@@ -14,7 +15,7 @@ export default function FrictionMitigatorPage() {
   const { teamId, sessionId } = useParams<{ teamId: string; sessionId?: string }>()
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { data: sessionData } = useConvergenceSession(sessionId)
+  const { data: sessionData, isLoading: sessionLoading } = useConvergenceSession(sessionId)
   const [stageIndex, setStageIndex] = useState(0)
   const [finishing, setFinishing] = useState(false)
   const [soloDone, setSoloDone] = useState(false)
@@ -69,6 +70,41 @@ export default function FrictionMitigatorPage() {
 
   const handleExit = () => {
     navigate(`/teams/${teamId}`)
+  }
+
+  // Every question in this flow ("what happened from your perspective?",
+  // "what do you feel in your body right now?"...) presupposes you already
+  // know what "this" refers to. An invited participant has nothing to
+  // anchor those to until the initiator has grounded themselves and
+  // written the shared topic (FrictionRespondPage) — so wait for it here
+  // rather than asking someone to reflect on a situation they can't see.
+  // The initiator themselves is never blocked — they're the one writing it.
+  if (sessionId && sessionLoading) return <LoadingScreen />
+  const isInitiator = sessionData?.session.initiator_id === user?.id
+  const topic = (sessionData?.session.framing as { topic?: string } | undefined)?.topic
+  const waitingOnTopic = !!sessionId && !isInitiator && !topic
+
+  if (waitingOnTopic) {
+    return (
+      <div className="mx-auto flex max-w-lg flex-col items-center gap-5 px-6 py-16 text-center">
+        <div
+          className="h-16 w-16 rounded-full"
+          style={{ background: 'radial-gradient(circle, #fff0c0, #ffb3e6)', animation: 'breathe 4s ease-in-out infinite' }}
+        />
+        <div>
+          <h1 className="m-0 text-[20px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
+            Not quite ready yet
+          </h1>
+          <p className="m-0 mt-1.5 text-[13.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
+            Whoever brought you into this is still grounding themselves and describing what it's about. Check back in
+            a bit — there's nothing for you to do here until they have.
+          </p>
+        </div>
+        <Button onClick={handleExit} variant="secondary" className="w-full">
+          Back for now
+        </Button>
+      </div>
+    )
   }
 
   if (soloDone) {
