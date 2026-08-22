@@ -102,6 +102,13 @@ export default function SignUpPage() {
             </Link>
           </p>
         </div>
+        <p className="mt-5 text-center text-[12px]" style={{ color: 'var(--color-eol-text-muted)' }}>
+          By creating an account, you agree to our{' '}
+          <a href="https://www.empireoflightcollective.com/privacy" target="_blank" rel="noreferrer" className="font-medium">
+            Privacy Policy
+          </a>
+          .
+        </p>
       </div>
     </div>
   )

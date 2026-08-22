@@ -3,10 +3,7 @@ import { ProtectedRoute, GuestRoute } from './components/auth/ProtectedRoute'
 import { ScrollToTop } from './components/shared/ScrollToTop'
 
 import AppHomePage from './pages/AppHomePage'
-import ThesisPage from './pages/marketing/ThesisPage'
-import AboutPage from './pages/marketing/AboutPage'
-import AdvisoryPage from './pages/marketing/AdvisoryPage'
-import PrivacyPage from './pages/marketing/PrivacyPage'
+import TermsPage from './pages/TermsPage'
 import LoginPage from './pages/auth/LoginPage'
 import SignUpPage from './pages/auth/SignUpPage'
 import InviteLandingPage from './pages/InviteLandingPage'
@@ -35,10 +32,7 @@ function App() {
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<AppHomePage />} />
-        <Route path="/thesis" element={<ThesisPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/advisory" element={<AdvisoryPage />} />
-        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
         <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
         <Route path="/signup" element={<GuestRoute><SignUpPage /></GuestRoute>} />
         <Route path="/invite/:token" element={<InviteLandingPage />} />

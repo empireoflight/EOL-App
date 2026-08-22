@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Logo } from '../components/shared/Logo'
+import { Seo } from '../components/shared/Seo'
 
 // The app.empireoflightcollective.com home route — deliberately minimal.
 // The full marketing site (thesis, about, pricing, etc.) lives on the root
@@ -8,6 +9,7 @@ import { Logo } from '../components/shared/Logo'
 export default function AppHomePage() {
   return (
     <main className="relative flex min-h-screen items-center overflow-hidden px-6 py-24" style={{ background: '#000000' }}>
+      <Seo title="Empire of Light" description="Sign in to your Empire of Light team, or create a new one." path="/" origin="app" noindex />
       <div
         className="pointer-events-none absolute inset-0"
         style={{
@@ -56,6 +58,13 @@ export default function AppHomePage() {
           empireoflightcollective.com &rarr;
         </a>
       </div>
+
+      <footer className="absolute bottom-6 left-0 right-0 flex items-center justify-center gap-4 px-6 text-[12px]" style={{ color: 'rgba(251,247,242,.5)' }}>
+        <span>&copy; {new Date().getFullYear()} Empire of Light LLC</span>
+        <Link to="/terms" style={{ color: 'rgba(251,247,242,.5)', borderBottomColor: 'rgba(251,247,242,.25)' }}>
+          Terms of Service
+        </Link>
+      </footer>
     </main>
   )
 }
