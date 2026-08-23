@@ -314,6 +314,7 @@ function VisionSessionProgress({ teamId, sessionId, canManage }: { teamId: strin
         onGenerate={handleGenerate}
         generating={generating}
         regenerate={session.status === 'guide_ready'}
+        allowBeforeGateMet
       />
       {Object.keys(participantNames).length > 0 && (
         <Card>
@@ -392,7 +393,7 @@ function VisionStatusPanel({
             </div>
           )}
 
-          {gateMet && canManage && (
+          {canManage && (
             <button
               type="button"
               onClick={handleGenerate}
@@ -400,7 +401,15 @@ function VisionStatusPanel({
               className="self-start rounded-lg px-4 py-2 text-[13px] font-semibold disabled:opacity-60"
               style={{ background: 'var(--color-eol-accent)', color: 'var(--color-eol-ink)' }}
             >
-              {generating ? (regenerate ? 'Regenerating…' : 'Generating…') : regenerate ? 'Regenerate discussion guide' : 'Generate discussion guide'}
+              {generating
+                ? regenerate
+                  ? 'Regenerating…'
+                  : 'Generating…'
+                : regenerate
+                  ? 'Regenerate discussion guide'
+                  : !gateMet
+                    ? 'Generate now anyway'
+                    : 'Generate discussion guide'}
             </button>
           )}
           {gateMet && !canManage && (
