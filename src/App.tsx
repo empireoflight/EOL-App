@@ -6,6 +6,8 @@ import AppHomePage from './pages/AppHomePage'
 import TermsPage from './pages/TermsPage'
 import LoginPage from './pages/auth/LoginPage'
 import SignUpPage from './pages/auth/SignUpPage'
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
+import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import InviteLandingPage from './pages/InviteLandingPage'
 import CreateOrgPage from './pages/onboarding/CreateOrgPage'
 import TeamListPage from './pages/teams/TeamListPage'
@@ -35,6 +37,8 @@ function App() {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
         <Route path="/signup" element={<GuestRoute><SignUpPage /></GuestRoute>} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
         <Route path="/invite/:token" element={<InviteLandingPage />} />
 
         <Route path="/onboarding" element={<ProtectedRoute><CreateOrgPage /></ProtectedRoute>} />

@@ -59,7 +59,12 @@ export default function LoginPage() {
               Sign in
             </Button>
           </form>
-          <p className="mt-5 text-center text-[13px]" style={{ color: 'var(--color-eol-text-muted)' }}>
+          <p className="mt-3 text-center text-[12.5px]">
+            <Link to="/forgot-password" style={{ color: 'var(--color-eol-text-muted)' }}>
+              Forgot your password?
+            </Link>
+          </p>
+          <p className="mt-3 text-center text-[13px]" style={{ color: 'var(--color-eol-text-muted)' }}>
             New here?{' '}
             <Link to="/signup" className="font-medium">
               Create an account

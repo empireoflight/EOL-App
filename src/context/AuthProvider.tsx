@@ -135,6 +135,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
   }
 
+  // Only valid with the temporary session established by clicking a
+  // recovery-email link (detectSessionInUrl picks up its token automatically,
+  // see lib/supabase.ts) — called from ResetPasswordPage after that.
+  const updatePassword = async (password: string) => {
+    if (!isSupabaseConfigured || !supabase) throw new Error('Supabase is not configured')
+    const { error } = await supabase.auth.updateUser({ password })
+    if (error) throw error
+  }
+
   const profileLoading = !!user?.id && fetchedForUserId !== user.id
   const loading = session === undefined || profileLoading
 
@@ -152,6 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signOut,
         resetPassword,
+        updatePassword,
       }}
     >
       {children}
