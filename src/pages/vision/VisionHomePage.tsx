@@ -537,25 +537,30 @@ export default function VisionHomePage() {
   const isTeamFacilitator = myMembership?.team_role === 'facilitator'
   const canManage = isTeamFacilitator || (!!vision && vision.created_by === user?.id)
 
-  // Three reasons nobody should see the canvas, facilitator included: (1) no
-  // guide exists yet for the currently open session; (2) one does, but not
-  // everyone currently in the session has submitted (e.g. the facilitator
-  // invited someone new after generating, per accept_team_invite); or (3)
-  // everyone HAS submitted, but at least one of those submissions happened
-  // *after* the last successful generation completed — "gate met" alone
-  // can't tell the difference between "always been met" and "just became
-  // met again via a late resubmission the existing guide doesn't reflect."
-  // Nobody sees stale content in any of these cases — the moment a guide
-  // exists that postdates every current submission, everyone sees it
-  // together. Also covers a stale vision left over from an earlier
-  // committed cycle (visions.team_id has no uniqueness) — this is the only
-  // "in progress" messaging on this page now, the old separate status page
-  // is gone.
-  const gateCurrentlyMet = openSessionData?.gateMet ?? true
+  // Two reasons nobody should see the canvas, facilitator included: (1) no
+  // guide exists yet for the currently open session; or (2) one does, but
+  // at least one participant's submission happened *after* the last
+  // successful generation completed — the existing guide doesn't reflect
+  // it. Nobody sees stale content in this case — the moment a guide exists
+  // that postdates every current submission, everyone sees it together.
+  // Also covers a stale vision left over from an earlier committed cycle
+  // (visions.team_id has no uniqueness) — this is the only "in progress"
+  // messaging on this page now, the old separate status page is gone.
+  //
+  // Deliberately NOT also requiring the readiness gate to currently be met:
+  // ReadinessBanner's "Generate now anyway" lets a facilitator generate
+  // before everyone's submitted, and a hard gate-met requirement here
+  // defeated that entirely — the guide would generate successfully but the
+  // canvas would stay permanently locked (gate never becomes "met" just
+  // because a guide exists), which is exactly the flash-then-revert bug a
+  // facilitator hit on staging. A late-joining, not-yet-submitted
+  // participant not being reflected in an early guide is the accepted
+  // tradeoff of generating early, not a staleness case — guideStale below
+  // still catches anyone who actually submitted after generation.
   const guideStale =
     !!lastGuideCompletedAt &&
     (openSessionData?.participants ?? []).some((p) => p.submitted_at && new Date(p.submitted_at) > new Date(lastGuideCompletedAt))
-  const blockedFromCanvas = !!openSession && (openSession.status !== 'guide_ready' || !gateCurrentlyMet || guideStale)
+  const blockedFromCanvas = !!openSession && (openSession.status !== 'guide_ready' || guideStale)
   if (blockedFromCanvas) {
     return (
       <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
