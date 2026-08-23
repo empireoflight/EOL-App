@@ -197,9 +197,19 @@ export function useOpenVisionSession(teamId: string | undefined) {
   })
 }
 
-/** Polls while synthesis is running — a deliberate, scoped use of refetchInterval,
- *  distinct from the refetchOnWindowFocus culprit disabled globally (spec §17). */
-export function useSynthesisJobPolling(sessionId: string | undefined, status: SessionStatus | undefined) {
+/**
+ * Polls while synthesis is running — a deliberate, scoped use of refetchInterval,
+ * distinct from the refetchOnWindowFocus culprit disabled globally (spec §17).
+ *
+ * `teamId` is optional and vision-only: VisionHomePage's canvas gate also
+ * depends on useOpenVisionSession/useTeamVision/useLatestGuideCompletion,
+ * three query-cache entries this hook otherwise wouldn't touch — leaving
+ * them stale while only convergence-session refreshes is what caused the
+ * canvas to flash in and then re-lock (one signal fresh, others not, until
+ * each caught up on its own schedule). Friction's call site has no
+ * equivalent state and passes nothing here, same as before.
+ */
+export function useSynthesisJobPolling(sessionId: string | undefined, status: SessionStatus | undefined, teamId?: string) {
   const queryClient = useQueryClient()
   return useQuery({
     queryKey: ['synthesis-job', sessionId],
@@ -215,6 +225,11 @@ export function useSynthesisJobPolling(sessionId: string | undefined, status: Se
       if (error) throw error
       if (data?.status === 'succeeded' || data?.status === 'failed') {
         queryClient.invalidateQueries({ queryKey: ['convergence-session', sessionId] })
+        if (teamId) {
+          queryClient.invalidateQueries({ queryKey: ['vision', teamId] })
+          queryClient.invalidateQueries({ queryKey: ['open-vision-session', teamId] })
+          queryClient.invalidateQueries({ queryKey: ['latest-guide-completion', sessionId] })
+        }
       }
       return data
     },

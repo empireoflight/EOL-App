@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
 import {
   useTeamVision,
@@ -222,9 +223,10 @@ function RawAnswers({ sessionId }: { sessionId: string | null }) {
 // (facilitator inviting more people after generating is a real case —
 // accept_team_invite adds them to the still-open session, so both spots
 // need this, not two copies that can drift apart).
-function useVisionSessionProgress(sessionId: string) {
+function useVisionSessionProgress(sessionId: string, teamId: string | undefined) {
+  const queryClient = useQueryClient()
   const { data, isLoading, refetch } = useConvergenceSession(sessionId)
-  const jobQuery = useSynthesisJobPolling(sessionId, data?.session.status)
+  const jobQuery = useSynthesisJobPolling(sessionId, data?.session.status, teamId)
   const [error, setError] = useState('')
   const [starting, setStarting] = useState(false)
 
@@ -255,7 +257,18 @@ function useVisionSessionProgress(sessionId: string) {
         throw invokeError
       }
 
-      refetch()
+      // VisionHomePage's canvas gate (blockedFromCanvas) also reads
+      // useOpenVisionSession, useTeamVision, and useLatestGuideCompletion —
+      // three separate query-cache entries this function never touches.
+      // Refetching only convergence-session left those stale, so the page
+      // would briefly compute an inconsistent combination of fresh/stale
+      // signals (canvas flashing in, then blockedFromCanvas re-locking once
+      // one of the others caught up on its own schedule). Invalidate the
+      // whole cluster together so they land in the same render.
+      await refetch()
+      if (teamId) queryClient.invalidateQueries({ queryKey: ['vision', teamId] })
+      queryClient.invalidateQueries({ queryKey: ['open-vision-session', teamId] })
+      queryClient.invalidateQueries({ queryKey: ['latest-guide-completion', sessionId] })
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't start synthesis.")
     } finally {
@@ -280,7 +293,7 @@ function useVisionSessionProgress(sessionId: string) {
 function VisionSessionProgress({ teamId, sessionId, canManage }: { teamId: string | undefined; sessionId: string; canManage: boolean }) {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { data, isLoading, error, handleGenerate, generating } = useVisionSessionProgress(sessionId)
+  const { data, isLoading, error, handleGenerate, generating } = useVisionSessionProgress(sessionId, teamId)
 
   if (isLoading || !data) return <LoadingScreen />
 
@@ -354,7 +367,7 @@ function VisionStatusPanel({
   const { user } = useAuth()
   const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState(false)
-  const { data, isLoading, error, handleGenerate, generating } = useVisionSessionProgress(sessionId)
+  const { data, isLoading, error, handleGenerate, generating } = useVisionSessionProgress(sessionId, teamId)
   const sendForApproval = useSendVisionForApproval(vision.id, teamId)
 
   if (isLoading || !data) return <LoadingScreen />
