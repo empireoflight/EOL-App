@@ -82,6 +82,28 @@ function parseJsonResponse<T>(raw: string): T {
   return JSON.parse(stripped) as T
 }
 
+// A prompt-only "respond as JSON" instruction occasionally produces output
+// that fails to parse — an unescaped quote/newline inside a synthesized
+// string is the usual culprit (seen in production: "Expected ',' or '}'
+// after property value in JSON"). Retrying the full round-trip is far more
+// effective than retrying the parse alone, since the malformed output came
+// from that specific generation and a fresh one is very unlikely to repeat
+// the same mistake. Every JSON-producing call in this file goes through
+// this instead of calling callAnthropic + parseJsonResponse directly.
+async function callAnthropicForJson<T>(options: AnthropicCallOptions, retries = 2): Promise<T> {
+  let lastError: unknown
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const raw = await callAnthropic(options)
+    try {
+      return parseJsonResponse<T>(raw)
+    } catch (err) {
+      lastError = err
+    }
+  }
+  const message = lastError instanceof Error ? lastError.message : String(lastError)
+  throw new Error(`AI response was not valid JSON after ${retries + 1} attempts: ${message}`)
+}
+
 const FRAMEWORK_SYSTEM_PROMPT = `You write for Empire of Light, a team collaboration tool built around the
 Vision -> Do -> Friction -> Evolve adaptive cycle, where Vision is the team's
 shared anchor and every other stage should visibly connect back to it.
@@ -147,7 +169,7 @@ export async function synthesizeRollup(input: {
   completedTaskCount?: number
   frictionProcessedCount?: number
 }): Promise<RollupResult> {
-  const raw = await callAnthropic({
+  return callAnthropicForJson<RollupResult>({
     model: MODELS.synthesis,
     system: FRAMEWORK_SYSTEM_PROMPT,
     messages: [
@@ -182,7 +204,6 @@ export async function synthesizeRollup(input: {
       },
     ],
   })
-  return parseJsonResponse<RollupResult>(raw)
 }
 
 // ------------------------------------------------------------
@@ -197,7 +218,7 @@ export type ClassificationResult = {
 }
 
 export async function classifyFriction(input: { text: string }): Promise<ClassificationResult> {
-  const raw = await callAnthropic({
+  return callAnthropicForJson<ClassificationResult>({
     model: MODELS.classification,
     system: FRAMEWORK_SYSTEM_PROMPT,
     maxTokens: 256,
@@ -210,7 +231,6 @@ export async function classifyFriction(input: { text: string }): Promise<Classif
       },
     ],
   })
-  return parseJsonResponse<ClassificationResult>(raw)
 }
 
 // ------------------------------------------------------------
@@ -257,7 +277,7 @@ export async function generateVisionLayout(input: {
   participantAnswers: Record<string, string>[]
 }): Promise<VisionLayout> {
   const labeledAnswers = labelAnswersByQuestion(input.questions, input.participantAnswers)
-  const raw = await callAnthropic({
+  return callAnthropicForJson<VisionLayout>({
     model: MODELS.visionLayout,
     system: FRAMEWORK_SYSTEM_PROMPT,
     // Default 2048 truncates mid-JSON once north_star + pillar + practice +
@@ -287,7 +307,6 @@ export async function generateVisionLayout(input: {
       },
     ],
   })
-  return parseJsonResponse<VisionLayout>(raw)
 }
 
 // ------------------------------------------------------------
@@ -310,7 +329,7 @@ export async function generateVisionAlignmentGuide(input: {
 }): Promise<VisionAlignmentGuide> {
   const labeledAnswers = labelAnswersByQuestion(input.questions, input.participantAnswers)
   const labeled = labeledAnswers.map((answers, i) => ({ participant: `Participant ${i + 1}`, answers }))
-  const raw = await callAnthropic({
+  return callAnthropicForJson<VisionAlignmentGuide>({
     model: MODELS.synthesis,
     system: FRAMEWORK_SYSTEM_PROMPT,
     messages: [
@@ -326,7 +345,6 @@ export async function generateVisionAlignmentGuide(input: {
       },
     ],
   })
-  return parseJsonResponse<VisionAlignmentGuide>(raw)
 }
 
 // ------------------------------------------------------------
@@ -352,7 +370,7 @@ export async function generateFrictionDiscussionGuide(input: {
   responses: Record<string, string>[]
 }): Promise<FrictionDiscussionGuide> {
   const labeled = input.responses.map((answers, i) => ({ participant: `Participant ${i + 1}`, answers }))
-  const raw = await callAnthropic({
+  return callAnthropicForJson<FrictionDiscussionGuide>({
     model: MODELS.synthesis,
     system: FRAMEWORK_SYSTEM_PROMPT,
     messages: [
@@ -374,5 +392,4 @@ export async function generateFrictionDiscussionGuide(input: {
       },
     ],
   })
-  return parseJsonResponse<FrictionDiscussionGuide>(raw)
 }
