@@ -7,7 +7,7 @@ import { Card } from '../../components/shared/Card'
 import { Button } from '../../components/shared/Button'
 import { TierBadge } from '../../components/shared/TierBadge'
 import { WeeklyCountChart } from '../../components/rollup/WeeklyCountChart'
-import { useCompletedExperimentsByWeek, useFrictionProcessedByWeek } from '../../hooks/useWeeklyCompletions'
+import { useCompletedTasksByWeek, useFrictionProcessedByWeek } from '../../hooks/useWeeklyCompletions'
 import type { TeamSignal } from '../../lib/types'
 
 type RollupValue = {
@@ -45,7 +45,7 @@ function formatShortDate(isoDate: string | null): string {
 export function TeamRollup({ teamId }: { teamId: string }) {
   const queryClient = useQueryClient()
   const { data: signals } = useTeamSignals(teamId)
-  const { data: taskCounts } = useCompletedExperimentsByWeek(teamId)
+  const { data: taskCounts } = useCompletedTasksByWeek(teamId)
   const { data: frictionCounts } = useFrictionProcessedByWeek(teamId)
   const [generating, setGenerating] = useState(false)
   const [notice, setNotice] = useState('')
@@ -218,7 +218,7 @@ export function TeamRollup({ teamId }: { teamId: string }) {
         <div className="min-w-[220px] flex-1">
           <WeeklyCountChart
             label="Tasks completed"
-            description="Experiments marked done, per week."
+            description="Actions and experiments marked done, per week."
             points={taskCounts ?? []}
             emptyLabel="No tasks completed yet."
           />

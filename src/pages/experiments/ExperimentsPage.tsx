@@ -10,14 +10,9 @@ import { Button } from '../../components/shared/Button'
 import { Input, Textarea } from '../../components/shared/Input'
 import { Avatar } from '../../components/shared/Avatar'
 import { LearningPrompt } from '../../components/experiments/LearningPrompt'
+import { ActionsPanel } from '../../components/actions/ActionsPanel'
+import { STATUS_LABEL } from '../../lib/taskStatus'
 import type { Experiment } from '../../lib/types'
-
-const STATUS_LABEL: Record<Experiment['status'], string> = {
-  not_started: 'Not started',
-  in_progress: 'In progress',
-  done: 'Done',
-  dropped: 'Dropped',
-}
 
 function useExperiments(teamId: string | undefined) {
   return useQuery({
@@ -139,11 +134,22 @@ export default function ExperimentsPage() {
           Bring the vision to life
         </h1>
         <p className="m-0 mt-1 text-[13px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-          Every experiment should trace back to the vision — what pillar it's testing, and what you're trying to learn.
+          Track what's moving the vision forward — quick actions, and experiments that trace back to a pillar.
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-6">
+      <div>
+        <h2 className="m-0 mb-3 text-[16px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
+          Actions
+        </h2>
+        <ActionsPanel teamId={teamId} />
+      </div>
+
+      <div>
+        <h2 className="m-0 mb-3 text-[16px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
+          Experiments
+        </h2>
+        <div className="flex flex-wrap gap-6">
         <div className="min-w-[320px] flex-1">
           {isLoading || !experiments || experiments.length === 0 ? (
             <Card>
@@ -364,6 +370,7 @@ export default function ExperimentsPage() {
             </>
           )}
         </Card>
+        </div>
       </div>
     </div>
   )

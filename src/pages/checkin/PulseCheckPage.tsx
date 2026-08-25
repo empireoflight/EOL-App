@@ -10,7 +10,7 @@ import { Textarea } from '../../components/shared/Input'
 import { Card } from '../../components/shared/Card'
 import { TierBadge } from '../../components/shared/TierBadge'
 import { LearningPrompt } from '../../components/experiments/LearningPrompt'
-import type { Experiment } from '../../lib/types'
+import type { Action, Experiment } from '../../lib/types'
 
 type PulseDraft = { gave: string; drained: string }
 
@@ -58,6 +58,30 @@ function useReviewExperiments(teamId: string | undefined) {
   })
 }
 
+function useReviewActions(teamId: string | undefined) {
+  return useQuery({
+    queryKey: ['pulse-review-actions', teamId],
+    queryFn: async (): Promise<Action[]> => {
+      if (!supabase) throw new Error('Supabase is not configured')
+      const { data, error } = await supabase
+        .from('actions')
+        .select('*')
+        .eq('team_id', teamId as string)
+        .in('status', ['not_started', 'in_progress'])
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      return data
+    },
+    enabled: !!teamId,
+  })
+}
+
+// Experiments and actions share the same review UI (title + carry
+// over/done/drop), so they're merged into one sorted list here — each
+// entry keeps track of which table it came from so a click can be routed
+// to the right mutation.
+type ReviewItem = { id: string; title: string; status: Experiment['status']; created_at: string; source: 'experiment' | 'action' }
+
 export default function PulseCheckPage() {
   const { teamId } = useParams<{ teamId: string }>()
   const { user } = useAuth()
@@ -69,7 +93,13 @@ export default function PulseCheckPage() {
   const [error, setError] = useState('')
 
   const { data: reviewExperiments } = useReviewExperiments(teamId)
+  const { data: reviewActions } = useReviewActions(teamId)
   const [justCompleted, setJustCompleted] = useState<Experiment[]>([])
+
+  const reviewItems: ReviewItem[] = [
+    ...(reviewExperiments ?? []).map((exp): ReviewItem => ({ id: exp.id, title: exp.title, status: exp.status, created_at: exp.created_at, source: 'experiment' })),
+    ...(reviewActions ?? []).map((action): ReviewItem => ({ id: action.id, title: action.title, status: action.status, created_at: action.created_at, source: 'action' })),
+  ].sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
 
   const updateExperimentStatus = useMutation({
     mutationFn: async ({ exp, status }: { exp: Experiment; status: Experiment['status'] }) => {
@@ -85,6 +115,17 @@ export default function PulseCheckPage() {
       if (status === 'done') setJustCompleted((prev) => [...prev, { ...exp, status: 'done' }])
       queryClient.invalidateQueries({ queryKey: ['pulse-review-experiments', teamId] })
     },
+  })
+
+  const updateActionStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: Action['status'] }) => {
+      if (!supabase) throw new Error('Not ready')
+      const { error } = await supabase.from('actions').update({ status }).eq('id', id)
+      if (error) throw error
+    },
+    // Actions have no `learning` field, so a 'done' action just drops out
+    // of the review list with no follow-up prompt.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pulse-review-actions', teamId] }),
   })
 
   const { value: draft, setValue: setDraft, saveState, discard } = useDurableForm<PulseDraft>({
@@ -136,7 +177,7 @@ export default function PulseCheckPage() {
         </div>
       )}
 
-      {reviewExperiments && reviewExperiments.length > 0 && (
+      {reviewItems.length > 0 && (
         <Card>
           <div className="mb-2.5 flex items-center gap-2">
             <div className="text-[13px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
@@ -145,19 +186,26 @@ export default function PulseCheckPage() {
             <TierBadge tier={4} />
           </div>
           <div className="flex flex-col gap-1.5">
-            {reviewExperiments.map((exp) => (
-              <div key={exp.id} className="flex items-center gap-2">
+            {reviewItems.map((item) => (
+              <div key={item.id} className="flex items-center gap-2">
                 <div className="min-w-0 flex-1 truncate text-[12.5px]" style={{ color: 'var(--color-eol-text)' }}>
-                  {exp.title}
+                  {item.title}
                 </div>
                 {(['in_progress', 'done', 'dropped'] as Experiment['status'][]).map((status) => (
                   <button
                     key={status}
                     type="button"
-                    onClick={() => updateExperimentStatus.mutate({ exp, status })}
+                    onClick={() => {
+                      if (item.source === 'experiment') {
+                        const exp = reviewExperiments?.find((e) => e.id === item.id)
+                        if (exp) updateExperimentStatus.mutate({ exp, status })
+                      } else {
+                        updateActionStatus.mutate({ id: item.id, status })
+                      }
+                    }}
                     className="shrink-0 rounded-full px-2.5 py-1 text-[10.5px] font-medium"
                     style={
-                      exp.status === status
+                      item.status === status
                         ? { background: 'var(--color-tier4-bg)', color: 'var(--color-tier4-fg)' }
                         : { border: '1px solid var(--color-eol-border-strong)', color: 'var(--color-eol-text-muted)' }
                     }

@@ -1,5 +1,5 @@
 import { WeeklyCountChart } from '../../components/rollup/WeeklyCountChart'
-import { useCompletedExperimentsByWeek, useFrictionProcessedByWeek, useMyVibeScoresByWeek } from '../../hooks/useWeeklyCompletions'
+import { useCompletedTasksByWeek, useFrictionProcessedByWeek, useMyVibeScoresByWeek } from '../../hooks/useWeeklyCompletions'
 
 // Solo (team-of-one) rollup reads the user's own raw rows directly instead
 // of team_signals — team_signals' n>=3 contributor gate can never fire for
@@ -9,7 +9,7 @@ import { useCompletedExperimentsByWeek, useFrictionProcessedByWeek, useMyVibeSco
 // data, no anonymization needed) is a clear follow-up, not this round.
 export function SoloRollup({ teamId }: { teamId: string }) {
   const { data: vibePoints } = useMyVibeScoresByWeek(teamId)
-  const { data: taskCounts } = useCompletedExperimentsByWeek(teamId)
+  const { data: taskCounts } = useCompletedTasksByWeek(teamId)
   const { data: frictionCounts } = useFrictionProcessedByWeek(teamId)
 
   return (
@@ -34,7 +34,7 @@ export function SoloRollup({ teamId }: { teamId: string }) {
         <div className="min-w-[220px] flex-1">
           <WeeklyCountChart
             label="Tasks completed"
-            description="Experiments marked done, per week."
+            description="Actions and experiments marked done, per week."
             points={taskCounts ?? []}
             emptyLabel="No tasks completed yet."
           />

@@ -131,6 +131,25 @@ export type Experiment = {
   cycle_start: string | null
   cycle_end: string | null
   completed_at: string | null
+  reminder_sent_at: string | null
+  created_by: string
+  created_at: string
+}
+
+// A lighter to-do alongside experiments — no pillar link, no
+// hypothesis/learning writeup. Same status lifecycle and completed_at
+// semantics, so it participates in the same weekly-review and
+// tasks-completed logic as an experiment.
+export type Action = {
+  id: string
+  team_id: string
+  vision_id: string | null
+  title: string
+  assignee_id: string | null
+  status: 'not_started' | 'in_progress' | 'done' | 'dropped'
+  due_date: string | null
+  completed_at: string | null
+  reminder_sent_at: string | null
   created_by: string
   created_at: string
 }

@@ -16,21 +16,22 @@ function bucketByWeek(dates: (string | null)[]): WeekCount[] {
     .sort((a, b) => (a.period_start < b.period_start ? 1 : -1)) // newest first, matches vibePoints convention
 }
 
-/** Tasks (experiments) completed per week, for a team — same query serves
- * team and solo pages, since experiments are already team-scoped tier-4
- * data with no member-count-dependent logic. */
-export function useCompletedExperimentsByWeek(teamId: string | undefined) {
+/** Tasks (experiments + actions) completed per week, for a team — same
+ * query serves team and solo pages, since both are already team-scoped
+ * tier-4 data with no member-count-dependent logic. Two sources, same
+ * merge pattern as useFrictionProcessedByWeek below. */
+export function useCompletedTasksByWeek(teamId: string | undefined) {
   return useQuery({
-    queryKey: ['completed-experiments-by-week', teamId],
+    queryKey: ['completed-tasks-by-week', teamId],
     queryFn: async (): Promise<WeekCount[]> => {
       if (!supabase) throw new Error('Supabase is not configured')
-      const { data, error } = await supabase
-        .from('experiments')
-        .select('completed_at')
-        .eq('team_id', teamId as string)
-        .not('completed_at', 'is', null)
-      if (error) throw error
-      return bucketByWeek(data.map((row) => row.completed_at))
+      const [experiments, actions] = await Promise.all([
+        supabase.from('experiments').select('completed_at').eq('team_id', teamId as string).not('completed_at', 'is', null),
+        supabase.from('actions').select('completed_at').eq('team_id', teamId as string).not('completed_at', 'is', null),
+      ])
+      if (experiments.error) throw experiments.error
+      if (actions.error) throw actions.error
+      return bucketByWeek([...experiments.data.map((row) => row.completed_at), ...actions.data.map((row) => row.completed_at)])
     },
     enabled: !!teamId,
   })

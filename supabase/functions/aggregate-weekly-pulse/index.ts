@@ -154,12 +154,21 @@ Deno.serve(async (req: Request) => {
   // who did private processing and how often, exactly what team_signals'
   // n>=3 rule exists to prevent. Only real, already-shared group sessions
   // count toward the team-level number.
-  const { count: completedTaskCount } = await db
+  const { count: completedExperimentCount } = await db
     .from('experiments')
     .select('id', { count: 'exact', head: true })
     .eq('team_id', teamId)
     .gte('completed_at', weekOf)
     .lte('completed_at', `${periodEndStr}T23:59:59.999Z`)
+
+  const { count: completedActionCount } = await db
+    .from('actions')
+    .select('id', { count: 'exact', head: true })
+    .eq('team_id', teamId)
+    .gte('completed_at', weekOf)
+    .lte('completed_at', `${periodEndStr}T23:59:59.999Z`)
+
+  const completedTaskCount = (completedExperimentCount ?? 0) + (completedActionCount ?? 0)
 
   const { count: frictionProcessedCount } = await db
     .from('convergence_sessions')
@@ -179,7 +188,7 @@ Deno.serve(async (req: Request) => {
     visionContext,
     priorPatterns: vibeTrend ? priorPatterns : undefined,
     vibeTrend,
-    completedTaskCount: completedTaskCount ?? 0,
+    completedTaskCount,
     frictionProcessedCount: frictionProcessedCount ?? 0,
   })
 
