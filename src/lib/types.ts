@@ -35,6 +35,15 @@ export type TeamInvite = {
   accepted_at: string | null
 }
 
+export type TeamInviteLink = {
+  id: string
+  team_id: string
+  token: string
+  created_by: string
+  status: 'active' | 'revoked'
+  created_at: string
+}
+
 export type ConvergenceSession = {
   id: string
   team_id: string

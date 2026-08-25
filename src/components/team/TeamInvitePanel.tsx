@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { useTeamMembers } from '../../hooks/useMyTeams'
-import { useTeamInvites } from '../../hooks/useTeamInvites'
+import { useTeamInvites, useTeamInviteLink, useRegenerateTeamInviteLink } from '../../hooks/useTeamInvites'
 import { Button } from '../shared/Button'
 import { Input } from '../shared/Input'
 import { Card } from '../shared/Card'
@@ -19,8 +19,11 @@ export function TeamInvitePanel({ teamId }: { teamId: string }) {
   const queryClient = useQueryClient()
   const { data: members } = useTeamMembers(teamId)
   const { data: invites } = useTeamInvites(teamId)
+  const { data: inviteLink } = useTeamInviteLink(teamId)
+  const regenerateLink = useRegenerateTeamInviteLink(teamId)
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
+  const [linkCopied, setLinkCopied] = useState(false)
 
   const createInvite = useMutation({
     mutationFn: async (inviteEmail: string) => {
@@ -43,10 +46,18 @@ export function TeamInvitePanel({ teamId }: { teamId: string }) {
   })
 
   const inviteUrl = (token: string) => `${window.location.origin}/invite/${token}`
+  const joinUrl = (token: string) => `${window.location.origin}/join/${token}`
   // Mirrors the RLS policy on team_invites (facilitators only) — a member
   // hitting "Invite" would otherwise just get a generic insert failure with
   // no clue why, since they can't even read the pending-invites list either.
   const canInvite = members?.find((m) => m.user_id === user?.id)?.team_role === 'facilitator'
+
+  const copyLink = () => {
+    if (!inviteLink) return
+    navigator.clipboard.writeText(joinUrl(inviteLink.token))
+    setLinkCopied(true)
+    setTimeout(() => setLinkCopied(false), 2000)
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -72,6 +83,42 @@ export function TeamInvitePanel({ teamId }: { teamId: string }) {
               Invite
             </Button>
           </form>
+        </Card>
+      ) : null}
+
+      {canInvite ? (
+        <Card>
+          <div className="mb-1 text-[13px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
+            Or share an invite link
+          </div>
+          <p className="m-0 mb-3 text-[12.5px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+            Anyone with this link can join the team — no need to know their email up front.
+          </p>
+          {inviteLink ? (
+            <div className="flex items-center gap-2">
+              <div
+                className="flex-1 truncate rounded-lg border px-3 py-2 text-[12.5px]"
+                style={{ borderColor: 'var(--color-eol-border-strong)', background: 'var(--color-eol-surface-light)', color: 'var(--color-eol-text-secondary)' }}
+              >
+                {joinUrl(inviteLink.token)}
+              </div>
+              <Button variant="secondary" onClick={copyLink}>
+                {linkCopied ? 'Copied!' : 'Copy link'}
+              </Button>
+              <Button variant="secondary" onClick={() => regenerateLink.mutate()} loading={regenerateLink.isPending}>
+                Regenerate
+              </Button>
+            </div>
+          ) : (
+            <Button variant="secondary" onClick={() => regenerateLink.mutate()} loading={regenerateLink.isPending}>
+              Get invite link
+            </Button>
+          )}
+          {regenerateLink.isError && (
+            <p className="m-0 mt-2 text-[12.5px]" style={{ color: 'var(--color-eol-pink-strong)' }}>
+              {regenerateLink.error instanceof Error ? regenerateLink.error.message : "Couldn't create the invite link."}
+            </p>
+          )}
         </Card>
       ) : (
         <Card>

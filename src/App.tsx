@@ -9,6 +9,7 @@ import SignUpPage from './pages/auth/SignUpPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import InviteLandingPage from './pages/InviteLandingPage'
+import JoinTeamPage from './pages/JoinTeamPage'
 import CreateOrgPage from './pages/onboarding/CreateOrgPage'
 import TeamListPage from './pages/teams/TeamListPage'
 import TeamLayout from './pages/teams/TeamLayout'
@@ -40,6 +41,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
         <Route path="/invite/:token" element={<InviteLandingPage />} />
+        <Route path="/join/:token" element={<JoinTeamPage />} />
 
         <Route path="/onboarding" element={<ProtectedRoute><CreateOrgPage /></ProtectedRoute>} />
         <Route path="/teams" element={<ProtectedRoute><TeamListPage /></ProtectedRoute>} />
