@@ -65,6 +65,36 @@ export function useFrictionProcessedByWeek(teamId: string | undefined) {
   })
 }
 
+export type CompletedItem = { id: string; title: string; type: 'action' | 'experiment'; completed_at: string; assignee_id: string | null }
+
+/** The actual rows behind one week's slice of useCompletedTasksByWeek —
+ * used by the Evolve page's click-a-week drill-down, which needs titles,
+ * not just a count. Same [gte, lte] week-range math the aggregate-weekly-
+ * pulse edge function uses for its own completed-task count. */
+export function useCompletedItemsForWeek(teamId: string | undefined, periodStart: string | null) {
+  return useQuery({
+    queryKey: ['completed-items-for-week', teamId, periodStart],
+    queryFn: async (): Promise<CompletedItem[]> => {
+      if (!supabase || !periodStart) throw new Error('Not ready')
+      const periodEnd = new Date(`${periodStart}T00:00:00Z`)
+      periodEnd.setUTCDate(periodEnd.getUTCDate() + 6)
+      const gte = periodStart
+      const lte = `${periodEnd.toISOString().slice(0, 10)}T23:59:59.999Z`
+      const [experiments, actions] = await Promise.all([
+        supabase.from('experiments').select('id, title, completed_at, assignee_id').eq('team_id', teamId as string).gte('completed_at', gte).lte('completed_at', lte),
+        supabase.from('actions').select('id, title, completed_at, assignee_id').eq('team_id', teamId as string).gte('completed_at', gte).lte('completed_at', lte),
+      ])
+      if (experiments.error) throw experiments.error
+      if (actions.error) throw actions.error
+      return [
+        ...experiments.data.map((r): CompletedItem => ({ ...r, type: 'experiment' })),
+        ...actions.data.map((r): CompletedItem => ({ ...r, type: 'action' })),
+      ].sort((a, b) => (a.completed_at < b.completed_at ? 1 : -1))
+    },
+    enabled: !!teamId && !!periodStart,
+  })
+}
+
 /** Solo-only: the caller's own weekly vibe score, read directly from
  * pulse_vibe_scores rather than team_signals — team_signals' n>=3
  * contributor gate can never fire for a team of one, per

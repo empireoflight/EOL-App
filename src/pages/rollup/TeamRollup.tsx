@@ -6,8 +6,11 @@ import { getWeekStart } from '../../lib/week'
 import { Card } from '../../components/shared/Card'
 import { Button } from '../../components/shared/Button'
 import { TierBadge } from '../../components/shared/TierBadge'
-import { WeeklyCountChart } from '../../components/rollup/WeeklyCountChart'
-import { useCompletedTasksByWeek, useFrictionProcessedByWeek } from '../../hooks/useWeeklyCompletions'
+import { Avatar } from '../../components/shared/Avatar'
+import { TaskTypeBadge } from '../../components/shared/TaskTypeBadge'
+import { WeeklyMetricsChart } from '../../components/rollup/WeeklyMetricsChart'
+import { useCompletedTasksByWeek, useFrictionProcessedByWeek, useCompletedItemsForWeek } from '../../hooks/useWeeklyCompletions'
+import { useTeamMembers } from '../../hooks/useMyTeams'
 import type { TeamSignal } from '../../lib/types'
 
 type RollupValue = {
@@ -17,6 +20,8 @@ type RollupValue = {
   visionInsight?: string | null
   trendInsight?: string | null
 }
+
+const MAX_BACKFILL_WEEKS = 12
 
 function useTeamSignals(teamId: string | undefined) {
   return useQuery({
@@ -42,11 +47,37 @@ function formatShortDate(isoDate: string | null): string {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' })
 }
 
+// Weeks between the most recently processed one and now that have no
+// team_signals row yet — a week counts as "processed" if it has either a
+// vibe_avg or a weekly_narrative row, since vibe_avg is only written when
+// that specific gate passes (aggregate-weekly-pulse writes it conditionally)
+// while weekly_narrative is written whenever the broader gate passes at all.
+// If nothing's ever been generated, only the current week is offered — there's
+// no way to know how far back a team's real history goes.
+function computeMissingWeeks(processedWeeks: Set<string>): string[] {
+  const currentWeek = getWeekStart()
+  if (processedWeeks.size === 0) return [currentWeek]
+
+  const latestProcessed = [...processedWeeks].sort().at(-1) as string
+  if (latestProcessed >= currentWeek) return []
+
+  const missing: string[] = []
+  const cursor = new Date(`${latestProcessed}T00:00:00Z`)
+  cursor.setUTCDate(cursor.getUTCDate() + 7)
+  while (cursor.toISOString().slice(0, 10) <= currentWeek && missing.length < MAX_BACKFILL_WEEKS) {
+    const week = cursor.toISOString().slice(0, 10)
+    if (!processedWeeks.has(week)) missing.push(week)
+    cursor.setUTCDate(cursor.getUTCDate() + 7)
+  }
+  return missing
+}
+
 export function TeamRollup({ teamId }: { teamId: string }) {
   const queryClient = useQueryClient()
   const { data: signals } = useTeamSignals(teamId)
   const { data: taskCounts } = useCompletedTasksByWeek(teamId)
   const { data: frictionCounts } = useFrictionProcessedByWeek(teamId)
+  const { data: members } = useTeamMembers(teamId)
   const [generating, setGenerating] = useState(false)
   const [notice, setNotice] = useState('')
 
@@ -54,14 +85,20 @@ export function TeamRollup({ teamId }: { teamId: string }) {
   const vibePoints = (signals ?? []).filter((s) => s.signal_type === 'vibe_avg')
   const latest = narratives[0]?.value as RollupValue | undefined
 
+  const processedWeeks = new Set([...narratives, ...vibePoints].map((s) => s.period_start).filter((p): p is string => !!p))
+  const missingWeeks = computeMissingWeeks(processedWeeks)
+
   // Default selection is the most recently completed week — vibePoints is
   // already ordered newest-first, so [0] is that week. Once the user picks
   // a bar, that choice sticks even if new data arrives.
   const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null)
-  const effectiveSelected = selectedPeriod ?? vibePoints[0]?.period_start ?? null
+  const effectiveSelected = selectedPeriod ?? vibePoints[0]?.period_start ?? taskCounts?.[0]?.period_start ?? frictionCounts?.[0]?.period_start ?? null
   const selectedVibePoint = vibePoints.find((p) => p.period_start === effectiveSelected)
   const selectedNarrative = narratives.find((n) => n.period_start === effectiveSelected)
   const selectedValue = selectedNarrative?.value as RollupValue | undefined
+  const { data: completedItems } = useCompletedItemsForWeek(teamId, effectiveSelected)
+
+  const memberName = (id: string | null) => members?.find((m) => m.user_id === id)?.users?.name ?? null
 
   const handleGenerate = async () => {
     if (!supabase || !teamId) return
@@ -69,15 +106,37 @@ export function TeamRollup({ teamId }: { teamId: string }) {
     setNotice('')
     try {
       const { data: authData } = await supabase.auth.getSession()
-      const { data, error } = await supabase.functions.invoke('aggregate-weekly-pulse', {
-        body: { teamId, weekOf: getWeekStart() },
-        headers: { Authorization: `Bearer ${authData.session?.access_token}` },
-      })
-      if (error) throw error
-      if (data?.reason === 'not_enough_contributors') {
-        setNotice(`Needs at least 3 people checked in this week (${data.vibeContributorCount} so far).`)
-      } else {
-        queryClient.invalidateQueries({ queryKey: ['team-signals', teamId] })
+      const token = authData.session?.access_token
+      const weeksToGenerate = missingWeeks.length > 0 ? missingWeeks : [getWeekStart()]
+
+      let succeeded = 0
+      let skipped = 0
+      let failed = 0
+      for (const weekOf of weeksToGenerate) {
+        try {
+          const { data, error } = await supabase.functions.invoke('aggregate-weekly-pulse', {
+            body: { teamId, weekOf },
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          if (error) throw error
+          if (data?.reason === 'not_enough_contributors') skipped += 1
+          else succeeded += 1
+        } catch {
+          failed += 1
+        }
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['team-signals', teamId] })
+
+      if (weeksToGenerate.length === 1 && skipped === 1) {
+        // Single-week case (the common one) keeps today's exact wording —
+        // no visible change for the normal "generate this week" click.
+        setNotice('Needs at least 3 people checked in this week.')
+      } else if (skipped > 0 || failed > 0) {
+        const parts = [`Generated ${succeeded} rollup${succeeded === 1 ? '' : 's'}.`]
+        if (skipped > 0) parts.push(`${skipped} week${skipped === 1 ? '' : 's'} skipped — not enough check-ins.`)
+        if (failed > 0) parts.push(`${failed} week${failed === 1 ? '' : 's'} failed to generate.`)
+        setNotice(parts.join(' '))
       }
     } catch (err) {
       setNotice(err instanceof Error ? err.message : "Couldn't generate the rollup.")
@@ -93,7 +152,7 @@ export function TeamRollup({ teamId }: { teamId: string }) {
           What are we learning?
         </h1>
         <Button variant="secondary" onClick={handleGenerate} loading={generating}>
-          Generate this week's rollup
+          {missingWeeks.length > 1 ? `Generate ${missingWeeks.length} missing rollups` : "Generate this week's rollup"}
         </Button>
       </div>
 
@@ -122,117 +181,81 @@ export function TeamRollup({ teamId }: { teamId: string }) {
         </div>
       )}
 
-      {vibePoints.length > 0 && (
-        <Card>
-          <div className="mb-1 flex items-center gap-2 text-[13px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
-            Team energy, week over week <TierBadge tier={3} />
-          </div>
-          <p className="m-0 mb-3 text-[11.5px]" style={{ color: 'var(--color-eol-text-faint)' }}>
-            Average score (1&ndash;5) per week a rollup was generated.
-          </p>
-          <div className="flex gap-2">
-            <div className="flex flex-col justify-between text-[10px]" style={{ height: 60, color: 'var(--color-eol-text-faint)' }}>
-              <span>5</span>
-              <span>1</span>
-            </div>
-            <div className="flex flex-1 items-end gap-3 border-l pl-3" style={{ borderColor: 'var(--color-eol-border)' }}>
-              {[...vibePoints].reverse().map((s) => {
-                const avg = (s.value as { avg: number }).avg
-                const selected = s.period_start === effectiveSelected
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => setSelectedPeriod(s.period_start)}
-                    className="flex flex-col items-center gap-1"
-                  >
-                    <span className="text-[10px]" style={{ color: selected ? 'var(--color-eol-text)' : 'var(--color-eol-text-muted)', fontWeight: selected ? 600 : 400 }}>
-                      {avg.toFixed(1)}
-                    </span>
-                    <div
-                      title={`${avg.toFixed(1)} · ${s.period_start}`}
-                      style={{
-                        width: 14,
-                        height: `${(avg / 5) * 60}px`,
-                        background: 'var(--color-eol-accent)',
-                        borderRadius: 3,
-                        opacity: selected ? 1 : 0.4,
-                        outline: selected ? '2px solid var(--color-eol-accent-hover)' : 'none',
-                        outlineOffset: 2,
-                      }}
-                    />
-                    <span
-                      className="text-[9.5px] whitespace-nowrap"
-                      style={{ color: selected ? 'var(--color-eol-text)' : 'var(--color-eol-text-faint)', fontWeight: selected ? 600 : 400 }}
-                    >
-                      {formatShortDate(s.period_start)}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+      <WeeklyMetricsChart
+        vibePoints={vibePoints.map((s) => ({ period_start: s.period_start as string, avg: (s.value as { avg: number }).avg }))}
+        taskCounts={taskCounts ?? []}
+        frictionCounts={frictionCounts ?? []}
+        selected={effectiveSelected}
+        onSelect={setSelectedPeriod}
+      />
 
-          {(() => {
-            const distribution = (selectedVibePoint?.value as { distribution?: Record<string, number> } | undefined)?.distribution
-            if (!distribution) return null
-            const maxCount = Math.max(...Object.values(distribution), 1)
-            return (
-              <div className="mt-5 border-t pt-4" style={{ borderColor: 'var(--color-eol-border)' }}>
-                <div className="mb-2.5 text-[11px]" style={{ color: 'var(--color-eol-text-muted)' }}>
-                  Distribution for the week of {formatShortDate(effectiveSelected)}
-                </div>
-                <div className="flex items-end justify-between gap-2" style={{ height: 70 }}>
-                  {[1, 2, 3, 4, 5].map((score) => {
-                    const count = distribution[String(score)] ?? 0
-                    return (
-                      <div key={score} className="flex flex-1 flex-col items-center gap-1.5">
-                        <div className="text-[10.5px]" style={{ color: 'var(--color-eol-text-faint)' }}>
-                          {count > 0 ? count : ''}
-                        </div>
-                        <div
-                          className="w-full rounded-md"
-                          style={{
-                            height: `${(count / maxCount) * 44 + (count > 0 ? 4 : 0)}px`,
-                            background: `oklch(${0.9 - score * 0.04} ${0.02 + score * 0.03} 78)`,
-                          }}
-                        />
-                        <div className="text-[10px]" style={{ color: 'var(--color-eol-text-faint)' }}>
-                          {score}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-                <div className="mt-1.5 flex justify-between text-[10px]" style={{ color: 'var(--color-eol-text-faint)' }}>
-                  <span>Drained</span>
-                  <span>Energized</span>
-                </div>
+      {selectedVibePoint &&
+        (() => {
+          const distribution = (selectedVibePoint.value as { distribution?: Record<string, number> } | undefined)?.distribution
+          if (!distribution) return null
+          const maxCount = Math.max(...Object.values(distribution), 1)
+          return (
+            <Card>
+              <div className="mb-1 flex items-center gap-2 text-[13px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
+                Energy distribution <TierBadge tier={3} />
               </div>
-            )
-          })()}
+              <div className="mb-2.5 text-[11px]" style={{ color: 'var(--color-eol-text-muted)' }}>
+                Week of {formatShortDate(effectiveSelected)}
+              </div>
+              <div className="flex items-end justify-between gap-2" style={{ height: 70 }}>
+                {[1, 2, 3, 4, 5].map((score) => {
+                  const count = distribution[String(score)] ?? 0
+                  return (
+                    <div key={score} className="flex flex-1 flex-col items-center gap-1.5">
+                      <div className="text-[10.5px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+                        {count > 0 ? count : ''}
+                      </div>
+                      <div
+                        className="w-full rounded-md"
+                        style={{
+                          height: `${(count / maxCount) * 44 + (count > 0 ? 4 : 0)}px`,
+                          background: `oklch(${0.9 - score * 0.04} ${0.02 + score * 0.03} 78)`,
+                        }}
+                      />
+                      <div className="text-[10px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+                        {score}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              <div className="mt-1.5 flex justify-between text-[10px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+                <span>Drained</span>
+                <span>Energized</span>
+              </div>
+            </Card>
+          )
+        })()}
+
+      {effectiveSelected && (
+        <Card>
+          <div className="mb-2.5 text-[13px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
+            Completed the week of {formatShortDate(effectiveSelected)}
+          </div>
+          {!completedItems?.length ? (
+            <p className="m-0 text-[12px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+              Nothing completed this week.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {completedItems.map((item) => (
+                <div key={`${item.type}-${item.id}`} className="flex items-center gap-2.5">
+                  <div className="min-w-0 flex-1 truncate text-[12.5px]" style={{ color: 'var(--color-eol-text)' }}>
+                    {item.title}
+                  </div>
+                  <TaskTypeBadge type={item.type} />
+                  {item.assignee_id && <Avatar name={memberName(item.assignee_id) ?? '?'} size={20} />}
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
       )}
-
-      <div className="flex flex-wrap gap-4">
-        <div className="min-w-[220px] flex-1">
-          <WeeklyCountChart
-            label="Tasks completed"
-            description="Actions and experiments marked done, per week."
-            points={taskCounts ?? []}
-            emptyLabel="No tasks completed yet."
-          />
-        </div>
-        <div className="min-w-[220px] flex-1">
-          <WeeklyCountChart
-            label="Friction processed"
-            description="Friction sessions worked through, per week — worth celebrating, not fearing."
-            points={frictionCounts ?? []}
-            emptyLabel="No friction processed yet."
-            accentColor="var(--color-tier4-dot)"
-          />
-        </div>
-      </div>
 
       {selectedValue && ((selectedValue.gaveThemes?.length ?? 0) > 0 || (selectedValue.drainedThemes?.length ?? 0) > 0) && (
         <div className="flex flex-wrap gap-4">

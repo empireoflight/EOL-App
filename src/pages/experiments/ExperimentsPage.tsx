@@ -10,6 +10,7 @@ import { Button } from '../../components/shared/Button'
 import { Input, Textarea } from '../../components/shared/Input'
 import { Avatar } from '../../components/shared/Avatar'
 import { LearningPrompt } from '../../components/experiments/LearningPrompt'
+import { TaskTypeBadge } from '../../components/shared/TaskTypeBadge'
 import { STATUS_LABEL, type TaskStatus } from '../../lib/taskStatus'
 import type { Action, Experiment } from '../../lib/types'
 
@@ -491,12 +492,7 @@ export default function ExperimentsPage() {
                     )}
                   </div>
                   <div className="w-[92px] shrink-0">
-                    <span
-                      className="rounded-full border px-2 py-0.5 text-[10.5px] font-medium"
-                      style={{ borderColor: 'var(--color-eol-border-strong)', color: 'var(--color-eol-text-muted)' }}
-                    >
-                      {row.kind === 'action' ? 'Action' : 'Experiment'}
-                    </span>
+                    <TaskTypeBadge type={row.kind} />
                   </div>
                   <div className="w-[36px] shrink-0">
                     {row.data.assignee_id && <Avatar name={memberName(row.data.assignee_id) ?? '?'} size={22} />}
