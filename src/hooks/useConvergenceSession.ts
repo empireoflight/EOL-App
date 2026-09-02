@@ -133,11 +133,14 @@ export function useMyPendingVisionSession(teamId: string | undefined) {
 // without this the only way to find out is to happen to open the Friction
 // hub. RLS now scopes this query to sessions the user actually participates
 // in, so no extra filtering is needed here beyond "not yet submitted."
-export function useMyPendingFrictionSession(teamId: string | undefined) {
+// Returns every pending session, oldest first — not just one, since a
+// member can genuinely be waiting on more than one at a time and a single
+// banner was silently hiding the rest.
+export function useMyPendingFrictionSessions(teamId: string | undefined) {
   const { user } = useAuth()
   return useQuery({
-    queryKey: ['my-pending-friction-session', teamId, user?.id],
-    queryFn: async (): Promise<ConvergenceSession | null> => {
+    queryKey: ['my-pending-friction-sessions', teamId, user?.id],
+    queryFn: async (): Promise<ConvergenceSession[]> => {
       if (!supabase || !user) throw new Error('Not ready')
       const { data: sessions, error: sessionsError } = await supabase
         .from('convergence_sessions')
@@ -145,8 +148,9 @@ export function useMyPendingFrictionSession(teamId: string | undefined) {
         .eq('team_id', teamId as string)
         .eq('session_type', 'friction')
         .neq('status', 'closed')
+        .order('created_at', { ascending: true })
       if (sessionsError) throw sessionsError
-      if (!sessions?.length) return null
+      if (!sessions?.length) return []
 
       const { data: myRows, error: participantsError } = await supabase
         .from('session_participants')
@@ -155,8 +159,8 @@ export function useMyPendingFrictionSession(teamId: string | undefined) {
         .in('session_id', sessions.map((s) => s.id))
       if (participantsError) throw participantsError
 
-      const pending = myRows?.find((p) => !p.submitted_at)
-      return sessions.find((s) => s.id === pending?.session_id) ?? null
+      const pendingSessionIds = new Set((myRows ?? []).filter((p) => !p.submitted_at).map((p) => p.session_id))
+      return sessions.filter((s) => pendingSessionIds.has(s.id))
     },
     enabled: !!teamId && !!user,
   })

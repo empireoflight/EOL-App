@@ -1,19 +1,26 @@
 import { Link, useParams } from 'react-router-dom'
-import { useMyPendingFrictionSession, useTeamFrictionSessions } from '../../hooks/useConvergenceSession'
+import { useMyPendingFrictionSessions, useTeamFrictionSessions } from '../../hooks/useConvergenceSession'
+import { useUserName } from '../../hooks/useUserName'
 import { Card } from '../../components/shared/Card'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
+import type { ConvergenceSession } from '../../lib/types'
 
-function PendingFrictionBanner({ teamId }: { teamId: string | undefined }) {
-  const { data: pendingSession } = useMyPendingFrictionSession(teamId)
-  if (!pendingSession) return null
+function PendingFrictionBanner({ teamId, session }: { teamId: string | undefined; session: ConvergenceSession }) {
+  const topic = (session.framing as { topic?: string | null }).topic
+  const { data: initiatorName } = useUserName(topic ? undefined : session.initiator_id)
   return (
     <Link
-      to={`/teams/${teamId}/friction/sessions/${pendingSession.id}/mitigate`}
+      to={`/teams/${teamId}/friction/sessions/${session.id}/mitigate`}
       className="flex items-center justify-between gap-3 rounded-2xl border p-4"
       style={{ background: 'var(--color-tier2-bg)', borderColor: 'var(--color-eol-border)' }}
     >
-      <div className="text-[13.5px] font-semibold" style={{ color: 'var(--color-tier2-fg)' }}>
-        You've been included in a friction conversation
+      <div className="min-w-0 flex-1">
+        <div className="text-[11px]" style={{ color: 'var(--color-tier2-fg)', opacity: 0.75 }}>
+          You've been included in a friction conversation
+        </div>
+        <div className="truncate text-[13.5px] font-semibold" style={{ color: 'var(--color-tier2-fg)' }}>
+          {topic || (initiatorName ? `Waiting on ${initiatorName} to describe it` : 'Waiting on the initiator to describe it')}
+        </div>
       </div>
       <span className="shrink-0 text-[12.5px] font-semibold" style={{ color: 'var(--color-tier2-fg)' }}>
         Process it &rarr;
@@ -25,6 +32,7 @@ function PendingFrictionBanner({ teamId }: { teamId: string | undefined }) {
 export default function FrictionHubPage() {
   const { teamId } = useParams<{ teamId: string }>()
   const { data: sessions, isLoading } = useTeamFrictionSessions(teamId)
+  const { data: pendingSessions } = useMyPendingFrictionSessions(teamId)
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-10">
@@ -37,7 +45,13 @@ export default function FrictionHubPage() {
         </p>
       </div>
 
-      <PendingFrictionBanner teamId={teamId} />
+      {pendingSessions && pendingSessions.length > 0 && (
+        <div className="flex flex-col gap-2">
+          {pendingSessions.map((session) => (
+            <PendingFrictionBanner key={session.id} teamId={teamId} session={session} />
+          ))}
+        </div>
+      )}
 
       <div className="flex flex-col gap-3">
         <div>
