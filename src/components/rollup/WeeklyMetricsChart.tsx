@@ -77,7 +77,13 @@ export function WeeklyMetricsChart({ vibePoints, taskCounts, frictionCounts, sel
           <span className="inline-block h-2 w-2 rounded-full" style={{ background: FRICTION_COLOR }} /> Friction processed
         </span>
       </div>
-      <div className="flex items-end gap-4 overflow-x-auto pb-1">
+      {/* overflow-x-auto here forces overflow-y to auto too (a CSS quirk —
+          setting only one axis to non-visible clips the other), so the
+          selected week's outline, which is drawn outside its button's own
+          box, was getting clipped flat at the top with no room to render
+          into. pt-2 gives it that room; px-0.5 does the same for the
+          first/last column's sides. */}
+      <div className="flex items-end gap-4 overflow-x-auto px-0.5 pt-2 pb-1">
         {weeks.map((week) => {
           const isSelected = week === selected
           return (
