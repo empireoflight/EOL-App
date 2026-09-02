@@ -12,6 +12,7 @@ import { Textarea } from '../../components/shared/Input'
 import { Card } from '../../components/shared/Card'
 import { TierBadge } from '../../components/shared/TierBadge'
 import { FrictionTopicSummary } from '../../components/session/FrictionTopicSummary'
+import { CancelFrictionSessionButton } from '../../components/session/CancelFrictionSessionButton'
 
 type AuthoredAnswers = { problem_summary: string; hopes: string; what_matters: string }
 
@@ -66,6 +67,12 @@ export default function FrictionRespondPage() {
           .update({ framing: { ...(sessionData?.session.framing ?? {}), topic: topic.trim(), frictionType } })
           .eq('id', sessionId)
         if (framingError) throw framingError
+
+        // This is the first moment anyone but the initiator should hear
+        // about this session — fire-and-forget, same tolerance as every
+        // other transactional email here (the topic is already saved even
+        // if this call fails).
+        void supabase.functions.invoke('send-friction-invite-email', { body: { sessionId } })
       }
 
       const { error: responseError } = await supabase.from('friction_session_responses').insert({
@@ -191,6 +198,7 @@ export default function FrictionRespondPage() {
       <Button onClick={handleSubmit} loading={submitting} disabled={!allAnswered} className="w-full">
         Submit my point of view
       </Button>
+      {needsSituationDescription && teamId && sessionId && <CancelFrictionSessionButton teamId={teamId} sessionId={sessionId} />}
     </div>
   )
 }

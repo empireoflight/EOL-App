@@ -11,6 +11,7 @@ import { TierBadge } from '../../components/shared/TierBadge'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
 import { Card } from '../../components/shared/Card'
 import { FrictionTopicSummary } from '../../components/session/FrictionTopicSummary'
+import { CancelFrictionSessionButton } from '../../components/session/CancelFrictionSessionButton'
 import { useState } from 'react'
 
 export default function FrictionMitigatorPage() {
@@ -221,6 +222,7 @@ export default function FrictionMitigatorPage() {
         <button type="button" onClick={handleExit} className="text-center text-[12.5px]" style={{ color: 'var(--color-eol-text-muted)' }}>
           Exit for now
         </button>
+        {sessionId && teamId && isInitiator && !topic && <CancelFrictionSessionButton teamId={teamId} sessionId={sessionId} />}
       </div>
     </div>
   )

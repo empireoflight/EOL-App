@@ -1,7 +1,9 @@
-// Fires when a facilitator brings other people into a friction session
-// (FrictionStartPage's "Talk about it" / "Bring it to the team" paths).
-// Content mirrors src/components/session/FrictionTopicSummary.tsx exactly —
-// same "{name} raised something about: {topic}" framing shown in-app.
+// Fires once the initiator has grounded themselves and written the shared
+// topic (FrictionRespondPage's submit) — not at session creation, so nobody
+// else hears about a friction session until the initiator has actually
+// finished the whole flow, not just picked who to bring in. Content mirrors
+// src/components/session/FrictionTopicSummary.tsx exactly — same "{name}
+// raised something about: {topic}" framing shown in-app.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { sendEmail, envSubjectPrefix } from '../_shared/email/resend.ts'
