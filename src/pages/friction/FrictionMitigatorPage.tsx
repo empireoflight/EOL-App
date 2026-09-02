@@ -3,11 +3,13 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { useConvergenceSession } from '../../hooks/useConvergenceSession'
 import { useDurableForm } from '../../hooks/useDurableForm'
+import { useTeamMembers } from '../../hooks/useMyTeams'
 import { FRICTION_STAGES, frictionQuestionsForStage, type FrictionStage } from '../../lib/frictionQuestions'
 import { Button } from '../../components/shared/Button'
 import { Textarea } from '../../components/shared/Input'
 import { TierBadge } from '../../components/shared/TierBadge'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
+import { Card } from '../../components/shared/Card'
 import { FrictionTopicSummary } from '../../components/session/FrictionTopicSummary'
 import { useState } from 'react'
 
@@ -16,6 +18,7 @@ export default function FrictionMitigatorPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { data: sessionData, isLoading: sessionLoading } = useConvergenceSession(sessionId)
+  const { data: members } = useTeamMembers(teamId)
   const [stageIndex, setStageIndex] = useState(0)
   const [finishing, setFinishing] = useState(false)
   const [soloDone, setSoloDone] = useState(false)
@@ -84,6 +87,22 @@ export default function FrictionMitigatorPage() {
   const topic = (sessionData?.session.framing as { topic?: string } | undefined)?.topic
   const waitingOnTopic = !!sessionId && !isInitiator && !topic
 
+  // The initiator's own grounding page otherwise has zero indication of who
+  // this session is even with — FrictionTopicSummary intentionally renders
+  // nothing until the topic exists (it's the initiator who's about to write
+  // it), which left this screen looking identical to solo grounding with no
+  // sense that a real conversation was started. Names, not just a count:
+  // spec §16's "never who has/hasn't submitted" is about hiding progress
+  // from *other* participants, not hiding from the initiator the list of
+  // people they personally chose to invite.
+  const otherParticipantNames =
+    isInitiator && sessionData
+      ? sessionData.participants
+          .filter((p) => p.user_id !== user?.id)
+          .map((p) => members?.find((m) => m.user_id === p.user_id)?.users?.name)
+          .filter((name): name is string => !!name)
+      : []
+
   if (waitingOnTopic) {
     return (
       <div className="mx-auto flex max-w-lg flex-col items-center gap-5 px-6 py-16 text-center">
@@ -140,6 +159,17 @@ export default function FrictionMitigatorPage() {
         </h1>
       </div>
 
+      {sessionId && !topic && otherParticipantNames.length > 0 && (
+        <Card>
+          <p className="m-0 text-[12.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
+            You're bringing this to{' '}
+            <span className="font-semibold" style={{ color: 'var(--color-eol-text)' }}>
+              {otherParticipantNames.join(', ')}
+            </span>
+            . Ground yourself first — you'll describe what it's about next.
+          </p>
+        </Card>
+      )}
       {sessionId && <FrictionTopicSummary sessionId={sessionId} />}
 
       <div className="flex gap-1.5">
