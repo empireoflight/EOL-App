@@ -67,8 +67,9 @@ export default function FrictionMitigatorPage() {
       await supabase.from('friction_grounding_completions').insert({ user_id: user.id, team_id: teamId })
       setFinishing(false)
     }
-    // Grounding Tools (friction/tools) is still a "coming soon" stub — land
-    // on a confirmation here instead of dropping someone onto an unbuilt page.
+    // A brief confirmation here rather than dropping someone straight into
+    // another moment — grounding just finished, it shouldn't feel like the
+    // app is pushing the next thing on them.
     setSoloDone(true)
   }
 

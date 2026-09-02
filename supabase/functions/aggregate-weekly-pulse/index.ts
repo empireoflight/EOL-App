@@ -179,6 +179,21 @@ Deno.serve(async (req: Request) => {
     .gte('updated_at', weekOf)
     .lte('updated_at', `${periodEndStr}T23:59:59.999Z`)
 
+  // Outcome notes are written by the initiator when closing a session
+  // (framing.outcome) — same tier-4 visibility as the topic itself, just
+  // fetched here for the ones that actually settled this period.
+  const { data: closedSessions } = await db
+    .from('convergence_sessions')
+    .select('framing')
+    .eq('team_id', teamId)
+    .eq('session_type', 'friction')
+    .eq('status', 'closed')
+    .gte('updated_at', weekOf)
+    .lte('updated_at', `${periodEndStr}T23:59:59.999Z`)
+  const frictionOutcomes = (closedSessions ?? [])
+    .map((s) => (s.framing as { outcome?: string } | null)?.outcome)
+    .filter((outcome): outcome is string => !!outcome)
+
   const rollup = await synthesizeRollup({
     teamName: team.name,
     periodLabel: `Week of ${weekOf}`,
@@ -190,6 +205,7 @@ Deno.serve(async (req: Request) => {
     vibeTrend,
     completedTaskCount,
     frictionProcessedCount: frictionProcessedCount ?? 0,
+    frictionOutcomes,
   })
 
   const rows = []

@@ -7,6 +7,7 @@ import { Card } from '../../components/shared/Card'
 import { Button } from '../../components/shared/Button'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
 import { OpenVisionSessionBanner } from '../../components/session/OpenVisionSessionBanner'
+import { PendingFrictionBanners } from '../../components/session/PendingFrictionBanners'
 import type { Experiment, TeamSignal } from '../../lib/types'
 
 const LOOP = [
@@ -79,6 +80,7 @@ export default function TeamHomePage() {
     return (
       <div className="mx-auto flex max-w-2xl flex-col gap-5 px-6 py-10">
         <OpenVisionSessionBanner teamId={teamId} />
+        <PendingFrictionBanners teamId={teamId} />
         {!sessionAlreadyInFlight && (
           <Card>
             <h2 className="m-0 mb-2 text-[18px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
@@ -99,6 +101,7 @@ export default function TeamHomePage() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 px-6 py-10">
       <OpenVisionSessionBanner teamId={teamId} />
+      <PendingFrictionBanners teamId={teamId} />
 
       <Link to={`/teams/${teamId}/vision`}>
         <div

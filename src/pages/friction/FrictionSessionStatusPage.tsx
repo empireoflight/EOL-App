@@ -7,6 +7,7 @@ import { useConvergenceSession, useSynthesisJobPolling } from '../../hooks/useCo
 import { ReadinessBanner } from '../../components/session/ReadinessBanner'
 import { Card } from '../../components/shared/Card'
 import { Button } from '../../components/shared/Button'
+import { Textarea } from '../../components/shared/Input'
 import { TierBadge } from '../../components/shared/TierBadge'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
 import { FRICTION_AUTHORED_QUESTIONS } from '../../lib/frictionQuestions'
@@ -81,6 +82,8 @@ export default function FrictionSessionStatusPage() {
   const [starting, setStarting] = useState(false)
   const [completing, setCompleting] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [outcomeDraft, setOutcomeDraft] = useState('')
+  const [closing, setClosing] = useState(false)
 
   const jobQuery = useSynthesisJobPolling(sessionId, data?.session.status)
 
@@ -88,6 +91,7 @@ export default function FrictionSessionStatusPage() {
 
   const { session, submittedCount, totalParticipants, gateMet } = data
   const isFacilitator = session.initiator_id === user?.id
+  const outcome = (session.framing as { outcome?: string | null }).outcome ?? null
 
   const handleGenerate = async () => {
     if (!supabase || !sessionId) return
@@ -129,6 +133,28 @@ export default function FrictionSessionStatusPage() {
       setError(err instanceof Error ? err.message : "Couldn't mark this as discussed.")
     } finally {
       setCompleting(false)
+    }
+  }
+
+  // Exercises the discussed -> closed transition (already legal in
+  // sessionStateMachine.ts, never triggered anywhere until now) — recording
+  // what actually came out of the conversation is what "closing" a friction
+  // session means here, not just a status flip. Feeds the Evolve rollup's
+  // AI narrative (aggregate-weekly-pulse reads closed sessions' outcomes).
+  const handleCloseWithOutcome = async () => {
+    if (!supabase || !sessionId || !outcomeDraft.trim()) return
+    setClosing(true)
+    setError('')
+    try {
+      await supabase
+        .from('convergence_sessions')
+        .update({ framing: { ...session.framing, outcome: outcomeDraft.trim() }, status: 'closed' })
+        .eq('id', sessionId)
+      refetch()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't save the outcome.")
+    } finally {
+      setClosing(false)
     }
   }
 
@@ -217,7 +243,30 @@ export default function FrictionSessionStatusPage() {
           </Card>
 
           <Card>
-            {session.status === 'discussed' ? (
+            {session.status === 'closed' ? (
+              <div className="flex flex-col gap-2">
+                <div className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-accent-label)' }}>
+                  Outcome
+                </div>
+                <p className="m-0 text-[13.5px] leading-relaxed" style={{ color: 'var(--color-eol-text)' }}>
+                  {outcome}
+                </p>
+              </div>
+            ) : session.status === 'discussed' && isFacilitator ? (
+              <div className="flex flex-col gap-3">
+                <p className="m-0 text-[13px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
+                  What came out of this?
+                </p>
+                <Textarea
+                  value={outcomeDraft}
+                  onChange={(e) => setOutcomeDraft(e.target.value)}
+                  placeholder="e.g. Weekly go/no-go check, so this stops living in one head."
+                />
+                <Button onClick={() => void handleCloseWithOutcome()} loading={closing} disabled={!outcomeDraft.trim()} className="w-full">
+                  Settle it
+                </Button>
+              </div>
+            ) : session.status === 'discussed' ? (
               <p className="m-0 text-[13px] font-medium" style={{ color: 'var(--color-eol-text)' }}>
                 This has been talked through — nice work.
               </p>

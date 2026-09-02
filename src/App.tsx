@@ -22,7 +22,7 @@ import VisionCommitPage from './pages/vision/VisionCommitPage'
 import ExperimentsPage from './pages/experiments/ExperimentsPage'
 import PulseCheckPage from './pages/checkin/PulseCheckPage'
 import RollupPage from './pages/rollup/RollupPage'
-import GroundingToolsPage from './pages/friction/GroundingToolsPage'
+import MomentPlayerPage from './pages/friction/MomentPlayerPage'
 import FrictionHubPage from './pages/friction/FrictionHubPage'
 import FrictionStartPage from './pages/friction/FrictionStartPage'
 import FrictionMitigatorPage from './pages/friction/FrictionMitigatorPage'
@@ -58,7 +58,7 @@ function App() {
           <Route path="pulse" element={<PulseCheckPage />} />
           <Route path="rollup" element={<RollupPage />} />
           <Route path="friction" element={<FrictionHubPage />} />
-          <Route path="friction/tools" element={<GroundingToolsPage />} />
+          <Route path="friction/tools/:momentId" element={<MomentPlayerPage />} />
           <Route path="friction/start" element={<FrictionStartPage />} />
           <Route path="friction/mitigate" element={<FrictionMitigatorPage />} />
           <Route path="friction/sessions/:sessionId/mitigate" element={<FrictionMitigatorPage />} />
