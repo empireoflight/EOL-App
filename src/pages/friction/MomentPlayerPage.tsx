@@ -128,19 +128,11 @@ function SilentMinuteMoment({ durationSec, onClose }: { durationSec: number; onC
   )
 }
 
-const MEDITATION_SCRIPT = `Find a position where you can be still — sitting or lying down, whatever feels right.
-Let your eyes close, or soften your gaze toward the floor.
-Take a slow breath in. Let it out slower than it came in.
-There is nothing to get right here. Just let the day settle.
-Notice where you're holding tension — your jaw, your shoulders, your hands — and let it soften, even a little.
-Stay here for a while. When you're ready, open your eyes and come back.`
-
 function GuidedMeditationMoment({ onClose }: { onClose: () => void }) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const [playing, setPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
   const [duration, setDuration] = useState(0)
-  const [readInstead, setReadInstead] = useState(false)
 
   const toggle = () => {
     const audio = audioRef.current
@@ -154,21 +146,16 @@ function GuidedMeditationMoment({ onClose }: { onClose: () => void }) {
       title="Guided meditation"
       onClose={onClose}
       footer={
-        !readInstead && (
-          <>
-            <button type="button" style={darkPillButton()} onClick={toggle}>
-              {playing ? 'Pause' : 'Play'}
-            </button>
-            <button type="button" style={darkPillButton('solid')} onClick={onClose}>
-              I'm done
-            </button>
-          </>
-        )
+        <>
+          <button type="button" style={darkPillButton()} onClick={toggle}>
+            {playing ? 'Pause' : 'Play'}
+          </button>
+          <button type="button" style={darkPillButton('solid')} onClick={onClose}>
+            I'm done
+          </button>
+        </>
       }
     >
-      {/* The audio file (public/audio/guided-meditation.mp3) is a pending
-          asset — until it's supplied, the player controls above simply have
-          nothing to play. Nothing else here depends on it. */}
       <audio
         ref={audioRef}
         src="/audio/guided-meditation.mp3"
@@ -178,37 +165,26 @@ function GuidedMeditationMoment({ onClose }: { onClose: () => void }) {
         onTimeUpdate={(e) => setProgress(e.currentTarget.currentTime)}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
       />
-      {readInstead ? (
-        <div className="max-w-[440px] text-left text-[15px] leading-relaxed" style={{ color: 'rgba(253,250,244,.85)', whiteSpace: 'pre-line' }}>
-          {MEDITATION_SCRIPT}
+      <div className="text-[26px] font-semibold" style={{ color: '#FBF7F2', fontFamily: 'var(--font-display)' }}>
+        Letting the day settle
+      </div>
+      <div className="max-w-[440px] text-[15px] leading-relaxed" style={{ color: 'rgba(253,250,244,.72)' }}>
+        Eyes closed or soft. There is nothing to get right here.
+      </div>
+      <div className="flex w-full max-w-[420px] items-center gap-3.5">
+        <div className="text-[12.5px] font-semibold" style={{ color: 'rgba(253,250,244,.72)' }}>
+          {formatClock(progress)}
         </div>
-      ) : (
-        <>
-          <div className="text-[26px] font-semibold" style={{ color: '#FBF7F2', fontFamily: 'var(--font-display)' }}>
-            Letting the day settle
-          </div>
-          <div className="max-w-[440px] text-[15px] leading-relaxed" style={{ color: 'rgba(253,250,244,.72)' }}>
-            Eyes closed or soft. There is nothing to get right here.
-          </div>
-          <div className="flex w-full max-w-[420px] items-center gap-3.5">
-            <div className="text-[12.5px] font-semibold" style={{ color: 'rgba(253,250,244,.72)' }}>
-              {formatClock(progress)}
-            </div>
-            <div className="relative h-[3px] flex-1 rounded-full" style={{ background: 'rgba(253,250,244,.14)' }}>
-              <div
-                className="absolute inset-y-0 left-0 rounded-full"
-                style={{ width: `${duration ? (progress / duration) * 100 : 0}%`, background: 'var(--color-eol-accent)' }}
-              />
-            </div>
-            <div className="text-[12.5px] font-semibold" style={{ color: 'rgba(253,250,244,.48)' }}>
-              {formatClock(duration)}
-            </div>
-          </div>
-        </>
-      )}
-      <button type="button" className="text-[13px]" style={{ color: 'rgba(253,250,244,.48)' }} onClick={() => setReadInstead((r) => !r)}>
-        {readInstead ? 'Play it instead' : 'Read it instead'}
-      </button>
+        <div className="relative h-[3px] flex-1 rounded-full" style={{ background: 'rgba(253,250,244,.14)' }}>
+          <div
+            className="absolute inset-y-0 left-0 rounded-full"
+            style={{ width: `${duration ? (progress / duration) * 100 : 0}%`, background: 'var(--color-eol-accent)' }}
+          />
+        </div>
+        <div className="text-[12.5px] font-semibold" style={{ color: 'rgba(253,250,244,.48)' }}>
+          {formatClock(duration)}
+        </div>
+      </div>
     </DarkTimedShell>
   )
 }

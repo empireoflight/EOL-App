@@ -37,8 +37,8 @@ export const GROUNDING_MOMENTS: GroundingMoment[] = [
     id: 'guided-meditation',
     name: 'Guided meditation',
     shell: 'timed-dark',
-    durationSec: 480,
-    meta: '8 min',
+    durationSec: 223, // matches public/audio/guided-meditation.mp3's actual length (3:42)
+    meta: '4 min',
     blurb: 'Voice-led, eyes closed. Nothing to do but stay.',
     outside: false,
   },
