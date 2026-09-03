@@ -690,6 +690,18 @@ export default function VisionHomePage() {
                   {vision.alignment_guide.disconnect}
                 </p>
               </div>
+              {vision.alignment_guide.uniquePerspectives?.length > 0 && (
+                <div>
+                  <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-tier2-fg)' }}>
+                    Worth talking about
+                  </div>
+                  <ul className="m-0 flex flex-col gap-1 pl-4 text-[12.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
+                    {vision.alignment_guide.uniquePerspectives.map((point, i) => (
+                      <li key={i}>{point}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </Card>
         ) : (

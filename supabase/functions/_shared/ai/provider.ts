@@ -326,6 +326,12 @@ export async function generateVisionLayout(input: {
 export type VisionAlignmentGuide = {
   alignment: string
   disconnect: string
+  // Individual points that don't fit neatly into either bucket above and
+  // would otherwise get lost once everything's rolled up into one shared
+  // layout — a distinct idea, a specific concern, an angle nobody else
+  // raised. Optional/empty when nothing genuinely stands out beyond what
+  // alignment/disconnect already cover.
+  uniquePerspectives: string[]
 }
 
 export async function generateVisionAlignmentGuide(input: {
@@ -349,7 +355,14 @@ export async function generateVisionAlignmentGuide(input: {
           `\n\nWrite two short paragraphs (2-3 sentences each): where the team's answers ` +
           `genuinely converge, and where there's a real disconnect worth naming (different ` +
           `readings of the same idea, tension between priorities, etc.). Be specific, not generic. ` +
-          `Respond as JSON: {"alignment": string, "disconnect": string}. No other text.`,
+          `\n\nAlso pull out 2-4 unique or unexpected individual points worth the team discussing ` +
+          `directly — something one person raised that doesn't fit neatly into either the alignment ` +
+          `or the disconnect (a distinct idea, a specific concern, an angle nobody else touched on) ` +
+          `and would otherwise get lost once everything's rolled into one shared layout. Paraphrase, ` +
+          `never quote verbatim, and never attribute a point to a specific participant — describe the ` +
+          `point itself, not who raised it. Leave this list empty if nothing genuinely stands out beyond ` +
+          `what alignment/disconnect already cover — don't manufacture points to fill it. ` +
+          `Respond as JSON: {"alignment": string, "disconnect": string, "uniquePerspectives": string[]}. No other text.`,
       },
     ],
   })

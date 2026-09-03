@@ -95,6 +95,7 @@ export type VisionLayout = {
 export type VisionAlignmentGuide = {
   alignment: string
   disconnect: string
+  uniquePerspectives: string[]
 }
 
 export type Vision = {
