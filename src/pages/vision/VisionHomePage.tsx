@@ -358,11 +358,13 @@ function VisionStatusPanel({
   sessionId,
   vision,
   canManage,
+  guideStale,
 }: {
   teamId: string | undefined
   sessionId: string
   vision: Vision
   canManage: boolean
+  guideStale: boolean
 }) {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -403,6 +405,12 @@ function VisionStatusPanel({
               <Button onClick={() => navigate(`/teams/${teamId}/vision/sessions/${sessionId}/reflect`)} className="w-full">
                 Submit your reflection
               </Button>
+            </div>
+          )}
+
+          {guideStale && (
+            <div className="rounded-lg border px-3 py-2 text-[12.5px]" style={{ borderColor: 'var(--color-tier2-dot)', color: 'var(--color-tier2-fg)', background: 'var(--color-tier2-bg)' }}>
+              Someone submitted a reflection after this guide was generated — it's still here to read, but regenerating will bring it up to date.
             </div>
           )}
 
@@ -526,41 +534,42 @@ export default function VisionHomePage() {
   const { user } = useAuth()
   const { data: vision, isLoading } = useTeamVision(teamId)
   const { data: openSession, isLoading: openSessionLoading } = useOpenVisionSession(teamId)
-  const { data: openSessionData } = useConvergenceSession(openSession?.id)
-  const { data: lastGuideCompletedAt } = useLatestGuideCompletion(openSession?.id)
+  const { data: openSessionData, isLoading: openSessionDataLoading } = useConvergenceSession(openSession?.id)
+  const { data: lastGuideCompletedAt, isLoading: lastGuideCompletedAtLoading } = useLatestGuideCompletion(openSession?.id)
   const { data: members } = useTeamMembers(teamId)
   const saveLayout = useSaveVisionLayout(vision?.id, teamId)
 
-  if (isLoading || openSessionLoading) return <LoadingScreen />
+  // openSessionData/lastGuideCompletedAt only start fetching once
+  // openSession.id is known, so right after openSession resolves there's a
+  // render where they're still undefined — guideStale would then compute as
+  // false (nothing to compare against yet), the canvas would flash into
+  // view, and then lock back the moment the real data arrives and guideStale
+  // turns out to be true. Waiting for both here means blockedFromCanvas is
+  // only ever computed once, with real data, not this stale-then-real flash.
+  if (isLoading || openSessionLoading || (openSession && (openSessionDataLoading || lastGuideCompletedAtLoading))) return <LoadingScreen />
 
   const myMembership = user ? (members ?? []).find((m) => m.user_id === user.id) : undefined
   const isTeamFacilitator = myMembership?.team_role === 'facilitator'
   const canManage = isTeamFacilitator || (!!vision && vision.created_by === user?.id)
 
-  // Two reasons nobody should see the canvas, facilitator included: (1) no
-  // guide exists yet for the currently open session; or (2) one does, but
-  // at least one participant's submission happened *after* the last
-  // successful generation completed — the existing guide doesn't reflect
-  // it. Nobody sees stale content in this case — the moment a guide exists
-  // that postdates every current submission, everyone sees it together.
-  // Also covers a stale vision left over from an earlier committed cycle
-  // (visions.team_id has no uniqueness) — this is the only "in progress"
-  // messaging on this page now, the old separate status page is gone.
+  // The only reason nobody should see the canvas, facilitator included: no
+  // guide exists yet for the currently open session. Also covers a stale
+  // vision left over from an earlier committed cycle (visions.team_id has no
+  // uniqueness) — this is the only "in progress" messaging on this page now,
+  // the old separate status page is gone.
   //
-  // Deliberately NOT also requiring the readiness gate to currently be met:
-  // ReadinessBanner's "Generate now anyway" lets a facilitator generate
-  // before everyone's submitted, and a hard gate-met requirement here
-  // defeated that entirely — the guide would generate successfully but the
-  // canvas would stay permanently locked (gate never becomes "met" just
-  // because a guide exists), which is exactly the flash-then-revert bug a
-  // facilitator hit on staging. A late-joining, not-yet-submitted
-  // participant not being reflected in an early guide is the accepted
-  // tradeoff of generating early, not a staleness case — guideStale below
-  // still catches anyone who actually submitted after generation.
+  // A guide that already exists is never hidden again, even once someone
+  // submits (or resubmits) after it was generated — that used to hard-block
+  // the canvas the moment guideStale went true, which silently disappeared
+  // a guide the team could otherwise still read and discuss, and produced a
+  // flash-then-revert on load once the real (stale) state caught up with an
+  // initial render computed before it was known. guideStale is still
+  // computed below, just to surface a "this may be out of date" notice
+  // (VisionStatusPanel) rather than hiding the canvas outright.
   const guideStale =
     !!lastGuideCompletedAt &&
     (openSessionData?.participants ?? []).some((p) => p.submitted_at && new Date(p.submitted_at) > new Date(lastGuideCompletedAt))
-  const blockedFromCanvas = !!openSession && (openSession.status !== 'guide_ready' || guideStale)
+  const blockedFromCanvas = !!openSession && openSession.status !== 'guide_ready'
   if (blockedFromCanvas) {
     return (
       <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
@@ -611,7 +620,7 @@ export default function VisionHomePage() {
           a manager who invited more people after generating re-run
           synthesis with their input included. */}
       {openSession && vision.status === 'draft' && (
-        <VisionStatusPanel teamId={teamId} sessionId={openSession.id} vision={vision} canManage={canManage} />
+        <VisionStatusPanel teamId={teamId} sessionId={openSession.id} vision={vision} canManage={canManage} guideStale={guideStale} />
       )}
       {vision.status !== 'draft' && <CommitmentPanel teamId={teamId} vision={vision} canManage={canManage} />}
 
