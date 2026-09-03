@@ -319,7 +319,7 @@ function DanceMomentMoment({ durationSec, onClose }: { durationSec: number; onCl
       footer={
         remaining > 0 ? (
           <button type="button" style={darkPillButton('solid')} onClick={() => setPlaying((p) => !p)}>
-            {playing ? 'Pause' : 'Play it'}
+            {playing ? 'Pause' : 'Start'}
           </button>
         ) : (
           <button type="button" style={darkPillButton('solid')} onClick={onClose}>
@@ -341,7 +341,8 @@ function DanceMomentMoment({ durationSec, onClose }: { durationSec: number; onCl
         Put on a song you love
       </div>
       <div className="max-w-[420px] text-[14.5px] leading-relaxed" style={{ color: 'rgba(253,250,244,.6)' }}>
-        Nobody is watching and nobody is scoring this. Put it on the big screen if you're together.
+        Start it playing wherever you like, then hit start here. Nobody is watching and nobody is scoring this — put it
+        on the big screen if you're together.
       </div>
       {playing && (
         <div className="text-[15px]" style={{ color: 'rgba(253,250,244,.72)' }}>
