@@ -166,10 +166,13 @@ export default function FrictionHubPage() {
           )}
         </div>
 
-        <div className="flex w-full flex-col gap-3 lg:w-[280px] lg:shrink-0">
+        <div
+          className="flex w-full flex-col gap-3 rounded-2xl border p-4 lg:w-[280px] lg:shrink-0"
+          style={{ background: 'var(--color-eol-surface-light)', borderColor: 'var(--color-eol-border)' }}
+        >
           <div>
-            <div className="text-[15px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-              Take a moment first
+            <div className="text-[18px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
+              Take a moment
             </div>
             <p className="m-0 mt-0.5 text-[12px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
               No tracking, no streaks.
