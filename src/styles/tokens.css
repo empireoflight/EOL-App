@@ -4,8 +4,10 @@
  * Colors are oklch to match the source mockup exactly.
  */
 @theme {
-  --font-display: 'Josefin Sans', sans-serif;
+  --font-display: 'Quicksand', sans-serif;
   --font-body: 'Work Sans', sans-serif;
+
+  --gradient-dawn: linear-gradient(135deg, #fff6ad, #ffd1d9 55%, #ffa9f8);
 
   --color-eol-text: oklch(0.24 0.02 50);
   --color-eol-text-secondary: oklch(0.48 0.02 50);

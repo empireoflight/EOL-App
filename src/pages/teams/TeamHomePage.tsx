@@ -106,7 +106,7 @@ export default function TeamHomePage() {
       <Link to={`/teams/${teamId}/vision`}>
         <div
           className="rounded-2xl border p-5 transition-opacity hover:opacity-90"
-          style={{ background: 'linear-gradient(135deg, #fff6ad, #ffd1d9 55%, #ffa9f8)', borderColor: 'var(--color-eol-border)' }}
+          style={{ background: 'var(--gradient-dawn)', borderColor: 'var(--color-eol-border)' }}
         >
           <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-pink-strong)' }}>
             What are we creating?

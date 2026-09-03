@@ -216,12 +216,14 @@ function SidebarContent({ teamId, teamName, onNavigate }: SidebarContentProps) {
               key={item.label}
               to={item.to}
               onClick={onNavigate}
-              className="rounded-lg px-3 py-2 text-[13px] font-medium"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-[14px]"
               style={{
-                background: active ? 'var(--color-tier2-bg)' : 'transparent',
-                color: active ? 'var(--color-tier2-fg)' : 'var(--color-eol-text-muted)',
+                background: active ? 'var(--color-eol-accent)' : 'transparent',
+                color: active ? 'var(--color-eol-ink)' : 'var(--color-eol-text-muted)',
+                fontWeight: active ? 600 : 500,
               }}
             >
+              {active && <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--color-eol-accent-hover)' }} />}
               {item.label}
             </Link>
           )
@@ -265,7 +267,7 @@ export function AppShell({ teamId, teamName, children }: AppShellProps) {
   return (
     <div className="flex h-screen overflow-hidden">
       <aside
-        className="hidden w-[220px] shrink-0 border-r md:block"
+        className="hidden w-[240px] shrink-0 border-r md:block"
         style={{ background: 'var(--color-eol-surface)', borderColor: 'var(--color-eol-border)' }}
       >
         <SidebarContent teamId={teamId} teamName={teamName} />
@@ -295,7 +297,7 @@ export function AppShell({ teamId, teamName, children }: AppShellProps) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header
           className="flex h-14 shrink-0 items-center justify-between border-b px-5"
-          style={{ borderColor: 'var(--color-eol-border)' }}
+          style={{ background: 'var(--gradient-dawn)', borderColor: 'var(--color-eol-border)' }}
         >
           <div className="flex items-center gap-2.5">
             <button
@@ -303,7 +305,7 @@ export function AppShell({ teamId, teamName, children }: AppShellProps) {
               onClick={() => setMobileNavOpen(true)}
               aria-label="Open menu"
               className="-ml-1.5 rounded-lg p-1.5 md:hidden"
-              style={{ color: 'var(--color-eol-text-muted)' }}
+              style={{ color: 'var(--color-eol-text)' }}
             >
               <MenuIcon />
             </button>
@@ -311,7 +313,7 @@ export function AppShell({ teamId, teamName, children }: AppShellProps) {
               {teamName}
             </span>
           </div>
-          <nav className="flex gap-4 text-[12.5px]" style={{ color: 'var(--color-eol-text-muted)' }}>
+          <nav className="flex gap-4 text-[12.5px] font-medium" style={{ color: 'var(--color-eol-text)' }}>
             <Link to={`/teams/${teamId}/pulse`}>Vibe check</Link>
             {canInvite && <Link to={`/teams/${teamId}/invite`}>Invite</Link>}
           </nav>

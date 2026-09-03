@@ -621,7 +621,7 @@ export default function VisionHomePage() {
         </div>
         <div
           className="rounded-2xl border p-6"
-          style={{ background: 'linear-gradient(135deg, #fff6ad, #ffd1d9 55%, #ffa9f8)', borderColor: 'var(--color-eol-border)' }}
+          style={{ background: 'var(--gradient-dawn)', borderColor: 'var(--color-eol-border)' }}
         >
           {northStar ? (
             <EditableText
