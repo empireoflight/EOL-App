@@ -218,12 +218,12 @@ function SidebarContent({ teamId, teamName, onNavigate }: SidebarContentProps) {
               onClick={onNavigate}
               className="flex items-center gap-2 rounded-lg px-3 py-2 text-[14px]"
               style={{
-                background: active ? 'var(--color-eol-accent)' : 'transparent',
-                color: active ? 'var(--color-eol-ink)' : 'var(--color-eol-text-muted)',
+                background: active ? 'var(--color-tier2-bg)' : 'transparent',
+                color: active ? 'var(--color-tier2-fg)' : 'var(--color-eol-text-muted)',
                 fontWeight: active ? 600 : 500,
               }}
             >
-              {active && <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--color-eol-accent-hover)' }} />}
+              {active && <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--color-tier2-dot)' }} />}
               {item.label}
             </Link>
           )

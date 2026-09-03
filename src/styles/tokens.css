@@ -59,10 +59,7 @@ body {
   margin: 0;
   font-family: var(--font-body);
   color: var(--color-eol-text);
-  background:
-    radial-gradient(ellipse 900px 480px at 50% 0%, rgba(255, 246, 173, 0.55), transparent 60%),
-    radial-gradient(ellipse 700px 420px at 82% 6%, rgba(255, 169, 248, 0.32), transparent 60%),
-    var(--color-eol-bg);
+  background: var(--color-eol-bg);
   min-height: 100vh;
 }
 
