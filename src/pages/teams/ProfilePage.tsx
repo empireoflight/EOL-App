@@ -7,6 +7,18 @@ import { Input } from '../../components/shared/Input'
 import { Avatar } from '../../components/shared/Avatar'
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024
+// Browser-renderable formats only — HEIC/HEIF (the default on iPhone and
+// recent Mac photo exports) uploads fine but no mainstream browser can
+// actually paint it in an <img>, which is exactly what showed up as a
+// broken-image icon instead of an avatar. Extension is derived from this
+// map (not the filename) so the stored object always matches what was
+// actually validated.
+const ALLOWED_AVATAR_TYPES: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+}
 
 export default function ProfilePage() {
   const { user, profile, refreshProfile } = useAuth()
@@ -43,10 +55,16 @@ export default function ProfilePage() {
       setError('That image is too large — please pick one under 5MB.')
       return
     }
+    const ext = ALLOWED_AVATAR_TYPES[file.type]
+    if (!ext) {
+      setError(
+        "That photo format isn't supported here — please use a JPG or PNG. (HEIC photos from iPhone or Mac need to be converted first — most photo apps have an \"Export as JPEG\" option.)"
+      )
+      return
+    }
     setUploadingAvatar(true)
     setError('')
     try {
-      const ext = file.name.split('.').pop() ?? 'jpg'
       const path = `${user.id}/avatar.${ext}`
       const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
       if (uploadError) throw uploadError
