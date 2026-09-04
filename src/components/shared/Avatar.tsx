@@ -17,9 +17,23 @@ function colorFor(seed: string) {
 type AvatarProps = {
   name: string
   size?: number
+  avatarUrl?: string | null
 }
 
-export function Avatar({ name, size = 32 }: AvatarProps) {
+export function Avatar({ name, size = 32, avatarUrl }: AvatarProps) {
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={name}
+        width={size}
+        height={size}
+        className="shrink-0 rounded-full object-cover"
+        style={{ width: size, height: size }}
+      />
+    )
+  }
+
   const initial = name.trim().charAt(0).toUpperCase() || '?'
   return (
     <div

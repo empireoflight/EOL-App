@@ -21,6 +21,7 @@ export type ConvergenceSessionData = {
    * even once Phase 2 builds friction sessions on the same hook.
    */
   participantNames: Record<string, string>
+  participantAvatarUrls: Record<string, string | null>
 }
 
 async function fetchSession(sessionId: string): Promise<ConvergenceSessionData> {
@@ -40,12 +41,14 @@ async function fetchSession(sessionId: string): Promise<ConvergenceSessionData> 
   if (participantsError) throw participantsError
 
   let participantNames: Record<string, string> = {}
+  let participantAvatarUrls: Record<string, string | null> = {}
   if (session.session_type === 'vision' && participants.length > 0) {
     const { data: users } = await supabase
       .from('users')
-      .select('id, name')
+      .select('id, name, avatar_url')
       .in('id', participants.map((p) => p.user_id))
     participantNames = Object.fromEntries((users ?? []).map((u) => [u.id, u.name]))
+    participantAvatarUrls = Object.fromEntries((users ?? []).map((u) => [u.id, u.avatar_url]))
   }
 
   const submittedCount = participants.filter((p) => p.submitted_at).length
@@ -57,6 +60,7 @@ async function fetchSession(sessionId: string): Promise<ConvergenceSessionData> 
     totalParticipants: participants.length,
     gateMet: isReadinessGateMet(session.readiness_gate, submittedCount, participants.length),
     participantNames,
+    participantAvatarUrls,
   }
 }
 

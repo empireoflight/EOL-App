@@ -21,7 +21,7 @@ export type TeamMember = {
   user_id: string
   team_role: 'facilitator' | 'member'
   joined_at: string
-  users?: { id: string; name: string; email: string }
+  users?: { id: string; name: string; email: string; avatar_url: string | null }
 }
 
 export type TeamInvite = {

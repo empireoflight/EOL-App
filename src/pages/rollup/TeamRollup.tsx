@@ -99,6 +99,7 @@ export function TeamRollup({ teamId }: { teamId: string }) {
   const { data: completedItems } = useCompletedItemsForWeek(teamId, effectiveSelected)
 
   const memberName = (id: string | null) => members?.find((m) => m.user_id === id)?.users?.name ?? null
+  const memberAvatarUrl = (id: string | null) => members?.find((m) => m.user_id === id)?.users?.avatar_url
 
   const handleGenerate = async () => {
     if (!supabase || !teamId) return
@@ -249,7 +250,7 @@ export function TeamRollup({ teamId }: { teamId: string }) {
                     {item.title}
                   </div>
                   <TaskTypeBadge type={item.type} />
-                  {item.assignee_id && <Avatar name={memberName(item.assignee_id) ?? '?'} size={20} />}
+                  {item.assignee_id && <Avatar name={memberName(item.assignee_id) ?? '?'} avatarUrl={memberAvatarUrl(item.assignee_id)} size={20} />}
                 </div>
               ))}
             </div>

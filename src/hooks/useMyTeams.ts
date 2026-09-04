@@ -40,7 +40,7 @@ export function useTeamMembers(teamId: string | undefined) {
       if (!supabase) throw new Error('Supabase is not configured')
       const { data, error } = await supabase
         .from('team_members')
-        .select('*, users(id, name, email)')
+        .select('*, users(id, name, email, avatar_url)')
         .eq('team_id', teamId as string)
       if (error) throw error
       return data

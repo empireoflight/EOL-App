@@ -81,6 +81,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user?.id])
 
+  // Re-pulls the current user's own row — used after a profile edit (name,
+  // avatar, notification preference) so the sidebar and anywhere else
+  // `profile` feeds into update immediately instead of waiting for a full
+  // reload. No retry here (unlike the initial fetch above) — by the time
+  // this is called the row is already known to exist.
+  const refreshProfile = async () => {
+    if (!user?.id || !isSupabaseConfigured || !supabase) return
+    const { data } = await supabase.from('users').select('*').eq('id', user.id).maybeSingle()
+    setProfile(data)
+  }
+
   const signUp = async ({
     email,
     password,
@@ -162,6 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signOut,
         resetPassword,
         updatePassword,
+        refreshProfile,
       }}
     >
       {children}

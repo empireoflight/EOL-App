@@ -5,6 +5,8 @@ export type Profile = {
   id: string
   email: string
   name: string
+  avatar_url: string | null
+  email_notifications_enabled: boolean
   created_at: string
 }
 
@@ -19,6 +21,7 @@ export type AuthContextValue = {
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<void>
   updatePassword: (password: string) => Promise<void>
+  refreshProfile: () => Promise<void>
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)

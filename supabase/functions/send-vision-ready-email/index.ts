@@ -44,14 +44,17 @@ Deno.serve(async (req: Request) => {
   const { data: team } = await db.from('teams').select('name').eq('id', vision.team_id).single()
   const { data: members } = await db
     .from('team_members')
-    .select('user_id, users(email, name)')
+    .select('user_id, users(email, name, email_notifications_enabled)')
     .eq('team_id', vision.team_id)
 
   const appBaseUrl = Deno.env.get('APP_BASE_URL') ?? 'http://localhost:5173'
   const ctaUrl = `${appBaseUrl}/teams/${vision.team_id}/vision/commit`
   const teamName = team?.name ?? 'your team'
 
-  const recipients = (members ?? []).filter((m) => m.users?.email) as { user_id: string; users: { email: string; name: string } }[]
+  const recipients = (members ?? []).filter((m) => m.users?.email && m.users.email_notifications_enabled) as {
+    user_id: string
+    users: { email: string; name: string }
+  }[]
 
   const results = await Promise.allSettled(
     recipients.map((m) =>

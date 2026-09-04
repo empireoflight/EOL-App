@@ -194,7 +194,7 @@ function RawAnswers({ sessionId }: { sessionId: string | null }) {
         {answers.map((a) => (
           <Card key={a.userId}>
             <div className="mb-3 flex items-center gap-2.5">
-              <Avatar name={a.userName} size={24} />
+              <Avatar name={a.userName} avatarUrl={a.userAvatarUrl} size={24} />
               <span className="text-[13px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
                 {a.userName}
               </span>
@@ -297,7 +297,7 @@ function VisionSessionProgress({ teamId, sessionId, canManage }: { teamId: strin
 
   if (isLoading || !data) return <LoadingScreen />
 
-  const { session, participants, submittedCount, totalParticipants, gateMet, participantNames } = data
+  const { session, participants, submittedCount, totalParticipants, gateMet, participantNames, participantAvatarUrls } = data
   const myParticipant = participants.find((p) => p.user_id === user?.id)
 
   return (
@@ -334,7 +334,7 @@ function VisionSessionProgress({ teamId, sessionId, canManage }: { teamId: strin
           <div className="flex flex-wrap gap-3">
             {Object.entries(participantNames).map(([id, name]) => (
               <div key={id} className="flex items-center gap-2">
-                <Avatar name={name} size={26} />
+                <Avatar name={name} avatarUrl={participantAvatarUrls[id]} size={26} />
                 <span className="text-[12px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
                   {name}
                 </span>
@@ -374,7 +374,7 @@ function VisionStatusPanel({
 
   if (isLoading || !data) return <LoadingScreen />
 
-  const { session, participants, submittedCount, totalParticipants, gateMet, participantNames } = data
+  const { session, participants, submittedCount, totalParticipants, gateMet, participantNames, participantAvatarUrls } = data
   const myParticipant = participants.find((p) => p.user_id === user?.id)
   const regenerate = session.status === 'guide_ready'
 
@@ -443,7 +443,7 @@ function VisionStatusPanel({
             <div className="flex flex-wrap gap-3">
               {Object.entries(participantNames).map(([id, name]) => (
                 <div key={id} className="flex items-center gap-2">
-                  <Avatar name={name} size={26} />
+                  <Avatar name={name} avatarUrl={participantAvatarUrls[id]} size={26} />
                   <span className="text-[12px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
                     {name}
                   </span>

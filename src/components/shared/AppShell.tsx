@@ -231,12 +231,12 @@ function SidebarContent({ teamId, teamName, onNavigate }: SidebarContentProps) {
       </nav>
 
       <div className="mt-auto shrink-0 border-t px-4 pt-3" style={{ borderColor: 'var(--color-eol-border)' }}>
-        <div className="flex items-center gap-2.5">
-          <Avatar name={profile?.name ?? '?'} size={28} />
+        <Link to={`/teams/${teamId}/profile`} onClick={onNavigate} className="flex items-center gap-2.5">
+          <Avatar name={profile?.name ?? '?'} avatarUrl={profile?.avatar_url} size={28} />
           <span className="min-w-0 flex-1 truncate text-[13px] font-medium" style={{ color: 'var(--color-eol-text)' }}>
             {profile?.name}
           </span>
-        </div>
+        </Link>
         <button
           type="button"
           onClick={() => void signOut()}

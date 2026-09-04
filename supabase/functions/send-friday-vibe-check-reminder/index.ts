@@ -61,7 +61,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: members } = await db
       .from('team_members')
-      .select('user_id, users(email, name)')
+      .select('user_id, users(email, name, email_notifications_enabled)')
       .eq('team_id', team.id)
     if (!members?.length) continue
 
@@ -73,7 +73,8 @@ Deno.serve(async (req: Request) => {
     const submittedIds = new Set((alreadySubmitted ?? []).map((r) => r.user_id))
 
     const pending = members.filter(
-      (m): m is typeof m & { users: { email: string; name: string } } => !!m.users?.email && !submittedIds.has(m.user_id)
+      (m): m is typeof m & { users: { email: string; name: string; email_notifications_enabled: boolean } } =>
+        !!m.users?.email && !submittedIds.has(m.user_id) && m.users.email_notifications_enabled
     )
 
     const ctaUrl = `${appBaseUrl}/teams/${team.id}/pulse`

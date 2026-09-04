@@ -42,9 +42,9 @@ Deno.serve(async (req: Request) => {
 
   const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
   const { data: team } = await db.from('teams').select('name').eq('id', session.team_id).single()
-  const { data: facilitator } = await db.from('users').select('email').eq('id', session.initiator_id).single()
+  const { data: facilitator } = await db.from('users').select('email, email_notifications_enabled').eq('id', session.initiator_id).single()
 
-  if (!facilitator?.email) {
+  if (!facilitator?.email || !facilitator.email_notifications_enabled) {
     return new Response(JSON.stringify({ ok: true, sent: 0 }), {
       headers: { ...corsHeaders, 'content-type': 'application/json' },
     })

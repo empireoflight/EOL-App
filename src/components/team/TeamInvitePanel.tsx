@@ -158,7 +158,7 @@ export function TeamInvitePanel({ teamId }: { teamId: string }) {
         <div className="flex flex-col gap-3">
           {(members ?? []).map((m) => (
             <div key={m.user_id} className="flex items-center gap-3">
-              <Avatar name={m.users?.name ?? '?'} />
+              <Avatar name={m.users?.name ?? '?'} avatarUrl={m.users?.avatar_url} />
               <div className="text-[13px]" style={{ color: 'var(--color-eol-text)' }}>
                 {m.users?.name}
                 {m.team_role === 'facilitator' && (

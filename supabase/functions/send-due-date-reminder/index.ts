@@ -40,9 +40,9 @@ async function remindDueItems(
 
   const { data: assignees } = await db
     .from('users')
-    .select('id, email, name')
+    .select('id, email, name, email_notifications_enabled')
     .in('id', dueItems.map((i) => i.assignee_id))
-  const emailById = new Map((assignees ?? []).map((u) => [u.id, u.email as string]))
+  const emailById = new Map((assignees ?? []).filter((u) => u.email_notifications_enabled).map((u) => [u.id, u.email as string]))
 
   const kindLabel = table === 'experiments' ? 'experiment' : 'action'
   const results = await Promise.allSettled(

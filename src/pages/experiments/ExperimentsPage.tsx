@@ -127,6 +127,7 @@ export default function ExperimentsPage() {
 
   const pillars = (vision?.layout.nodes ?? []).filter((n) => n.kind === 'pillar')
   const memberName = (id: string | null) => members?.find((m) => m.user_id === id)?.users?.name ?? null
+  const memberAvatarUrl = (id: string | null) => members?.find((m) => m.user_id === id)?.users?.avatar_url
 
   const [sort, setSort] = useState<SortState>({ key: 'due_date', dir: 'asc' })
   const toggleSort = (key: SortKey) => setSort((prev) => (prev.key === key ? { key, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'asc' }))
@@ -495,7 +496,7 @@ export default function ExperimentsPage() {
                     <TaskTypeBadge type={row.kind} />
                   </div>
                   <div className="w-[36px] shrink-0">
-                    {row.data.assignee_id && <Avatar name={memberName(row.data.assignee_id) ?? '?'} size={22} />}
+                    {row.data.assignee_id && <Avatar name={memberName(row.data.assignee_id) ?? '?'} avatarUrl={memberAvatarUrl(row.data.assignee_id)} size={22} />}
                   </div>
                   <div className="w-[128px] shrink-0" onClick={(e) => e.stopPropagation()}>
                     <select

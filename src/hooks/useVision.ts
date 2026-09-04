@@ -118,6 +118,7 @@ export function useReviseVision(visionId: string | undefined, teamId?: string) {
 export type VisionAnswer = {
   userId: string
   userName: string
+  userAvatarUrl: string | null
   content: Record<string, string>
 }
 
@@ -141,14 +142,15 @@ export function useVisionAnswers(sessionId: string | undefined) {
 
       const { data: users, error: usersError } = await supabase
         .from('users')
-        .select('id, name')
+        .select('id, name, avatar_url')
         .in('id', reflections.map((r) => r.user_id))
       if (usersError) throw usersError
-      const nameById = Object.fromEntries((users ?? []).map((u) => [u.id, u.name]))
+      const userById = Object.fromEntries((users ?? []).map((u) => [u.id, u]))
 
       return reflections.map((r) => ({
         userId: r.user_id,
-        userName: nameById[r.user_id] ?? 'Someone',
+        userName: userById[r.user_id]?.name ?? 'Someone',
+        userAvatarUrl: userById[r.user_id]?.avatar_url ?? null,
         content: r.content as Record<string, string>,
       }))
     },

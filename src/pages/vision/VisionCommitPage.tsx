@@ -69,7 +69,7 @@ export default function VisionCommitPage() {
             const committed = c?.status === 'committed'
             return (
               <div key={m.user_id} className="flex items-center gap-3 rounded-lg border px-3.5 py-2.5" style={{ borderColor: 'var(--color-eol-border)', background: 'var(--color-eol-surface-light)' }}>
-                <Avatar name={m.users?.name ?? '?'} />
+                <Avatar name={m.users?.name ?? '?'} avatarUrl={m.users?.avatar_url} />
                 <div className="flex-1">
                   <div className="text-[13px] font-medium" style={{ color: 'var(--color-eol-text)' }}>
                     {m.users?.name}
