@@ -49,6 +49,16 @@ Deno.serve(async (req: Request) => {
 
   let sent = 0
   for (const team of teams) {
+    // A team that hasn't sent a vision for commitment yet doesn't have
+    // anything for the pulse to actually measure against — the vibe check
+    // exists to notice how the team's doing relative to what it committed
+    // to, so nudging before that commitment even happened is premature.
+    // `neq('status', 'draft')` covers both pending_commitment and
+    // committed, and stays true even if a committed vision is later
+    // revised back to draft — the team already reached commitment once.
+    const { data: sentVisions } = await db.from('visions').select('id').eq('team_id', team.id).neq('status', 'draft').limit(1)
+    if (!sentVisions?.length) continue
+
     const { data: members } = await db
       .from('team_members')
       .select('user_id, users(email, name)')

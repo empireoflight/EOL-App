@@ -392,6 +392,11 @@ deno_version = 2
 
 [edge_runtime.secrets]
 ANTHROPIC_API_KEY = "env(ANTHROPIC_API_KEY)"
+# Lets the two cron-triggered functions (send-friday-vibe-check-reminder,
+# send-due-date-reminder) actually be invoked locally for testing — hosted
+# projects get this from Vault (see 20260818060000_friday_vibe_check_reminder_cron.sql),
+# this is the local-only equivalent.
+CRON_SECRET = "env(CRON_SECRET)"
 
 [analytics]
 enabled = true
