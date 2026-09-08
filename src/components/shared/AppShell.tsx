@@ -136,6 +136,14 @@ function TeamSwitcher({ teamId, onClose }: { teamId: string; onClose: () => void
 
         <div className="mt-1 border-t pt-2" style={{ borderColor: 'var(--color-eol-border)' }}>
           <Link
+            to={`/teams/${teamId}/settings`}
+            onClick={onClose}
+            className="block rounded-lg px-2.5 py-2 text-[13px] font-medium"
+            style={{ color: 'var(--color-eol-text-muted)' }}
+          >
+            Team settings
+          </Link>
+          <Link
             to="/onboarding"
             onClick={onClose}
             className="block rounded-lg px-2.5 py-2 text-[13px] font-medium"
