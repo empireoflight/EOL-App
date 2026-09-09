@@ -772,14 +772,25 @@ export default function VisionHomePage() {
         </div>
       )}
 
-      <div>
-        <h2 className="m-0 mb-3 text-[16px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-          Artifacts
-        </h2>
-        <ArtifactsSection teamId={teamId as string} visionId={vision.id} />
-      </div>
+      {vision.status !== 'draft' && (
+        <div>
+          <h2 className="m-0 mb-3 text-[16px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
+            Artifacts
+          </h2>
+          <ArtifactsSection teamId={teamId as string} visionId={vision.id} />
+        </div>
+      )}
 
       {vision.alignment_guide && (vision.status === 'draft' ? <RawAnswers sessionId={vision.session_id} /> : <HistorySection vision={vision} />)}
+
+      {vision.status === 'draft' && (
+        <div>
+          <h2 className="m-0 mb-3 text-[16px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
+            Artifacts
+          </h2>
+          <ArtifactsSection teamId={teamId as string} visionId={vision.id} />
+        </div>
+      )}
     </div>
   )
 }
