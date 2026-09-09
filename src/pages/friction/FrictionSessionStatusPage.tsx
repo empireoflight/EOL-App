@@ -72,6 +72,40 @@ function joinNames(names: string[]): string {
   return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`
 }
 
+// Numbered run-of-show markers so the page reads as a script the group can
+// follow live (initiator shares -> others share -> discussion guide ->
+// outcome), not just a pile of cards in submission order.
+function StepBadge({ step }: { step: number }) {
+  return (
+    <span
+      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10.5px] font-semibold"
+      style={{ background: 'var(--color-eol-accent)', color: 'var(--color-eol-ink)' }}
+    >
+      {step}
+    </span>
+  )
+}
+
+function ResponseCard({ response, name }: { response: FrictionResponse; name: string }) {
+  return (
+    <Card>
+      <div className="mb-3 text-[12.5px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
+        {name}
+      </div>
+      {FRICTION_AUTHORED_QUESTIONS.map((q) => (
+        <div key={q.id} className="mb-3 last:mb-0">
+          <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-accent-label)' }}>
+            {q.prompt}
+          </div>
+          <p className="m-0 text-[13px] leading-relaxed" style={{ color: 'var(--color-eol-text)' }}>
+            {response[q.id]}
+          </p>
+        </div>
+      ))}
+    </Card>
+  )
+}
+
 export default function FrictionSessionStatusPage() {
   const { sessionId } = useParams<{ teamId: string; sessionId: string }>()
   const { user } = useAuth()
@@ -92,6 +126,9 @@ export default function FrictionSessionStatusPage() {
   const { session, submittedCount, totalParticipants, gateMet } = data
   const isFacilitator = session.initiator_id === user?.id
   const outcome = (session.framing as { outcome?: string | null }).outcome ?? null
+  const nameFor = (id: string) => participantNames?.[id] ?? 'They'
+  const initiatorResponse = responses?.find((r) => r.user_id === session.initiator_id)
+  const otherResponses = (responses ?? []).filter((r) => r.user_id !== session.initiator_id)
 
   const handleGenerate = async () => {
     if (!supabase || !sessionId) return
@@ -201,24 +238,35 @@ export default function FrictionSessionStatusPage() {
       {session.discussion_guide && responses && responses.length > 0 && (
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
+            <StepBadge step={1} />
+            <span className="text-[13px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
+              {nameFor(session.initiator_id)} shares first
+            </span>
             <TierBadge tier={4} />
-            <span className="text-[12.5px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-              Everyone has submitted — here's what was shared.
+          </div>
+          <p className="m-0 text-[12px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+            Everyone else: just listen for now — hold your response until it's your turn.
+          </p>
+          {initiatorResponse ? (
+            <ResponseCard response={initiatorResponse} name={nameFor(initiatorResponse.user_id)} />
+          ) : (
+            <p className="m-0 text-[13px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+              {nameFor(session.initiator_id)} hasn't submitted a response.
+            </p>
+          )}
+        </div>
+      )}
+
+      {session.discussion_guide && otherResponses.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <StepBadge step={2} />
+            <span className="text-[13px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
+              Then everyone else shares
             </span>
           </div>
-          {responses.map((r) => (
-            <Card key={r.id}>
-              {FRICTION_AUTHORED_QUESTIONS.map((q) => (
-                <div key={q.id} className="mb-3 last:mb-0">
-                  <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-accent-label)' }}>
-                    {q.prompt}
-                  </div>
-                  <p className="m-0 text-[13px] leading-relaxed" style={{ color: 'var(--color-eol-text)' }}>
-                    {r[q.id]}
-                  </p>
-                </div>
-              ))}
-            </Card>
+          {otherResponses.map((r) => (
+            <ResponseCard key={r.id} response={r} name={nameFor(r.user_id)} />
           ))}
         </div>
       )}
@@ -226,10 +274,11 @@ export default function FrictionSessionStatusPage() {
       {session.discussion_guide && (
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
-            <TierBadge tier={4} />
+            <StepBadge step={3} />
             <span className="text-[13px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
-              Discussion guide
+              Work through the discussion guide
             </span>
+            <TierBadge tier={4} />
           </div>
           <Card>
             <p className="m-0 mb-3 text-[13px] leading-relaxed" style={{ color: 'var(--color-eol-text)' }}>
@@ -241,7 +290,17 @@ export default function FrictionSessionStatusPage() {
               ))}
             </ul>
           </Card>
+        </div>
+      )}
 
+      {session.discussion_guide && (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <StepBadge step={4} />
+            <span className="text-[13px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
+              Capture the outcome
+            </span>
+          </div>
           <Card>
             {session.status === 'closed' ? (
               <div className="flex flex-col gap-2">
