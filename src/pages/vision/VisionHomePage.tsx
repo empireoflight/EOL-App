@@ -21,6 +21,7 @@ import { TierBadge } from '../../components/shared/TierBadge'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
 import { Avatar } from '../../components/shared/Avatar'
 import { ReadinessBanner } from '../../components/session/ReadinessBanner'
+import { ArtifactsSection } from '../../components/artifacts/ArtifactsSection'
 import type { Vision, VisionNode } from '../../lib/types'
 
 // Click-to-edit span/textarea, saves on blur. `draft` only ever gets
@@ -720,7 +721,27 @@ export default function VisionHomePage() {
         )}
       </div>
 
-      {vision.alignment_guide && <RawAnswers sessionId={vision.session_id} />}
+      <div>
+        <h2 className="m-0 mb-3 text-[16px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
+          Artifacts
+        </h2>
+        <ArtifactsSection teamId={teamId as string} visionId={vision.id} />
+      </div>
+
+      {vision.alignment_guide &&
+        (vision.status === 'draft' ? (
+          <RawAnswers sessionId={vision.session_id} />
+        ) : (
+          <div>
+            <h2 className="m-0 mb-1 text-[16px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
+              History
+            </h2>
+            <p className="m-0 mb-3 text-[12.5px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+              Individual responses from when this vision was being drafted.
+            </p>
+            <RawAnswers sessionId={vision.session_id} />
+          </div>
+        ))}
     </div>
   )
 }

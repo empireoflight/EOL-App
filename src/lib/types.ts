@@ -118,6 +118,22 @@ export type VisionCommitment = {
   committed_at: string | null
 }
 
+// A linked doc or an uploaded file attached to a vision or an experiment —
+// exactly one of vision_id/experiment_id is ever set (enforced by a check
+// constraint, not just convention).
+export type Artifact = {
+  id: string
+  team_id: string
+  vision_id: string | null
+  experiment_id: string | null
+  kind: 'link' | 'file'
+  label: string
+  url: string
+  storage_path: string | null
+  created_by: string
+  created_at: string
+}
+
 export type Experiment = {
   id: string
   team_id: string

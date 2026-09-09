@@ -11,6 +11,7 @@ import { Input, Textarea } from '../../components/shared/Input'
 import { Avatar } from '../../components/shared/Avatar'
 import { LearningPrompt } from '../../components/experiments/LearningPrompt'
 import { TaskTypeBadge } from '../../components/shared/TaskTypeBadge'
+import { ArtifactsSection } from '../../components/artifacts/ArtifactsSection'
 import { STATUS_LABEL, type TaskStatus } from '../../lib/taskStatus'
 import type { Action, Experiment } from '../../lib/types'
 
@@ -539,6 +540,10 @@ export default function ExperimentsPage() {
                       {row.kind === 'experiment' ? (
                         <>
                           <div>
+                            <span style={{ color: 'var(--color-eol-text-muted)' }}>Title: </span>
+                            {row.data.title}
+                          </div>
+                          <div>
                             <span style={{ color: 'var(--color-eol-text-muted)' }}>We're testing: </span>
                             {pillarLabel(row.data.pillar_node_id) ?? 'No linked pillar'}
                           </div>
@@ -548,13 +553,24 @@ export default function ExperimentsPage() {
                           </div>
                         </>
                       ) : (
-                        <div style={{ color: 'var(--color-eol-text-faint)' }}>Actions don't carry extra detail beyond what's shown above.</div>
+                        <div>
+                          <span style={{ color: 'var(--color-eol-text-muted)' }}>Title: </span>
+                          {row.data.title}
+                        </div>
                       )}
                       <div>
                         <span style={{ color: 'var(--color-eol-text-muted)' }}>Assignee: </span>
                         {memberName(row.data.assignee_id) ?? 'Unassigned'}
                       </div>
                     </div>
+                    {row.kind === 'experiment' && (
+                      <div className="mt-3 border-t pt-3" style={{ borderColor: 'var(--color-eol-border)' }}>
+                        <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-text-muted)' }}>
+                          Artifacts
+                        </div>
+                        <ArtifactsSection teamId={teamId as string} experimentId={row.data.id} />
+                      </div>
+                    )}
                   </div>
                 )}
 
