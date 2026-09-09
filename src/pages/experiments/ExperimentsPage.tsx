@@ -469,6 +469,14 @@ export default function ExperimentsPage() {
                       </Button>
                     </div>
                   </form>
+                  {row.kind === 'experiment' && (
+                    <div className="mt-3 border-t pt-3" style={{ borderColor: 'var(--color-eol-border)' }}>
+                      <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-text-muted)' }}>
+                        Artifacts
+                      </div>
+                      <ArtifactsSection teamId={teamId as string} experimentId={row.data.id} />
+                    </div>
+                  )}
                 </div>
               )
             }

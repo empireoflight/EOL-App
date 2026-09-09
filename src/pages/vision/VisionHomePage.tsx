@@ -175,6 +175,92 @@ function EditableNodeList({
   )
 }
 
+function AlignmentGuideCard({ vision }: { vision: Vision }) {
+  if (!vision.alignment_guide) {
+    return (
+      <p className="m-0 text-[13px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+        No alignment guide generated yet — individual answers stay private until it's ready.
+      </p>
+    )
+  }
+  return (
+    <Card>
+      <div className="flex flex-col gap-4">
+        <div>
+          <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-accent-label)' }}>
+            Where there's alignment
+          </div>
+          <p className="m-0 text-[12.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
+            {vision.alignment_guide.alignment}
+          </p>
+        </div>
+        <div>
+          <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-pink-strong)' }}>
+            Where there's disconnect
+          </div>
+          <p className="m-0 text-[12.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
+            {vision.alignment_guide.disconnect}
+          </p>
+        </div>
+        {vision.alignment_guide.uniquePerspectives?.length > 0 && (
+          <div>
+            <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-tier2-fg)' }}>
+              Worth talking about
+            </div>
+            <ul className="m-0 flex flex-col gap-1 pl-4 text-[12.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
+              {vision.alignment_guide.uniquePerspectives.map((point, i) => (
+                <li key={i}>{point}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </Card>
+  )
+}
+
+// Collapsed by default — once a vision has been sent for commitment, the AI
+// synthesis and raw per-person answers are background material, not the
+// thing people should land on. Combines both under one disclosure so
+// there's a single "history" concept rather than two separately-hideable
+// sections.
+function HistorySection({ vision }: { vision: Vision }) {
+  const [expanded, setExpanded] = useState(false)
+
+  return (
+    <div>
+      <button type="button" onClick={() => setExpanded((e) => !e)} className="flex w-full items-center justify-between gap-3 text-left">
+        <div>
+          <h2 className="m-0 text-[16px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
+            History
+          </h2>
+          <p className="m-0 mt-0.5 text-[12.5px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+            The AI synthesis and individual responses from when this vision was being drafted.
+          </p>
+        </div>
+        <span className="shrink-0 text-[11px] font-semibold" style={{ color: 'var(--color-eol-accent-label)' }}>
+          {expanded ? 'Hide' : 'Show'}
+        </span>
+      </button>
+
+      {expanded && (
+        <div className="mt-4 flex flex-col gap-6 border-t pt-4" style={{ borderColor: 'var(--color-eol-border)' }}>
+          <div>
+            <div className="mb-3 flex items-center gap-2">
+              <h3 className="m-0 text-[13.5px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
+                AI synthesis
+              </h3>
+              <TierBadge tier={4} />
+            </div>
+            <AlignmentGuideCard vision={vision} />
+          </div>
+          <RawAnswers sessionId={vision.session_id} />
+        </div>
+      )}
+    </div>
+  )
+}
+
 function RawAnswers({ sessionId }: { sessionId: string | null }) {
   const { data: answers, isLoading } = useVisionAnswers(sessionId ?? undefined)
   const { data: sessionData } = useConvergenceSession(sessionId ?? undefined)
@@ -674,52 +760,17 @@ export default function VisionHomePage() {
         <EditableNodeList nodes={vision.layout.nodes} kind="signal" editable={editable} onChange={updateNodes} addLabel="Add a signal" />
       </div>
 
-      <div>
-        <div className="mb-3 flex items-center gap-2">
-          <h2 className="m-0 text-[16px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-            AI synthesis
-          </h2>
-          <TierBadge tier={4} />
+      {vision.status === 'draft' && (
+        <div>
+          <div className="mb-3 flex items-center gap-2">
+            <h2 className="m-0 text-[16px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
+              AI synthesis
+            </h2>
+            <TierBadge tier={4} />
+          </div>
+          <AlignmentGuideCard vision={vision} />
         </div>
-        {vision.alignment_guide ? (
-          <Card>
-            <div className="flex flex-col gap-4">
-              <div>
-                <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-accent-label)' }}>
-                  Where there's alignment
-                </div>
-                <p className="m-0 text-[12.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
-                  {vision.alignment_guide.alignment}
-                </p>
-              </div>
-              <div>
-                <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-pink-strong)' }}>
-                  Where there's disconnect
-                </div>
-                <p className="m-0 text-[12.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
-                  {vision.alignment_guide.disconnect}
-                </p>
-              </div>
-              {vision.alignment_guide.uniquePerspectives?.length > 0 && (
-                <div>
-                  <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-tier2-fg)' }}>
-                    Worth talking about
-                  </div>
-                  <ul className="m-0 flex flex-col gap-1 pl-4 text-[12.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
-                    {vision.alignment_guide.uniquePerspectives.map((point, i) => (
-                      <li key={i}>{point}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </Card>
-        ) : (
-          <p className="m-0 text-[13px]" style={{ color: 'var(--color-eol-text-faint)' }}>
-            No alignment guide generated yet — individual answers stay private until it's ready.
-          </p>
-        )}
-      </div>
+      )}
 
       <div>
         <h2 className="m-0 mb-3 text-[16px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
@@ -728,20 +779,7 @@ export default function VisionHomePage() {
         <ArtifactsSection teamId={teamId as string} visionId={vision.id} />
       </div>
 
-      {vision.alignment_guide &&
-        (vision.status === 'draft' ? (
-          <RawAnswers sessionId={vision.session_id} />
-        ) : (
-          <div>
-            <h2 className="m-0 mb-1 text-[16px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-              History
-            </h2>
-            <p className="m-0 mb-3 text-[12.5px]" style={{ color: 'var(--color-eol-text-faint)' }}>
-              Individual responses from when this vision was being drafted.
-            </p>
-            <RawAnswers sessionId={vision.session_id} />
-          </div>
-        ))}
+      {vision.alignment_guide && (vision.status === 'draft' ? <RawAnswers sessionId={vision.session_id} /> : <HistorySection vision={vision} />)}
     </div>
   )
 }
