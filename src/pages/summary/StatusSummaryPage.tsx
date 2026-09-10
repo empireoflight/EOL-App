@@ -12,7 +12,15 @@ import { Avatar } from '../../components/shared/Avatar'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
 import type { TeamSignal } from '../../lib/types'
 
-type OpenItem = { id: string; kind: 'experiment' | 'action'; title: string; assignee_id: string | null; due_date: string | null }
+type OpenItem = {
+  id: string
+  kind: 'experiment' | 'action'
+  title: string
+  assignee_id: string | null
+  due_date: string | null
+  hypothesis: string | null
+  pillar_node_id: string | null
+}
 
 function useOpenDoItems(teamId: string | undefined) {
   return useQuery({
@@ -22,7 +30,7 @@ function useOpenDoItems(teamId: string | undefined) {
       const [experiments, actions] = await Promise.all([
         supabase
           .from('experiments')
-          .select('id, title, assignee_id, due_date')
+          .select('id, title, assignee_id, due_date, hypothesis, pillar_node_id')
           .eq('team_id', teamId as string)
           .in('status', ['not_started', 'in_progress']),
         supabase
@@ -35,7 +43,7 @@ function useOpenDoItems(teamId: string | undefined) {
       if (actions.error) throw actions.error
       return [
         ...experiments.data.map((r): OpenItem => ({ ...r, kind: 'experiment' })),
-        ...actions.data.map((r): OpenItem => ({ ...r, kind: 'action' })),
+        ...actions.data.map((r): OpenItem => ({ ...r, kind: 'action', hypothesis: null, pillar_node_id: null })),
       ].sort((a, b) => {
         if (!a.due_date && !b.due_date) return 0
         if (!a.due_date) return 1
@@ -128,6 +136,7 @@ export default function StatusSummaryPage() {
 
   const memberName = (id: string | null) => members?.find((m) => m.user_id === id)?.users?.name ?? null
   const memberAvatarUrl = (id: string | null) => members?.find((m) => m.user_id === id)?.users?.avatar_url
+  const pillarLabel = (id: string | null) => (vision?.layout.nodes ?? []).find((n) => n.id === id)?.text ?? null
 
   const outcomes = (frictionSessions ?? []).filter((s) => s.status === 'closed' && s.outcome)
   const vibeNarrative = vibeSignals?.find((s) => s.signal_type === 'weekly_narrative')
@@ -154,6 +163,11 @@ export default function StatusSummaryPage() {
         const who = memberName(item.assignee_id) ?? 'Unassigned'
         const due = item.due_date ? `due ${formatDate(item.due_date)}` : 'no due date'
         lines.push(`- [${item.kind === 'experiment' ? 'Experiment' : 'Action'}] ${item.title} (${who}, ${due})`)
+        if (item.kind === 'experiment') {
+          const pillar = pillarLabel(item.pillar_node_id)
+          if (pillar) lines.push(`  Testing: ${pillar}`)
+          if (item.hypothesis) lines.push(`  Trying to learn: ${item.hypothesis}`)
+        }
       })
     }
 
@@ -281,21 +295,43 @@ export default function StatusSummaryPage() {
             </p>
           ) : (
             <div className="flex flex-col gap-2.5">
-              {openItems.map((item) => (
-                <div key={`${item.kind}-${item.id}`} className="flex items-center gap-2.5">
-                  <TaskTypeBadge type={item.kind} />
-                  <div className="min-w-0 flex-1 truncate text-[13px]" style={{ color: 'var(--color-eol-text)' }}>
-                    {item.title}
+              {openItems.map((item) => {
+                const pillar = item.kind === 'experiment' ? pillarLabel(item.pillar_node_id) : null
+                const hasDetail = item.kind === 'experiment' && (pillar || item.hypothesis)
+                return (
+                  <div key={`${item.kind}-${item.id}`} className={hasDetail ? 'border-b pb-2.5 last:border-0 last:pb-0' : ''} style={{ borderColor: 'var(--color-eol-border)' }}>
+                    <div className="flex items-center gap-2.5">
+                      <TaskTypeBadge type={item.kind} />
+                      <div className="min-w-0 flex-1 truncate text-[13px]" style={{ color: 'var(--color-eol-text)' }}>
+                        {item.title}
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1.5 text-[11.5px]" style={{ color: 'var(--color-eol-text-muted)' }}>
+                        <Avatar name={memberName(item.assignee_id) ?? '?'} avatarUrl={memberAvatarUrl(item.assignee_id)} size={18} />
+                        {memberName(item.assignee_id) ?? 'Unassigned'}
+                      </div>
+                      <div className="shrink-0 text-[11.5px]" style={{ color: 'var(--color-eol-text-muted)' }}>
+                        {item.due_date ? `Due ${formatDate(item.due_date)}` : 'No due date'}
+                      </div>
+                    </div>
+                    {hasDetail && (
+                      <div className="mt-1 flex flex-col gap-0.5 pl-[70px] text-[12px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
+                        {pillar && (
+                          <div>
+                            <span style={{ color: 'var(--color-eol-text-muted)' }}>Testing: </span>
+                            {pillar}
+                          </div>
+                        )}
+                        {item.hypothesis && (
+                          <div>
+                            <span style={{ color: 'var(--color-eol-text-muted)' }}>Trying to learn: </span>
+                            {item.hypothesis}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="flex shrink-0 items-center gap-1.5 text-[11.5px]" style={{ color: 'var(--color-eol-text-muted)' }}>
-                    <Avatar name={memberName(item.assignee_id) ?? '?'} avatarUrl={memberAvatarUrl(item.assignee_id)} size={18} />
-                    {memberName(item.assignee_id) ?? 'Unassigned'}
-                  </div>
-                  <div className="shrink-0 text-[11.5px]" style={{ color: 'var(--color-eol-text-muted)' }}>
-                    {item.due_date ? `Due ${formatDate(item.due_date)}` : 'No due date'}
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </Card>
