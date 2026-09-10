@@ -295,7 +295,7 @@ export default function ExperimentsPage() {
   )
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6 px-6 py-10">
+    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-6 py-10">
       <div>
         <h1 className="m-0 text-[24px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
           Bring the vision to life
