@@ -24,6 +24,7 @@ import VisionCommitPage from './pages/vision/VisionCommitPage'
 import ExperimentsPage from './pages/experiments/ExperimentsPage'
 import PulseCheckPage from './pages/checkin/PulseCheckPage'
 import RollupPage from './pages/rollup/RollupPage'
+import StatusSummaryPage from './pages/summary/StatusSummaryPage'
 import MomentPlayerPage from './pages/friction/MomentPlayerPage'
 import FrictionHubPage from './pages/friction/FrictionHubPage'
 import FrictionStartPage from './pages/friction/FrictionStartPage'
@@ -61,6 +62,7 @@ function App() {
           <Route path="experiments" element={<ExperimentsPage />} />
           <Route path="pulse" element={<PulseCheckPage />} />
           <Route path="rollup" element={<RollupPage />} />
+          <Route path="summary" element={<StatusSummaryPage />} />
           <Route path="friction" element={<FrictionHubPage />} />
           <Route path="friction/tools/:momentId" element={<MomentPlayerPage />} />
           <Route path="friction/start" element={<FrictionStartPage />} />

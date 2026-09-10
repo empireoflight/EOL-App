@@ -273,9 +273,9 @@ export function AppShell({ teamId, teamName, children }: AppShellProps) {
   const canInvite = members?.find((m) => m.user_id === user?.id)?.team_role === 'facilitator'
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden print:block print:h-auto print:overflow-visible">
       <aside
-        className="hidden w-[240px] shrink-0 border-r md:block"
+        className="hidden w-[240px] shrink-0 border-r md:block print:hidden"
         style={{ background: 'var(--color-eol-surface)', borderColor: 'var(--color-eol-border)' }}
       >
         <SidebarContent teamId={teamId} teamName={teamName} />
@@ -302,9 +302,9 @@ export function AppShell({ teamId, teamName, children }: AppShellProps) {
         </div>
       )}
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col print:block">
         <header
-          className="flex h-14 shrink-0 items-center justify-between border-b px-5"
+          className="flex h-14 shrink-0 items-center justify-between border-b px-5 print:hidden"
           style={{ background: 'var(--gradient-dawn)', borderColor: 'var(--color-eol-border)' }}
         >
           <div className="flex items-center gap-2.5">
@@ -326,7 +326,7 @@ export function AppShell({ teamId, teamName, children }: AppShellProps) {
             {canInvite && <Link to={`/teams/${teamId}/invite`}>Invite</Link>}
           </nav>
         </header>
-        <main className="min-w-0 flex-1 overflow-auto">{children}</main>
+        <main className="min-w-0 flex-1 overflow-auto print:overflow-visible">{children}</main>
       </div>
     </div>
   )

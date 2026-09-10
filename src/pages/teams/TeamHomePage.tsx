@@ -79,6 +79,11 @@ export default function TeamHomePage() {
     const sessionAlreadyInFlight = !!pendingVisionSession || !!openVisionSession
     return (
       <div className="mx-auto flex max-w-2xl flex-col gap-5 px-6 py-10">
+        <div className="flex justify-end">
+          <Link to={`/teams/${teamId}/summary`} className="text-[12px] font-medium" style={{ color: 'var(--color-eol-accent-label)' }}>
+            Status summary &rarr;
+          </Link>
+        </div>
         <OpenVisionSessionBanner teamId={teamId} />
         <PendingFrictionBanners teamId={teamId} />
         {!sessionAlreadyInFlight && (
@@ -100,6 +105,11 @@ export default function TeamHomePage() {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 px-6 py-10">
+      <div className="flex justify-end">
+        <Link to={`/teams/${teamId}/summary`} className="text-[12px] font-medium" style={{ color: 'var(--color-eol-accent-label)' }}>
+          Status summary &rarr;
+        </Link>
+      </div>
       <OpenVisionSessionBanner teamId={teamId} />
       <PendingFrictionBanners teamId={teamId} />
 
