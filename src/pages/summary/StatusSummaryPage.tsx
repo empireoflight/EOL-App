@@ -151,9 +151,9 @@ export default function StatusSummaryPage() {
       lines.push('Nothing open right now.')
     } else {
       openItems.forEach((item) => {
-        const who = memberName(item.assignee_id)
-        const due = item.due_date ? ` — due ${formatDate(item.due_date)}` : ''
-        lines.push(`- [${item.kind === 'experiment' ? 'Experiment' : 'Action'}] ${item.title}${who ? ` (${who})` : ''}${due}`)
+        const who = memberName(item.assignee_id) ?? 'Unassigned'
+        const due = item.due_date ? `due ${formatDate(item.due_date)}` : 'no due date'
+        lines.push(`- [${item.kind === 'experiment' ? 'Experiment' : 'Action'}] ${item.title} (${who}, ${due})`)
       })
     }
 
@@ -287,12 +287,13 @@ export default function StatusSummaryPage() {
                   <div className="min-w-0 flex-1 truncate text-[13px]" style={{ color: 'var(--color-eol-text)' }}>
                     {item.title}
                   </div>
-                  {item.due_date && (
-                    <div className="shrink-0 text-[11.5px]" style={{ color: 'var(--color-eol-text-muted)' }}>
-                      Due {formatDate(item.due_date)}
-                    </div>
-                  )}
-                  {item.assignee_id && <Avatar name={memberName(item.assignee_id) ?? '?'} avatarUrl={memberAvatarUrl(item.assignee_id)} size={22} />}
+                  <div className="flex shrink-0 items-center gap-1.5 text-[11.5px]" style={{ color: 'var(--color-eol-text-muted)' }}>
+                    <Avatar name={memberName(item.assignee_id) ?? '?'} avatarUrl={memberAvatarUrl(item.assignee_id)} size={18} />
+                    {memberName(item.assignee_id) ?? 'Unassigned'}
+                  </div>
+                  <div className="shrink-0 text-[11.5px]" style={{ color: 'var(--color-eol-text-muted)' }}>
+                    {item.due_date ? `Due ${formatDate(item.due_date)}` : 'No due date'}
+                  </div>
                 </div>
               ))}
             </div>
