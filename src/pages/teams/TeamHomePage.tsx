@@ -8,7 +8,7 @@ import { Button } from '../../components/shared/Button'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
 import { OpenVisionSessionBanner } from '../../components/session/OpenVisionSessionBanner'
 import { PendingFrictionBanners } from '../../components/session/PendingFrictionBanners'
-import type { Experiment, TeamSignal } from '../../lib/types'
+import type { Action, Experiment, TeamSignal } from '../../lib/types'
 
 const LOOP = [
   { label: 'Reimagine', segment: 'vision' },
@@ -24,6 +24,23 @@ function useTeamExperiments(teamId: string | undefined) {
       if (!supabase) throw new Error('Supabase is not configured')
       const { data, error } = await supabase
         .from('experiments')
+        .select('*')
+        .eq('team_id', teamId as string)
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      return data
+    },
+    enabled: !!teamId,
+  })
+}
+
+function useTeamActions(teamId: string | undefined) {
+  return useQuery({
+    queryKey: ['actions', teamId],
+    queryFn: async (): Promise<Action[]> => {
+      if (!supabase) throw new Error('Supabase is not configured')
+      const { data, error } = await supabase
+        .from('actions')
         .select('*')
         .eq('team_id', teamId as string)
         .order('created_at', { ascending: false })
@@ -59,6 +76,7 @@ export default function TeamHomePage() {
   const navigate = useNavigate()
   const { data: vision, isLoading } = useTeamVision(teamId)
   const { data: experiments } = useTeamExperiments(teamId)
+  const { data: actions } = useTeamActions(teamId)
   const { data: frictionSessions } = useTeamFrictionSessions(teamId)
   const { data: narratives } = useLatestNarrative(teamId)
   const { data: pendingVisionSession } = useMyPendingVisionSession(teamId)
@@ -67,6 +85,7 @@ export default function TeamHomePage() {
   if (isLoading) return <LoadingScreen />
 
   const openExperiments = (experiments ?? []).filter((e) => e.status === 'not_started' || e.status === 'in_progress')
+  const openActions = (actions ?? []).filter((a) => a.status === 'not_started' || a.status === 'in_progress')
   const activeFrictionSessions = (frictionSessions ?? []).filter((s) => s.status !== 'closed' && s.status !== 'discussed')
   const nextExperiments = (experiments ?? []).filter((e) => e.status === 'not_started').slice(0, 2)
   const latest = narratives?.[0]?.value as { pattern?: string; visionInsight?: string | null } | undefined
@@ -150,10 +169,10 @@ export default function TeamHomePage() {
         <Link to={`/teams/${teamId}/experiments`} className="min-w-[150px] flex-1">
           <Card className="transition-opacity hover:opacity-80">
             <div className="text-[22px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-              {openExperiments.length}
+              {openExperiments.length + openActions.length}
             </div>
             <div className="text-[12px]" style={{ color: 'var(--color-eol-text-muted)' }}>
-              open experiments
+              open actions/experiments
             </div>
           </Card>
         </Link>
