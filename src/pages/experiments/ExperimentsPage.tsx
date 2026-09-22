@@ -401,7 +401,7 @@ export default function ExperimentsPage() {
       ) : (
         <div className="overflow-hidden rounded-2xl border" style={{ borderColor: 'var(--color-eol-border)' }}>
           <div
-            className="flex items-center gap-3 px-4 py-2.5 text-[10.5px] font-semibold uppercase tracking-wide"
+            className="hidden items-center gap-3 px-4 py-2.5 text-[10.5px] font-semibold uppercase tracking-wide sm:flex"
             style={{ background: 'var(--color-eol-surface)', color: 'var(--color-eol-text-faint)' }}
           >
             <div className="flex-1 min-w-0">Title</div>
@@ -487,15 +487,15 @@ export default function ExperimentsPage() {
             return (
               <div key={rowKey} className="border-t" style={{ borderColor: 'var(--color-eol-border)' }}>
                 <div
-                  className="flex cursor-pointer items-center gap-3 px-4 py-3"
+                  className="flex flex-wrap cursor-pointer items-center gap-x-3 gap-y-2 px-4 py-3"
                   onClick={() => setExpandedKey(expanded ? null : rowKey)}
                 >
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-[13.5px] font-medium" style={{ color: 'var(--color-eol-text)' }}>
+                  <div className="min-w-0 w-full sm:w-auto sm:flex-1">
+                    <div className="text-[13.5px] font-medium sm:truncate" style={{ color: 'var(--color-eol-text)' }}>
                       {row.data.title}
                     </div>
                     {row.kind === 'experiment' && (pillarLabel(row.data.pillar_node_id) || row.data.hypothesis) && (
-                      <div className="mt-0.5 truncate text-[11.5px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+                      <div className="mt-0.5 text-[11.5px] sm:truncate" style={{ color: 'var(--color-eol-text-faint)' }}>
                         {pillarLabel(row.data.pillar_node_id) && <>We're testing: {pillarLabel(row.data.pillar_node_id)}. </>}
                         {row.data.hypothesis}
                       </div>
