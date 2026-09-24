@@ -40,9 +40,12 @@ function BatteryIcon({ level, active, onClick }: { level: number; active: boolea
   )
 }
 
-function useReviewExperiments(teamId: string | undefined) {
+// Scoped to items the person checking in could actually act on this
+// week — unassigned ones anyone might pick up, plus their own — rather
+// than the whole team's open list, which isn't this page's job to show.
+function useReviewExperiments(teamId: string | undefined, userId: string | undefined) {
   return useQuery({
-    queryKey: ['pulse-review-experiments', teamId],
+    queryKey: ['pulse-review-experiments', teamId, userId],
     queryFn: async (): Promise<Experiment[]> => {
       if (!supabase) throw new Error('Supabase is not configured')
       const { data, error } = await supabase
@@ -50,17 +53,18 @@ function useReviewExperiments(teamId: string | undefined) {
         .select('*')
         .eq('team_id', teamId as string)
         .in('status', ['not_started', 'in_progress'])
+        .or(`assignee_id.is.null,assignee_id.eq.${userId}`)
         .order('created_at', { ascending: false })
       if (error) throw error
       return data
     },
-    enabled: !!teamId,
+    enabled: !!teamId && !!userId,
   })
 }
 
-function useReviewActions(teamId: string | undefined) {
+function useReviewActions(teamId: string | undefined, userId: string | undefined) {
   return useQuery({
-    queryKey: ['pulse-review-actions', teamId],
+    queryKey: ['pulse-review-actions', teamId, userId],
     queryFn: async (): Promise<Action[]> => {
       if (!supabase) throw new Error('Supabase is not configured')
       const { data, error } = await supabase
@@ -68,11 +72,12 @@ function useReviewActions(teamId: string | undefined) {
         .select('*')
         .eq('team_id', teamId as string)
         .in('status', ['not_started', 'in_progress'])
+        .or(`assignee_id.is.null,assignee_id.eq.${userId}`)
         .order('created_at', { ascending: false })
       if (error) throw error
       return data
     },
-    enabled: !!teamId,
+    enabled: !!teamId && !!userId,
   })
 }
 
@@ -92,8 +97,8 @@ export default function PulseCheckPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
-  const { data: reviewExperiments } = useReviewExperiments(teamId)
-  const { data: reviewActions } = useReviewActions(teamId)
+  const { data: reviewExperiments } = useReviewExperiments(teamId, user?.id)
+  const { data: reviewActions } = useReviewActions(teamId, user?.id)
   const [justCompleted, setJustCompleted] = useState<Experiment[]>([])
 
   const reviewItems: ReviewItem[] = [
