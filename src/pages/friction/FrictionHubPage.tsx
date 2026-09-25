@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useConvergenceSession, useTeamFrictionSessions } from '../../hooks/useConvergenceSession'
 import { PendingFrictionBanners } from '../../components/session/PendingFrictionBanners'
 import { Card } from '../../components/shared/Card'
+import { PageHeader } from '../../components/shared/PageHeader'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
 import { GROUNDING_MOMENTS, filterMoments, type MomentFilter } from '../../lib/groundingMoments'
 import type { SessionStatus } from '../../lib/sessionStateMachine'
@@ -30,6 +31,15 @@ const STATUS_LABEL: Record<SessionStatus, string> = {
   scheduled: 'Discussing',
   discussed: 'Wrapping up',
   closed: 'Settled',
+}
+
+// Deterministic pastel swatch per moment, same hashing approach
+// Avatar.tsx/AppShell.tsx use for per-person/per-team color.
+const SWATCH_PALETTE = ['oklch(0.9 0.05 78)', 'oklch(0.9 0.05 350)', 'oklch(0.9 0.045 220)', 'oklch(0.9 0.05 150)', 'oklch(0.9 0.05 300)']
+function swatchFor(seed: string) {
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0
+  return SWATCH_PALETTE[hash % SWATCH_PALETTE.length]
 }
 
 const RAIL_DOT: Record<SessionStatus, string> = {
@@ -113,16 +123,9 @@ export default function FrictionHubPage() {
   const moments = filterMoments(GROUNDING_MOMENTS, filter)
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-10">
-      <div>
-        <h1 className="m-0 text-[24px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-          Unlearn
-        </h1>
-        <p className="m-0 mt-1 text-[13.5px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-          Unlearning is the art of processing friction and building capacity to try new things.
-        </p>
-      </div>
-
+    <>
+      <PageHeader eyebrow="Unlearn" title="Unlearn" subline="Unlearning is the art of processing friction and building capacity to try new things." />
+      <div className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-10">
       <PendingFrictionBanners teamId={teamId} />
 
       {/* Friction is the primary content — it's the thing most likely to
@@ -200,14 +203,15 @@ export default function FrictionHubPage() {
               <Link
                 key={m.id}
                 to={`/teams/${teamId}/friction/tools/${m.id}`}
-                className="flex flex-col gap-1 rounded-xl border p-3"
+                className="flex min-h-[116px] flex-col gap-2 rounded-[16px] border p-3"
                 style={{ background: 'var(--color-eol-surface)', borderColor: 'var(--color-eol-border)' }}
               >
+                <span className="h-[30px] w-[30px] shrink-0 rounded-[8px]" style={{ background: swatchFor(m.id) }} />
                 <div className="flex items-baseline justify-between gap-2">
-                  <div className="text-[13.5px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
+                  <div className="text-[14px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
                     {m.name}
                   </div>
-                  <div className="shrink-0 text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-accent-label)' }}>
+                  <div className="shrink-0 text-[12px]" style={{ color: 'var(--color-eol-text-muted)' }}>
                     {m.meta}
                   </div>
                 </div>
@@ -219,6 +223,7 @@ export default function FrictionHubPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }

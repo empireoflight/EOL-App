@@ -10,6 +10,7 @@ import { FRICTION_AUTHORED_QUESTIONS, FRICTION_TYPES } from '../../lib/frictionQ
 import { Button } from '../../components/shared/Button'
 import { Textarea } from '../../components/shared/Input'
 import { Card } from '../../components/shared/Card'
+import { PageHeader } from '../../components/shared/PageHeader'
 import { TierBadge } from '../../components/shared/TierBadge'
 import { FrictionTopicSummary } from '../../components/session/FrictionTopicSummary'
 import { CancelFrictionSessionButton } from '../../components/session/CancelFrictionSessionButton'
@@ -107,7 +108,13 @@ export default function FrictionRespondPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
+    <>
+      <PageHeader
+        eyebrow="Unlearn · Your point of view"
+        title="Your point of view"
+        subline="These answers will be shared, once everyone has submitted theirs — never before."
+      />
+      <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
       <FrictionTopicSummary sessionId={sessionId} />
 
       {needsSituationDescription && (
@@ -148,7 +155,7 @@ export default function FrictionRespondPage() {
                     className="rounded-full px-3.5 py-1.5 text-[12px] font-medium"
                     style={
                       frictionType === t
-                        ? { background: 'var(--color-tier4-bg)', color: 'var(--color-tier4-fg)' }
+                        ? { background: 'var(--color-eol-night)', color: 'var(--color-eol-heading-on-dark)' }
                         : { border: '1px solid var(--color-eol-border-strong)', color: 'var(--color-eol-text-secondary)' }
                     }
                   >
@@ -172,15 +179,6 @@ export default function FrictionRespondPage() {
         </Card>
       )}
 
-      <div>
-        <h1 className="m-0 text-[20px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-          Your point of view
-        </h1>
-        <p className="m-0 mt-1 text-[13px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-          These answers will be shared, once everyone has submitted theirs — never before.
-        </p>
-      </div>
-
       {error && (
         <div className="rounded-lg border px-3 py-2 text-[12.5px]" style={{ borderColor: 'var(--color-eol-pink)', color: 'var(--color-eol-pink-strong)' }}>
           {error}
@@ -199,6 +197,7 @@ export default function FrictionRespondPage() {
         Submit my point of view
       </Button>
       {needsSituationDescription && teamId && sessionId && <CancelFrictionSessionButton teamId={teamId} sessionId={sessionId} />}
-    </div>
+      </div>
+    </>
   )
 }
