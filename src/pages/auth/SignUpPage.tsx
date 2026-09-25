@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../../components/shared/Button'
 import { Input } from '../../components/shared/Input'
-import { Logo } from '../../components/shared/Logo'
+import { AuthShell } from '../../components/shared/AuthShell'
 import { Seo } from '../../components/shared/Seo'
 
 export default function SignUpPage() {
@@ -44,72 +44,55 @@ export default function SignUpPage() {
 
   if (awaitingConfirmation) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4 py-16">
+      <AuthShell title="Check your email">
         <Seo title="Check your email | Empire of Light" description="Confirm your Empire of Light account." path="/signup" origin="app" noindex />
-        <div className="w-full max-w-sm">
-          <div className="mb-8 flex flex-col items-center gap-3 text-center">
-            <Logo size={36} />
-            <h1
-              className="m-0 text-[28px] font-semibold"
-              style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}
-            >
-              Check your email
-            </h1>
-          </div>
-          <div className="rounded-2xl border p-6 text-center" style={{ background: 'var(--color-eol-surface)', borderColor: 'var(--color-eol-border)' }}>
-            <p className="m-0 text-[13.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
-              We sent a confirmation link to <strong>{form.email}</strong>. Click it to finish setting up your
-              account — you'll land right back here, signed in.
-            </p>
-          </div>
+        <div className="rounded-2xl border p-6 text-center" style={{ background: 'var(--color-eol-surface)', borderColor: 'var(--color-eol-border)' }}>
+          <p className="m-0 text-[13.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
+            We sent a confirmation link to <strong>{form.email}</strong>. Click it to finish setting up your
+            account — you'll land right back here, signed in.
+          </p>
         </div>
-      </div>
+      </AuthShell>
     )
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-16">
+    <AuthShell title="Create your account">
       <Seo title="Create your account | Empire of Light" description="Create your Empire of Light account." path="/signup" origin="app" noindex />
-      <div className="w-full max-w-sm">
-        <div className="mb-8 flex flex-col items-center gap-3 text-center">
-          <Logo size={36} />
-          <h1
-            className="m-0 text-[28px] font-semibold"
-            style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}
-          >
-            Create your account
-          </h1>
-        </div>
-
-        <div className="rounded-2xl border p-6" style={{ background: 'var(--color-eol-surface)', borderColor: 'var(--color-eol-border)' }}>
-          {error && (
-            <div className="mb-4 rounded-lg border px-3 py-2 text-[12.5px]" style={{ borderColor: 'var(--color-eol-pink)', color: 'var(--color-eol-pink-strong)' }}>
-              {error}
-            </div>
-          )}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <Input label="Name" autoComplete="name" required value={form.name} onChange={set('name')} />
-            <Input label="Email" type="email" autoComplete="email" required value={form.email} onChange={set('email')} />
-            <Input label="Password" type="password" autoComplete="new-password" required minLength={6} value={form.password} onChange={set('password')} />
-            <Button type="submit" loading={loading} className="w-full">
-              Create account
-            </Button>
-          </form>
-          <p className="mt-5 text-center text-[13px]" style={{ color: 'var(--color-eol-text-muted)' }}>
-            Already have an account?{' '}
-            <Link to="/login" className="font-medium">
-              Sign in
-            </Link>
-          </p>
-        </div>
-        <p className="mt-5 text-center text-[12px]" style={{ color: 'var(--color-eol-text-muted)' }}>
-          By creating an account, you agree to our{' '}
-          <a href="https://www.empireoflightcollective.com/privacy" target="_blank" rel="noreferrer" className="font-medium">
-            Privacy Policy
-          </a>
-          .
+      <div className="rounded-2xl border p-6" style={{ background: 'var(--color-eol-surface)', borderColor: 'var(--color-eol-border)' }}>
+        {error && (
+          <div className="mb-4 rounded-lg border px-3 py-2 text-[12.5px]" style={{ borderColor: 'var(--color-eol-pink)', color: 'var(--color-eol-pink-strong)' }}>
+            {error}
+          </div>
+        )}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <Input label="Name" autoComplete="name" required value={form.name} onChange={set('name')} />
+          <Input label="Email" type="email" autoComplete="email" required value={form.email} onChange={set('email')} />
+          <Input label="Password" type="password" autoComplete="new-password" required minLength={6} value={form.password} onChange={set('password')} />
+          <Button type="submit" loading={loading} className="w-full">
+            Create account
+          </Button>
+        </form>
+        <p className="mt-5 text-center text-[13px]" style={{ color: 'var(--color-eol-text-muted)' }}>
+          Already have an account?{' '}
+          <Link to="/login" className="font-medium">
+            Sign in
+          </Link>
         </p>
       </div>
-    </div>
+      <p className="mt-5 text-center text-[12px]" style={{ color: 'var(--color-eol-on-dark-muted)' }}>
+        By creating an account, you agree to our{' '}
+        <a
+          href="https://www.empireoflightcollective.com/privacy"
+          target="_blank"
+          rel="noreferrer"
+          className="font-medium"
+          style={{ color: 'var(--color-eol-heading-on-dark)' }}
+        >
+          Privacy Policy
+        </a>
+        .
+      </p>
+    </AuthShell>
   )
 }

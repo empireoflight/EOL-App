@@ -13,6 +13,14 @@
     radial-gradient(ellipse 520px 220px at 62% -40%, rgba(255, 246, 173, 0.22), transparent 70%),
     #1a1220;
 
+  /* Full-page dark backdrop for the auth screens (login/signup/etc.) — a
+     warm glow behind the logo up top, a pink bloom low on the page, same
+     night base as the header glow. */
+  --gradient-auth-glow:
+    radial-gradient(ellipse 480px 320px at 50% 0%, rgba(255, 246, 173, 0.2), transparent 65%),
+    radial-gradient(ellipse 460px 320px at 15% 100%, rgba(255, 169, 248, 0.22), transparent 65%),
+    #1a1220;
+
   /* Dark chrome (sidebar + page-header band) */
   --color-eol-night: oklch(0.2 0.03 310);
   --color-eol-sidebar: oklch(0.165 0.028 310);
