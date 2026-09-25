@@ -7,6 +7,7 @@ import { useTeamVision } from '../../hooks/useVision'
 import { useTeamMembers } from '../../hooks/useMyTeams'
 import { Card } from '../../components/shared/Card'
 import { Button } from '../../components/shared/Button'
+import { PageHeader } from '../../components/shared/PageHeader'
 import { Input, Textarea } from '../../components/shared/Input'
 import { Avatar } from '../../components/shared/Avatar'
 import { LearningPrompt } from '../../components/experiments/LearningPrompt'
@@ -295,16 +296,13 @@ export default function ExperimentsPage() {
   )
 
   return (
-    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-6 py-10">
-      <div>
-        <h1 className="m-0 text-[24px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-          Bring the vision to life
-        </h1>
-        <p className="m-0 mt-1 text-[13px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-          Track what's moving the vision forward — quick actions, and experiments that trace back to a pillar.
-        </p>
-      </div>
-
+    <>
+      <PageHeader
+        eyebrow="Do · Tasks & experiments"
+        title="Bring the vision to life"
+        subline="Track what's moving the vision forward — quick actions, and experiments that trace back to a pillar."
+      />
+      <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-6 py-10">
       <div className="flex gap-2">
         <Button variant="secondary" onClick={() => setNewFormKind(newFormKind === 'action' ? null : 'action')}>
           + New action
@@ -597,6 +595,7 @@ export default function ExperimentsPage() {
           })}
         </div>
       )}
-    </div>
+      </div>
+    </>
   )
 }
