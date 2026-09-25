@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useTeam, useTeamMembers } from '../../hooks/useMyTeams'
 import { Card } from '../../components/shared/Card'
 import { Button } from '../../components/shared/Button'
+import { PageHeader } from '../../components/shared/PageHeader'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
 
 // Two-step reveal-then-confirm, same shape as
@@ -80,20 +81,19 @@ export default function TeamSettingsPage() {
   const canManage = members?.find((m) => m.user_id === user?.id)?.team_role === 'facilitator'
 
   return (
-    <div className="mx-auto flex max-w-xl flex-col gap-6 px-6 py-10">
-      <h1 className="m-0 text-[22px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-        Team settings
-      </h1>
-
-      {!canManage ? (
-        <Card>
-          <p className="m-0 text-[12.5px]" style={{ color: 'var(--color-eol-text-faint)' }}>
-            Only your team's facilitator can manage team settings.
-          </p>
-        </Card>
-      ) : (
-        <DeleteTeamSection teamId={teamId as string} teamName={team?.name ?? 'this team'} />
-      )}
-    </div>
+    <>
+      <PageHeader title="Team settings" />
+      <div className="mx-auto flex max-w-xl flex-col gap-6 px-6 py-10">
+        {!canManage ? (
+          <Card>
+            <p className="m-0 text-[12.5px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+              Only your team's facilitator can manage team settings.
+            </p>
+          </Card>
+        ) : (
+          <DeleteTeamSection teamId={teamId as string} teamName={team?.name ?? 'this team'} />
+        )}
+      </div>
+    </>
   )
 }
