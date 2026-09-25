@@ -5,7 +5,17 @@ import { Logo } from './Logo'
 // password) — dark auth-glow background, 3px dawn stripe at the very top
 // (matching AppShell's stripe under its own dark header), centered logo +
 // title, then whatever card/content each page needs below.
-export function AuthShell({ title, titleSize = 28, children }: { title: string; titleSize?: number; children: ReactNode }) {
+export function AuthShell({
+  title,
+  titleSize = 28,
+  subline,
+  children,
+}: {
+  title: string
+  titleSize?: number
+  subline?: string
+  children: ReactNode
+}) {
   return (
     <div className="flex min-h-screen flex-col" style={{ background: 'var(--gradient-auth-glow)' }}>
       <div style={{ height: 3, background: 'var(--gradient-dawn)' }} />
@@ -19,6 +29,11 @@ export function AuthShell({ title, titleSize = 28, children }: { title: string; 
             >
               {title}
             </h1>
+            {subline && (
+              <p className="m-0 text-[13px]" style={{ color: 'var(--color-eol-on-dark-muted)' }}>
+                {subline}
+              </p>
+            )}
           </div>
           {children}
         </div>

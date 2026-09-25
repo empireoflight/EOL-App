@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../../components/shared/Button'
 import { Input } from '../../components/shared/Input'
-import { Logo } from '../../components/shared/Logo'
+import { AuthShell } from '../../components/shared/AuthShell'
 import type { Organization, Team } from '../../lib/types'
 
 // A signed-in session whose profile row no longer exists (deleted directly
@@ -63,86 +63,80 @@ export default function CreateOrgPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-16">
-      <div className="w-full max-w-sm">
-        <div className="mb-8 flex flex-col items-center gap-3 text-center">
-          <Logo size={36} />
-          <h1 className="m-0 text-[26px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-            {mode === 'solo' ? 'Set up your space' : 'Set up your team'}
-          </h1>
-          <p className="m-0 text-[13px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-            {mode === 'solo'
-              ? 'A private space just for you — clarify your own vision, run your own tasks and weekly check-ins, and process friction on your own terms. You can invite others any time.'
-              : 'This creates your organization and your first pilot team together.'}
-          </p>
-        </div>
-
-        <div className="mb-4 flex rounded-lg border p-1" style={{ borderColor: 'var(--color-eol-border)', background: 'var(--color-eol-surface)' }}>
-          {(['team', 'solo'] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => setMode(m)}
-              className="flex-1 rounded-md py-2 text-[13px] font-semibold transition-opacity"
-              style={
-                mode === m
-                  ? { background: 'var(--color-eol-accent)', color: 'var(--color-eol-ink)' }
-                  : { color: 'var(--color-eol-text-secondary)' }
-              }
-            >
-              {m === 'team' ? 'Team' : 'Just for me'}
-            </button>
-          ))}
-        </div>
-
-        <div className="rounded-2xl border p-6" style={{ background: 'var(--color-eol-surface)', borderColor: 'var(--color-eol-border)' }}>
-          {error && (
-            <div className="mb-4 flex flex-col gap-2 rounded-lg border px-3 py-2 text-[12.5px]" style={{ borderColor: 'var(--color-eol-pink)', color: 'var(--color-eol-pink-strong)' }}>
-              <span>{error}</span>
-              {staleSession && (
-                <button
-                  type="button"
-                  onClick={() => void signOut()}
-                  className="self-start font-semibold underline"
-                >
-                  Sign out
-                </button>
-              )}
-            </div>
-          )}
-          {mode === 'solo' ? (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <Input
-                label="What should we call this?"
-                placeholder="My personal space"
-                required
-                value={spaceName}
-                onChange={(e) => setSpaceName(e.target.value)}
-              />
-              <Button type="submit" loading={loading} className="w-full">
-                Create my space
-              </Button>
-            </form>
-          ) : (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <Input label="Organization name" placeholder="Lumen" required value={orgName} onChange={(e) => setOrgName(e.target.value)} />
-              <Input label="Team name" placeholder="Lumen Product Team" required value={teamName} onChange={(e) => setTeamName(e.target.value)} />
-              <Button type="submit" loading={loading} className="w-full">
-                Create team
-              </Button>
-            </form>
-          )}
-        </div>
-
-        <button
-          type="button"
-          onClick={() => void signOut()}
-          className="mt-4 block w-full text-center text-[12px]"
-          style={{ color: 'var(--color-eol-text-muted)' }}
-        >
-          Sign out
-        </button>
+    <AuthShell
+      title={mode === 'solo' ? 'Set up your space' : 'Set up your team'}
+      titleSize={26}
+      subline={
+        mode === 'solo'
+          ? 'A private space just for you — clarify your own vision, run your own tasks and weekly check-ins, and process friction on your own terms. You can invite others any time.'
+          : 'This creates your organization and your first pilot team together.'
+      }
+    >
+      <div className="mb-4 flex rounded-lg border p-1" style={{ borderColor: 'var(--color-eol-border)', background: 'var(--color-eol-surface)' }}>
+        {(['team', 'solo'] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => setMode(m)}
+            className="flex-1 rounded-md py-2 text-[13px] font-semibold transition-opacity"
+            style={
+              mode === m
+                ? { background: 'var(--color-eol-cta)', color: 'var(--color-eol-cta-ink)' }
+                : { color: 'var(--color-eol-text-secondary)' }
+            }
+          >
+            {m === 'team' ? 'Team' : 'Just for me'}
+          </button>
+        ))}
       </div>
-    </div>
+
+      <div className="rounded-2xl border p-6" style={{ background: 'var(--color-eol-surface)', borderColor: 'var(--color-eol-border)' }}>
+        {error && (
+          <div className="mb-4 flex flex-col gap-2 rounded-lg border px-3 py-2 text-[12.5px]" style={{ borderColor: 'var(--color-eol-pink)', color: 'var(--color-eol-pink-strong)' }}>
+            <span>{error}</span>
+            {staleSession && (
+              <button
+                type="button"
+                onClick={() => void signOut()}
+                className="self-start font-semibold underline"
+              >
+                Sign out
+              </button>
+            )}
+          </div>
+        )}
+        {mode === 'solo' ? (
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <Input
+              label="What should we call this?"
+              placeholder="My personal space"
+              required
+              value={spaceName}
+              onChange={(e) => setSpaceName(e.target.value)}
+            />
+            <Button type="submit" loading={loading} className="w-full">
+              Create my space
+            </Button>
+          </form>
+        ) : (
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <Input label="Organization name" placeholder="Lumen" required value={orgName} onChange={(e) => setOrgName(e.target.value)} />
+            <Input label="Team name" placeholder="Lumen Product Team" required value={teamName} onChange={(e) => setTeamName(e.target.value)} />
+            <Button type="submit" loading={loading} className="w-full">
+              Create team
+            </Button>
+          </form>
+        )}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => void signOut()}
+        className="mt-4 block w-full text-center text-[12px]"
+        style={{ color: 'var(--color-eol-on-dark-muted)' }}
+      >
+        Sign out
+      </button>
+    </AuthShell>
   )
 }
