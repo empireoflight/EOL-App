@@ -17,13 +17,20 @@ const VIEW_HEIGHT = 200
 const PAD_X = 30
 const TOP_Y = 20
 const BOTTOM_Y = 180
-// The left-side axis reads out the energy line specifically (its 1–5 scale
-// is fixed and universally meaningful, unlike tasks/friction counts, which
-// vary week to week and get their exact value from the hover tooltip
-// instead) — gridlines are pinned to these same ticks so the axis numbers
-// line up with the lines they label.
-const ENERGY_TICKS = [1, 2, 3, 4, 5]
-const yForEnergy = (v: number) => BOTTOM_Y - (v / ENERGY_MAX) * (BOTTOM_Y - TOP_Y)
+
+// All three series plot against one shared scale (not each normalized to
+// its own independent max) — otherwise a single completed task, on a week
+// where 1 is also the highest task count ever seen, would stretch to the
+// very top of the chart and visually read as "5" right where the energy
+// axis's top tick sits, when it actually means 1. Axis ticks are 1–5 in the
+// common case (energy's own natural range already covers it); they only
+// extend past 5 if tasks or friction ever genuinely exceed it.
+function niceTicks(max: number): number[] {
+  if (max <= ENERGY_MAX) return [1, 2, 3, 4, 5]
+  const step = Math.ceil(max / 5)
+  return [1, 2, 3, 4, 5].map((n) => n * step)
+}
+const yFor = (v: number, max: number) => BOTTOM_Y - (v / max) * (BOTTOM_Y - TOP_Y)
 
 type VibePoint = { period_start: string; avg: number }
 
@@ -83,13 +90,15 @@ export function WeeklyMetricsChart({ vibePoints, taskCounts, frictionCounts, sel
   const vibeByWeek = new Map(vibePoints.map((p) => [p.period_start, p.avg]))
   const tasksByWeek = new Map(taskCounts.map((p) => [p.period_start, p.count]))
   const frictionByWeek = new Map(frictionCounts.map((p) => [p.period_start, p.count]))
-  const maxTasks = Math.max(...taskCounts.map((p) => p.count), 1)
-  const maxFriction = Math.max(...frictionCounts.map((p) => p.count), 1)
+  const maxTasks = Math.max(...taskCounts.map((p) => p.count), 0)
+  const maxFriction = Math.max(...frictionCounts.map((p) => p.count), 0)
+  const sharedMax = Math.max(ENERGY_MAX, maxTasks, maxFriction)
+  const ticks = niceTicks(sharedMax)
 
   const series = [
-    { name: 'Energy', color: ENERGY_COLOR, format: (v: number) => v.toFixed(1), ...buildLine(weeks.map((w) => vibeByWeek.get(w) ?? null), ENERGY_MAX) },
-    { name: 'Tasks completed', color: TASKS_COLOR, format: (v: number) => String(v), ...buildLine(weeks.map((w) => tasksByWeek.get(w) ?? null), maxTasks) },
-    { name: 'Friction processed', color: FRICTION_COLOR, format: (v: number) => String(v), ...buildLine(weeks.map((w) => frictionByWeek.get(w) ?? null), maxFriction) },
+    { name: 'Energy', color: ENERGY_COLOR, format: (v: number) => v.toFixed(1), ...buildLine(weeks.map((w) => vibeByWeek.get(w) ?? null), sharedMax) },
+    { name: 'Tasks completed', color: TASKS_COLOR, format: (v: number) => String(v), ...buildLine(weeks.map((w) => tasksByWeek.get(w) ?? null), sharedMax) },
+    { name: 'Friction processed', color: FRICTION_COLOR, format: (v: number) => String(v), ...buildLine(weeks.map((w) => frictionByWeek.get(w) ?? null), sharedMax) },
   ]
 
   const selectedIdx = selected ? weeks.indexOf(selected) : -1
@@ -111,8 +120,8 @@ export function WeeklyMetricsChart({ vibePoints, taskCounts, frictionCounts, sel
 
       <div className="flex gap-2">
         <div className="relative shrink-0 text-right text-[10.5px]" style={{ width: 16, height: VIEW_HEIGHT, color: 'var(--color-eol-text-faint)' }}>
-          {ENERGY_TICKS.map((v) => (
-            <span key={v} className="absolute right-0" style={{ top: yForEnergy(v), transform: 'translateY(-50%)' }}>
+          {ticks.map((v) => (
+            <span key={v} className="absolute right-0" style={{ top: yFor(v, sharedMax), transform: 'translateY(-50%)' }}>
               {v}
             </span>
           ))}
@@ -120,8 +129,8 @@ export function WeeklyMetricsChart({ vibePoints, taskCounts, frictionCounts, sel
 
         <div className="relative min-w-0 flex-1">
           <svg width="100%" height={VIEW_HEIGHT} viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`} preserveAspectRatio="none" style={{ display: 'block', overflow: 'visible' }}>
-            {ENERGY_TICKS.map((v) => (
-              <line key={v} x1={0} x2={VIEW_WIDTH} y1={yForEnergy(v)} y2={yForEnergy(v)} stroke="rgba(40,25,10,0.07)" />
+            {ticks.map((v) => (
+              <line key={v} x1={0} x2={VIEW_WIDTH} y1={yFor(v, sharedMax)} y2={yFor(v, sharedMax)} stroke="rgba(40,25,10,0.07)" />
             ))}
             {selectedX != null && <line x1={selectedX} x2={selectedX} y1={TOP_Y} y2={BOTTOM_Y} stroke="var(--color-eol-accent-hover)" strokeWidth={1.5} strokeDasharray="3 3" opacity={0.6} />}
             {series.map(({ name, color, format, path, points }, si) => (
@@ -142,8 +151,10 @@ export function WeeklyMetricsChart({ vibePoints, taskCounts, frictionCounts, sel
                         cy={p.y}
                         r={9}
                         fill="transparent"
+                        style={{ cursor: 'pointer' }}
                         onMouseEnter={() => setHover({ x: p.x, y: p.y, text: `${name} · ${formatShortDate(weeks[p.idx])}: ${format(p.value)}` })}
                         onMouseLeave={() => setHover(null)}
+                        onClick={() => onSelect(weeks[p.idx])}
                       />
                     </g>
                   )
