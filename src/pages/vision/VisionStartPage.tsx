@@ -14,7 +14,7 @@ import { LoadingScreen } from '../../components/shared/LoadingScreen'
 
 const HORIZONS = ['6 months', '12 months', '18 months', '3 years']
 
-type Step = 'invite' | 'framing' | 'questions'
+type Step = 'framing' | 'questions' | 'invite'
 
 function QuestionRow({
   question,
@@ -80,18 +80,18 @@ export default function VisionStartPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const { data: openSession, isLoading: openSessionLoading } = useOpenVisionSession(teamId)
-  // Always offer the invite step first, every time — an established team
-  // starting another session may still want to add someone new before
-  // framing. `manualStep` overrides it once the user clicks Continue, a
+  // Framing comes first so there's a survey to actually invite people to —
+  // `manualStep` overrides the default once the user clicks Continue, a
   // pure derivation instead of syncing state via an effect.
   const [manualStep, setManualStep] = useState<Step | null>(null)
-  const step = manualStep ?? 'invite'
+  const step = manualStep ?? 'framing'
   const [scope, setScope] = useState('')
   const [horizon, setHorizon] = useState(HORIZONS[1])
   const [whyNow, setWhyNow] = useState('')
   const [questions, setQuestions] = useState<VisionQuestion[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [createdSessionId, setCreatedSessionId] = useState<string | null>(null)
 
   const updateQuestion = (id: string, patch: Partial<VisionQuestion>) =>
     setQuestions((qs) => qs.map((q) => (q.id === id ? { ...q, ...patch } : q)))
@@ -141,7 +141,8 @@ export default function VisionStartPage() {
         .insert(currentMembers.map((m) => ({ session_id: session.id, user_id: m.user_id })))
       if (participantsError) throw participantsError
 
-      navigate(`/teams/${teamId}/vision/sessions/${session.id}/reflect`)
+      setCreatedSessionId(session.id)
+      setManualStep('invite')
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't start the session.")
     } finally {
@@ -161,25 +162,6 @@ export default function VisionStartPage() {
   if (step === null || !teamId) return null
 
   if (openSessionLoading || openSession) return <LoadingScreen />
-
-  if (step === 'invite') {
-    return (
-      <>
-        <PageHeader
-          eyebrow="Reimagine · Start a vision"
-          title="Who's doing this with you?"
-          subline="A vision built with your team goes further than one written alone. Invite the people you're building with, or continue on your own for now — you can always invite people later."
-        />
-        <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
-          <TeamInvitePanel teamId={teamId} />
-
-          <Button onClick={() => setManualStep('framing')} className="w-full">
-            Continue
-          </Button>
-        </div>
-      </>
-    )
-  }
 
   if (step === 'framing') {
     return (
@@ -224,66 +206,85 @@ export default function VisionStartPage() {
     )
   }
 
+  if (step === 'questions') {
+    return (
+      <>
+        <PageHeader
+          eyebrow="Reimagine · Start a vision"
+          title="Review the questions"
+          subline="These are what everyone will answer. Edit, reorder, remove, or add your own — this set is locked in once the session starts."
+        />
+        <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
+          {error && (
+            <div className="rounded-lg border px-3 py-2 text-[12.5px]" style={{ borderColor: 'var(--color-eol-pink)', color: 'var(--color-eol-pink-strong)' }}>
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2.5">
+              {questions.map((q, i) => (
+                <QuestionRow
+                  key={q.id}
+                  question={q}
+                  index={i}
+                  count={questions.length}
+                  onChange={(patch) => updateQuestion(q.id, patch)}
+                  onRemove={() => removeQuestion(q.id)}
+                  onMove={(direction) => moveQuestion(i, direction)}
+                />
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Input
+                value={newQuestionText}
+                onChange={(e) => setNewQuestionText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    addQuestion()
+                  }
+                }}
+                placeholder="Add a question"
+                className="flex-1"
+              />
+              <Button type="button" variant="secondary" onClick={addQuestion}>
+                Add
+              </Button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setQuestions(getVisionQuestions(horizon))}
+              className="self-start text-[12px] font-semibold"
+              style={{ color: 'var(--color-eol-accent-label)' }}
+            >
+              Reset to defaults
+            </button>
+
+            <Button type="submit" loading={loading} disabled={questions.length === 0} className="w-full">
+              Start the session
+            </Button>
+          </form>
+        </div>
+      </>
+    )
+  }
+
   return (
     <>
       <PageHeader
         eyebrow="Reimagine · Start a vision"
-        title="Review the questions"
-        subline="These are what everyone will answer. Edit, reorder, remove, or add your own — this set is locked in once the session starts."
+        title="Who's doing this with you?"
+        subline="The session's set up. Invite the people you're building with, or continue on your own for now — you can always invite people later."
       />
       <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
-        {error && (
-          <div className="rounded-lg border px-3 py-2 text-[12.5px]" style={{ borderColor: 'var(--color-eol-pink)', color: 'var(--color-eol-pink-strong)' }}>
-            {error}
-          </div>
-        )}
+        <TeamInvitePanel teamId={teamId} />
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2.5">
-            {questions.map((q, i) => (
-              <QuestionRow
-                key={q.id}
-                question={q}
-                index={i}
-                count={questions.length}
-                onChange={(patch) => updateQuestion(q.id, patch)}
-                onRemove={() => removeQuestion(q.id)}
-                onMove={(direction) => moveQuestion(i, direction)}
-              />
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Input
-              value={newQuestionText}
-              onChange={(e) => setNewQuestionText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  addQuestion()
-                }
-              }}
-              placeholder="Add a question"
-              className="flex-1"
-            />
-            <Button type="button" variant="secondary" onClick={addQuestion}>
-              Add
-            </Button>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setQuestions(getVisionQuestions(horizon))}
-            className="self-start text-[12px] font-semibold"
-            style={{ color: 'var(--color-eol-accent-label)' }}
-          >
-            Reset to defaults
-          </button>
-
-          <Button type="submit" loading={loading} disabled={questions.length === 0} className="w-full">
-            Start the session
-          </Button>
-        </form>
+        <Button onClick={() => navigate(`/teams/${teamId}/vision/sessions/${createdSessionId}/reflect`)} className="w-full">
+          Continue to your reflection
+        </Button>
       </div>
     </>
   )
