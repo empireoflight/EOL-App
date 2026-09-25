@@ -9,6 +9,7 @@ import { Button } from '../../components/shared/Button'
 import { Input } from '../../components/shared/Input'
 import { Textarea } from '../../components/shared/Input'
 import { Card } from '../../components/shared/Card'
+import { PageHeader } from '../../components/shared/PageHeader'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
 
 const HORIZONS = ['6 months', '12 months', '18 months', '3 years']
@@ -163,139 +164,127 @@ export default function VisionStartPage() {
 
   if (step === 'invite') {
     return (
-      <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
-        <div>
-          <h1 className="m-0 text-[22px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-            Who's doing this with you?
-          </h1>
-          <p className="m-0 mt-1 text-[13px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-            A vision built with your team goes further than one written alone. Invite the people you're building
-            with, or continue on your own for now — you can always invite people later.
-          </p>
+      <>
+        <PageHeader
+          eyebrow="Reimagine · Start a vision"
+          title="Who's doing this with you?"
+          subline="A vision built with your team goes further than one written alone. Invite the people you're building with, or continue on your own for now — you can always invite people later."
+        />
+        <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
+          <TeamInvitePanel teamId={teamId} />
+
+          <Button onClick={() => setManualStep('framing')} className="w-full">
+            Continue
+          </Button>
         </div>
-
-        <TeamInvitePanel teamId={teamId} />
-
-        <Button onClick={() => setManualStep('framing')} className="w-full">
-          Continue
-        </Button>
-      </div>
+      </>
     )
   }
 
   if (step === 'framing') {
     return (
-      <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
-        <div>
-          <h1 className="m-0 text-[22px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-            Start a vision session
-          </h1>
-          <p className="m-0 mt-1 text-[13px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-            A little framing first, so everyone answers at the same altitude.
-          </p>
+      <>
+        <PageHeader eyebrow="Reimagine · Start a vision" title="Start a vision session" subline="A little framing first, so everyone answers at the same altitude." />
+        <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
+          <Card>
+            <form
+              onSubmit={(ev) => {
+                ev.preventDefault()
+                setQuestions(getVisionQuestions(horizon))
+                setManualStep('questions')
+              }}
+              className="flex flex-col gap-4"
+            >
+              <Input label="Scope — this team / project / product" required value={scope} onChange={(e) => setScope(e.target.value)} placeholder="This team" />
+              <label className="flex flex-col gap-1.5 text-left">
+                <span className="text-[11px] font-medium" style={{ color: 'var(--color-eol-text-muted)' }}>
+                  Time horizon
+                </span>
+                <select
+                  value={horizon}
+                  onChange={(e) => setHorizon(e.target.value)}
+                  className="rounded-lg border px-3 py-2.5 text-[13px]"
+                  style={{ borderColor: 'var(--color-eol-border-strong)', background: 'var(--color-eol-surface-light)', color: 'var(--color-eol-text)' }}
+                >
+                  {HORIZONS.map((h) => (
+                    <option key={h} value={h}>
+                      {h}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <Textarea label="Why now" hint="One or two sentences on what prompted this session." required value={whyNow} onChange={(e) => setWhyNow(e.target.value)} />
+              <Button type="submit" className="w-full">
+                Continue
+              </Button>
+            </form>
+          </Card>
         </div>
-
-        <Card>
-          <form
-            onSubmit={(ev) => {
-              ev.preventDefault()
-              setQuestions(getVisionQuestions(horizon))
-              setManualStep('questions')
-            }}
-            className="flex flex-col gap-4"
-          >
-            <Input label="Scope — this team / project / product" required value={scope} onChange={(e) => setScope(e.target.value)} placeholder="This team" />
-            <label className="flex flex-col gap-1.5 text-left">
-              <span className="text-[11px] font-medium" style={{ color: 'var(--color-eol-text-muted)' }}>
-                Time horizon
-              </span>
-              <select
-                value={horizon}
-                onChange={(e) => setHorizon(e.target.value)}
-                className="rounded-lg border px-3 py-2.5 text-[13px]"
-                style={{ borderColor: 'var(--color-eol-border-strong)', background: 'var(--color-eol-surface-light)', color: 'var(--color-eol-text)' }}
-              >
-                {HORIZONS.map((h) => (
-                  <option key={h} value={h}>
-                    {h}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <Textarea label="Why now" hint="One or two sentences on what prompted this session." required value={whyNow} onChange={(e) => setWhyNow(e.target.value)} />
-            <Button type="submit" className="w-full">
-              Continue
-            </Button>
-          </form>
-        </Card>
-      </div>
+      </>
     )
   }
 
   return (
-    <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
-      <div>
-        <h1 className="m-0 text-[22px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-          Review the questions
-        </h1>
-        <p className="m-0 mt-1 text-[13px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-          These are what everyone will answer. Edit, reorder, remove, or add your own — this set is locked in once the
-          session starts.
-        </p>
-      </div>
+    <>
+      <PageHeader
+        eyebrow="Reimagine · Start a vision"
+        title="Review the questions"
+        subline="These are what everyone will answer. Edit, reorder, remove, or add your own — this set is locked in once the session starts."
+      />
+      <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
+        {error && (
+          <div className="rounded-lg border px-3 py-2 text-[12.5px]" style={{ borderColor: 'var(--color-eol-pink)', color: 'var(--color-eol-pink-strong)' }}>
+            {error}
+          </div>
+        )}
 
-      {error && (
-        <div className="rounded-lg border px-3 py-2 text-[12.5px]" style={{ borderColor: 'var(--color-eol-pink)', color: 'var(--color-eol-pink-strong)' }}>
-          {error}
-        </div>
-      )}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2.5">
+            {questions.map((q, i) => (
+              <QuestionRow
+                key={q.id}
+                question={q}
+                index={i}
+                count={questions.length}
+                onChange={(patch) => updateQuestion(q.id, patch)}
+                onRemove={() => removeQuestion(q.id)}
+                onMove={(direction) => moveQuestion(i, direction)}
+              />
+            ))}
+          </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2.5">
-          {questions.map((q, i) => (
-            <QuestionRow
-              key={q.id}
-              question={q}
-              index={i}
-              count={questions.length}
-              onChange={(patch) => updateQuestion(q.id, patch)}
-              onRemove={() => removeQuestion(q.id)}
-              onMove={(direction) => moveQuestion(i, direction)}
+          <div className="flex items-center gap-2">
+            <Input
+              value={newQuestionText}
+              onChange={(e) => setNewQuestionText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  addQuestion()
+                }
+              }}
+              placeholder="Add a question"
+              className="flex-1"
             />
-          ))}
-        </div>
+            <Button type="button" variant="secondary" onClick={addQuestion}>
+              Add
+            </Button>
+          </div>
 
-        <div className="flex items-center gap-2">
-          <Input
-            value={newQuestionText}
-            onChange={(e) => setNewQuestionText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                addQuestion()
-              }
-            }}
-            placeholder="Add a question"
-            className="flex-1"
-          />
-          <Button type="button" variant="secondary" onClick={addQuestion}>
-            Add
+          <button
+            type="button"
+            onClick={() => setQuestions(getVisionQuestions(horizon))}
+            className="self-start text-[12px] font-semibold"
+            style={{ color: 'var(--color-eol-accent-label)' }}
+          >
+            Reset to defaults
+          </button>
+
+          <Button type="submit" loading={loading} disabled={questions.length === 0} className="w-full">
+            Start the session
           </Button>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setQuestions(getVisionQuestions(horizon))}
-          className="self-start text-[12px] font-semibold"
-          style={{ color: 'var(--color-eol-accent-label)' }}
-        >
-          Reset to defaults
-        </button>
-
-        <Button type="submit" loading={loading} disabled={questions.length === 0} className="w-full">
-          Start the session
-        </Button>
-      </form>
-    </div>
+        </form>
+      </div>
+    </>
   )
 }
