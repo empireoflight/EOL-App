@@ -6,9 +6,9 @@ function formatShortDate(isoDate: string): string {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' })
 }
 
-const ENERGY_COLOR = 'var(--color-eol-accent)'
-const TASKS_COLOR = 'var(--color-eol-accent-hover)'
-const FRICTION_COLOR = 'var(--color-tier4-dot, var(--color-tier4-fg))'
+const ENERGY_COLOR = 'var(--color-eol-chart-energy)'
+const TASKS_COLOR = 'var(--color-eol-chart-tasks)'
+const FRICTION_COLOR = 'var(--color-eol-chart-friction)'
 const BAR_HEIGHT = 60
 
 type VibePoint = { period_start: string; avg: number }

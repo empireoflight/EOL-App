@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { getWeekStart } from '../../lib/week'
 import { Card } from '../../components/shared/Card'
 import { Button } from '../../components/shared/Button'
+import { PageHeader } from '../../components/shared/PageHeader'
 import { TierBadge } from '../../components/shared/TierBadge'
 import { Avatar } from '../../components/shared/Avatar'
 import { TaskTypeBadge } from '../../components/shared/TaskTypeBadge'
@@ -147,16 +148,17 @@ export function TeamRollup({ teamId }: { teamId: string }) {
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-5 px-6 py-10">
-      <div className="flex items-center justify-between">
-        <h1 className="m-0 text-[22px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-          What are we learning?
-        </h1>
-        <Button variant="secondary" onClick={handleGenerate} loading={generating}>
-          {missingWeeks.length > 1 ? `Generate ${missingWeeks.length} missing rollups` : "Generate this week's rollup"}
-        </Button>
-      </div>
-
+    <>
+      <PageHeader
+        eyebrow="Evolve"
+        title="What are we learning?"
+        actions={
+          <Button variant="ghost-on-dark" onClick={handleGenerate} loading={generating}>
+            {missingWeeks.length > 1 ? `Generate ${missingWeeks.length} missing rollups` : "Generate this week's rollup"}
+          </Button>
+        }
+      />
+      <div className="mx-auto flex max-w-2xl flex-col gap-5 px-6 py-10">
       {notice && (
         <div className="rounded-lg border px-3 py-2 text-[12.5px]" style={{ borderColor: 'var(--color-eol-border-strong)', color: 'var(--color-eol-text-secondary)' }}>
           {notice}
@@ -164,18 +166,27 @@ export function TeamRollup({ teamId }: { teamId: string }) {
       )}
 
       {latest?.trendInsight && (
-        <div
-          className="flex flex-col gap-2 rounded-2xl border p-4"
-          style={{ background: 'var(--color-tier2-bg)', borderColor: 'var(--color-eol-border)' }}
-        >
-          <p className="m-0 text-[13px] leading-relaxed" style={{ color: 'var(--color-tier2-fg)' }}>
+        <div className="flex flex-col gap-4 rounded-[18px] p-[30px_28px]" style={{ background: 'var(--gradient-dawn)' }}>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: 'var(--color-eol-north-star-label)' }}>
+            Throughline
+          </div>
+          <p className="m-0 text-[24px] leading-[1.4]" style={{ fontFamily: 'var(--font-display)', fontWeight: 400, color: 'var(--color-eol-north-star-text)' }}>
             {latest.trendInsight}
           </p>
-          <div className="flex gap-4 text-[12.5px] font-semibold">
-            <Link to={`/teams/${teamId}/friction/start`} state={{ prefillTopic: latest.trendInsight }} style={{ color: 'var(--color-tier2-fg)' }}>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              to={`/teams/${teamId}/friction/start`}
+              state={{ prefillTopic: latest.trendInsight }}
+              className="rounded-full px-4 py-2 text-[13px] font-semibold"
+              style={{ background: 'var(--color-eol-night)', color: 'var(--color-eol-heading-on-dark)' }}
+            >
               Explore this &rarr;
             </Link>
-            <Link to={`/teams/${teamId}/vision`} style={{ color: 'var(--color-tier2-fg)' }}>
+            <Link
+              to={`/teams/${teamId}/vision`}
+              className="rounded-full px-4 py-2 text-[13px] font-semibold"
+              style={{ background: 'rgba(255,255,255,0.55)', color: 'var(--color-eol-north-star-text)' }}
+            >
               Revisit the vision
             </Link>
           </div>
@@ -319,6 +330,7 @@ export function TeamRollup({ teamId }: { teamId: string }) {
           )}
         </Card>
       )}
-    </div>
+      </div>
+    </>
   )
 }
