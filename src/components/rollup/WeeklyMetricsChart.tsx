@@ -1,4 +1,4 @@
-import { Fragment } from 'react'
+import { Fragment, useState } from 'react'
 import { Card } from '../shared/Card'
 import type { WeekCount } from '../../hooks/useWeeklyCompletions'
 
@@ -17,7 +17,13 @@ const VIEW_HEIGHT = 200
 const PAD_X = 30
 const TOP_Y = 20
 const BOTTOM_Y = 180
-const GRIDLINES = [20, 73.33, 126.67, 180]
+// The left-side axis reads out the energy line specifically (its 1–5 scale
+// is fixed and universally meaningful, unlike tasks/friction counts, which
+// vary week to week and get their exact value from the hover tooltip
+// instead) — gridlines are pinned to these same ticks so the axis numbers
+// line up with the lines they label.
+const ENERGY_TICKS = [1, 2, 3, 4, 5]
+const yForEnergy = (v: number) => BOTTOM_Y - (v / ENERGY_MAX) * (BOTTOM_Y - TOP_Y)
 
 type VibePoint = { period_start: string; avg: number }
 
@@ -30,22 +36,24 @@ type WeeklyMetricsChartProps = {
   maxWeeks?: number
 }
 
+type Hover = { x: number; y: number; text: string }
+
 // One point per week per series, connected into a line — three trend lines
 // (energy, tasks, friction) sharing one x-axis of weeks. The three series
 // don't necessarily share the same weeks (a rollup may not have been
 // generated for every week that had completed tasks, or vice versa), so the
 // x-axis is the union of all three, and a week missing from a given series
 // just breaks that series' line rather than dropping the week entirely.
-function buildLine(valuesByWeek: (number | null)[], max: number): { path: string; points: { x: number; y: number; idx: number }[] } {
+function buildLine(valuesByWeek: (number | null)[], max: number): { path: string; points: { x: number; y: number; idx: number; value: number }[] } {
   const n = valuesByWeek.length
   const xFor = (i: number) => (n === 1 ? (PAD_X + (VIEW_WIDTH - PAD_X * 2)) / 2 : PAD_X + (i * (VIEW_WIDTH - PAD_X * 2)) / (n - 1))
   const points = valuesByWeek
-    .map((v, i) => (v == null ? null : { x: xFor(i), y: BOTTOM_Y - (v / max) * (BOTTOM_Y - TOP_Y), idx: i }))
-    .filter((p): p is { x: number; y: number; idx: number } => p !== null)
+    .map((v, i) => (v == null ? null : { x: xFor(i), y: BOTTOM_Y - (v / max) * (BOTTOM_Y - TOP_Y), idx: i, value: v }))
+    .filter((p): p is { x: number; y: number; idx: number; value: number } => p !== null)
 
   // Break the line wherever a week is missing for this series, instead of
   // drawing a straight (misleading) segment across the gap.
-  const segments: { x: number; y: number; idx: number }[][] = []
+  const segments: { x: number; y: number; idx: number; value: number }[][] = []
   for (const p of points) {
     const last = segments.at(-1)
     if (last && p.idx === last.at(-1)!.idx + 1) last.push(p)
@@ -56,6 +64,7 @@ function buildLine(valuesByWeek: (number | null)[], max: number): { path: string
 }
 
 export function WeeklyMetricsChart({ vibePoints, taskCounts, frictionCounts, selected, onSelect, maxWeeks = 12 }: WeeklyMetricsChartProps) {
+  const [hover, setHover] = useState<Hover | null>(null)
   const weeks = [...new Set([...vibePoints.map((p) => p.period_start), ...taskCounts.map((p) => p.period_start), ...frictionCounts.map((p) => p.period_start)])]
     .sort((a, b) => (a < b ? 1 : -1))
     .slice(0, maxWeeks)
@@ -78,9 +87,9 @@ export function WeeklyMetricsChart({ vibePoints, taskCounts, frictionCounts, sel
   const maxFriction = Math.max(...frictionCounts.map((p) => p.count), 1)
 
   const series = [
-    { color: ENERGY_COLOR, ...buildLine(weeks.map((w) => vibeByWeek.get(w) ?? null), ENERGY_MAX) },
-    { color: TASKS_COLOR, ...buildLine(weeks.map((w) => tasksByWeek.get(w) ?? null), maxTasks) },
-    { color: FRICTION_COLOR, ...buildLine(weeks.map((w) => frictionByWeek.get(w) ?? null), maxFriction) },
+    { name: 'Energy', color: ENERGY_COLOR, format: (v: number) => v.toFixed(1), ...buildLine(weeks.map((w) => vibeByWeek.get(w) ?? null), ENERGY_MAX) },
+    { name: 'Tasks completed', color: TASKS_COLOR, format: (v: number) => String(v), ...buildLine(weeks.map((w) => tasksByWeek.get(w) ?? null), maxTasks) },
+    { name: 'Friction processed', color: FRICTION_COLOR, format: (v: number) => String(v), ...buildLine(weeks.map((w) => frictionByWeek.get(w) ?? null), maxFriction) },
   ]
 
   const selectedIdx = selected ? weeks.indexOf(selected) : -1
@@ -100,36 +109,65 @@ export function WeeklyMetricsChart({ vibePoints, taskCounts, frictionCounts, sel
         </span>
       </div>
 
-      <svg width="100%" height={VIEW_HEIGHT} viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`} preserveAspectRatio="none" style={{ display: 'block' }}>
-        {GRIDLINES.map((y) => (
-          <line key={y} x1={0} x2={VIEW_WIDTH} y1={y} y2={y} stroke="rgba(40,25,10,0.07)" />
-        ))}
-        {selectedX != null && <line x1={selectedX} x2={selectedX} y1={TOP_Y} y2={BOTTOM_Y} stroke="var(--color-eol-accent-hover)" strokeWidth={1.5} strokeDasharray="3 3" opacity={0.6} />}
-        {series.map(({ color, path, points }, si) => (
-          <Fragment key={si}>
-            {path
-              .split('|')
-              .filter(Boolean)
-              .map((seg, i) => (
-                <polyline key={i} fill="none" stroke={color} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" points={seg} />
-              ))}
-            {points.map((p) => {
-              const isLatest = p.idx === weeks.length - 1
-              return (
-                <circle
-                  key={p.idx}
-                  cx={p.x}
-                  cy={p.y}
-                  r={isLatest ? 5 : 3.5}
-                  fill={isLatest ? color : 'var(--color-eol-surface)'}
-                  stroke={color}
-                  strokeWidth={2}
-                />
-              )
-            })}
-          </Fragment>
-        ))}
-      </svg>
+      <div className="flex gap-2">
+        <div className="relative shrink-0 text-right text-[10.5px]" style={{ width: 16, height: VIEW_HEIGHT, color: 'var(--color-eol-text-faint)' }}>
+          {ENERGY_TICKS.map((v) => (
+            <span key={v} className="absolute right-0" style={{ top: yForEnergy(v), transform: 'translateY(-50%)' }}>
+              {v}
+            </span>
+          ))}
+        </div>
+
+        <div className="relative min-w-0 flex-1">
+          <svg width="100%" height={VIEW_HEIGHT} viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`} preserveAspectRatio="none" style={{ display: 'block', overflow: 'visible' }}>
+            {ENERGY_TICKS.map((v) => (
+              <line key={v} x1={0} x2={VIEW_WIDTH} y1={yForEnergy(v)} y2={yForEnergy(v)} stroke="rgba(40,25,10,0.07)" />
+            ))}
+            {selectedX != null && <line x1={selectedX} x2={selectedX} y1={TOP_Y} y2={BOTTOM_Y} stroke="var(--color-eol-accent-hover)" strokeWidth={1.5} strokeDasharray="3 3" opacity={0.6} />}
+            {series.map(({ name, color, format, path, points }, si) => (
+              <Fragment key={si}>
+                {path
+                  .split('|')
+                  .filter(Boolean)
+                  .map((seg, i) => (
+                    <polyline key={i} fill="none" stroke={color} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" points={seg} />
+                  ))}
+                {points.map((p) => {
+                  const isLatest = p.idx === weeks.length - 1
+                  return (
+                    <g key={p.idx}>
+                      <circle cx={p.x} cy={p.y} r={isLatest ? 5 : 3.5} fill={isLatest ? color : 'var(--color-eol-surface)'} stroke={color} strokeWidth={2} />
+                      <circle
+                        cx={p.x}
+                        cy={p.y}
+                        r={9}
+                        fill="transparent"
+                        onMouseEnter={() => setHover({ x: p.x, y: p.y, text: `${name} · ${formatShortDate(weeks[p.idx])}: ${format(p.value)}` })}
+                        onMouseLeave={() => setHover(null)}
+                      />
+                    </g>
+                  )
+                })}
+              </Fragment>
+            ))}
+          </svg>
+
+          {hover && (
+            <div
+              className="pointer-events-none absolute z-10 whitespace-nowrap rounded-md px-2 py-1 text-[11.5px] font-medium shadow-sm"
+              style={{
+                left: `${(hover.x / VIEW_WIDTH) * 100}%`,
+                top: `${(hover.y / VIEW_HEIGHT) * 100}%`,
+                transform: 'translate(-50%, -130%)',
+                background: 'var(--color-eol-night)',
+                color: 'var(--color-eol-heading-on-dark)',
+              }}
+            >
+              {hover.text}
+            </div>
+          )}
+        </div>
+      </div>
 
       <div className="mt-2.5 flex justify-between px-0.5">
         {weeks.map((week) => {
