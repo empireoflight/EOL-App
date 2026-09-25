@@ -16,6 +16,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { resolveVisionQuestions, type VisionQuestion } from '../../lib/visionQuestions'
 import { Card } from '../../components/shared/Card'
 import { Button } from '../../components/shared/Button'
+import { PageHeader } from '../../components/shared/PageHeader'
 import { Input } from '../../components/shared/Input'
 import { TierBadge } from '../../components/shared/TierBadge'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
@@ -109,8 +110,8 @@ function EditableNodeList({
         {items.map((p) => (
           <span
             key={p.id}
-            className="flex items-center gap-1.5 rounded-full py-1 pl-3 pr-2 text-[12px] font-medium"
-            style={{ background: 'var(--color-tier2-bg)', color: 'var(--color-tier2-fg)' }}
+            className="flex h-8 items-center gap-1.5 rounded-full py-1 pl-3 pr-2 text-[12px] font-medium"
+            style={{ background: 'var(--color-eol-lavender-bg)', color: 'var(--color-eol-lavender-fg)' }}
           >
             <EditableText value={p.text} editable={editable} onSave={(t) => updateText(p.id, t)} />
             {editable && (
@@ -187,7 +188,8 @@ function AlignmentGuideCard({ vision }: { vision: Vision }) {
     <Card>
       <div className="flex flex-col gap-4">
         <div>
-          <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-accent-label)' }}>
+          <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-accent-label)' }}>
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--color-eol-alignment-dot)' }} />
             Where there's alignment
           </div>
           <p className="m-0 text-[12.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
@@ -195,7 +197,8 @@ function AlignmentGuideCard({ vision }: { vision: Vision }) {
           </p>
         </div>
         <div>
-          <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-pink-strong)' }}>
+          <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-pink-strong)' }}>
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--color-eol-disconnect-dot)' }} />
             Where there's disconnect
           </div>
           <p className="m-0 text-[12.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
@@ -659,39 +662,32 @@ export default function VisionHomePage() {
   const blockedFromCanvas = !!openSession && openSession.status !== 'guide_ready'
   if (blockedFromCanvas) {
     return (
-      <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
-        <div>
-          <h1 className="m-0 text-[24px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-            Vision creation process is in progress
-          </h1>
+      <>
+        <PageHeader eyebrow="Reimagine" title="Vision creation process is in progress" />
+        <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
+          <VisionSessionProgress teamId={teamId} sessionId={openSession.id} canManage={canManage} />
         </div>
-        <VisionSessionProgress teamId={teamId} sessionId={openSession.id} canManage={canManage} />
-      </div>
+      </>
     )
   }
 
   if (!vision) {
     return (
-      <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
-        <div>
-          <h1 className="m-0 text-[24px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-            What are we creating?
-          </h1>
-          <p className="m-0 mt-1 text-[13.5px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-            No vision yet — everything else in this cycle takes its shape from here.
-          </p>
+      <>
+        <PageHeader eyebrow="Reimagine" title="What are we creating?" subline="No vision yet — everything else in this cycle takes its shape from here." />
+        <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
+          <Card>
+            <div className="flex items-center justify-between gap-4">
+              <p className="m-0 text-[13px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
+                Start a vision session to co-create a shared north star with your team.
+              </p>
+              <Link to={`/teams/${teamId}/vision/start`}>
+                <Button>Start</Button>
+              </Link>
+            </div>
+          </Card>
         </div>
-        <Card>
-          <div className="flex items-center justify-between gap-4">
-            <p className="m-0 text-[13px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-              Start a vision session to co-create a shared north star with your team.
-            </p>
-            <Link to={`/teams/${teamId}/vision/start`}>
-              <Button>Start</Button>
-            </Link>
-          </div>
-        </Card>
-      </div>
+      </>
     )
   }
 
@@ -700,7 +696,13 @@ export default function VisionHomePage() {
   const updateNodes = (nodes: VisionNode[]) => saveLayout.mutate({ nodes, edges: vision.layout.edges })
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-10">
+    <>
+      <PageHeader
+        eyebrow={editable ? 'Reimagine · Vision canvas' : 'Reimagine · Vision'}
+        title="What are we creating?"
+        subline="Synthesized from your team's reflections below."
+      />
+      <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-10">
       {/* openSession is only ever non-null here once its guide is ready and
           blockedFromCanvas above already excluded the "not everyone's in
           yet" case for non-managers — this is the regenerate path, letting
@@ -713,10 +715,10 @@ export default function VisionHomePage() {
 
       <div>
         <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-accent-label)' }}>
-          What are we creating?
+          North Star
         </div>
         <div
-          className="rounded-2xl border p-6"
+          className="rounded-[18px] border p-6"
           style={{ background: 'var(--gradient-dawn)', borderColor: 'var(--color-eol-border)' }}
         >
           {northStar ? (
@@ -724,25 +726,29 @@ export default function VisionHomePage() {
               value={northStar.text}
               editable={editable}
               onSave={(text) => updateNodes(vision.layout.nodes.map((n) => (n.id === northStar.id ? { ...n, text } : n)))}
-              textClassName="text-[22px] leading-snug"
-              textStyle={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}
+              textClassName="text-[23px] leading-[1.45]"
+              textStyle={{ fontFamily: 'var(--font-display)', fontWeight: 400, color: 'var(--color-eol-north-star-text)' }}
             />
           ) : (
-            <div className="text-[22px] leading-snug" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
+            <div className="text-[23px] leading-[1.45]" style={{ fontFamily: 'var(--font-display)', fontWeight: 400, color: 'var(--color-eol-north-star-text)' }}>
               No north star yet.
             </div>
           )}
         </div>
         <EditableNodeList nodes={vision.layout.nodes} kind="pillar" editable={editable} onChange={updateNodes} addLabel="Add a pillar" chip />
-        <p className="m-0 mt-3 text-[12px]" style={{ color: 'var(--color-eol-text-faint)' }}>
-          Synthesized from your team's reflections below.
-        </p>
         {!editable && (
-          <p className="m-0 mt-1 text-[11.5px] font-medium" style={{ color: 'var(--color-eol-text-faint)' }}>
+          <div
+            className="mt-3 flex items-center gap-2 rounded-[12px] px-3 py-2.5 text-[12.5px] font-medium"
+            style={{ background: 'var(--color-eol-lavender-bg)', color: 'var(--color-eol-lavender-fg)' }}
+          >
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" className="shrink-0">
+              <rect x="3" y="6.5" width="8" height="6" rx="1.2" stroke="currentColor" strokeWidth="1.3" />
+              <path d="M4.5 6.5V4.5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+            </svg>
             {vision.status === 'committed'
               ? "This vision has been committed — it's read-only now."
               : "This vision is pending everyone's commitment — it's read-only until that's resolved."}
-          </p>
+          </div>
         )}
       </div>
 
@@ -791,6 +797,7 @@ export default function VisionHomePage() {
           <ArtifactsSection teamId={teamId as string} visionId={vision.id} />
         </div>
       )}
-    </div>
+      </div>
+    </>
   )
 }
