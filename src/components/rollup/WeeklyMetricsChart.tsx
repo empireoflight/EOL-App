@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import { Card } from '../shared/Card'
 import type { WeekCount } from '../../hooks/useWeeklyCompletions'
 
@@ -9,7 +10,14 @@ function formatShortDate(isoDate: string): string {
 const ENERGY_COLOR = 'var(--color-eol-chart-energy)'
 const TASKS_COLOR = 'var(--color-eol-chart-tasks)'
 const FRICTION_COLOR = 'var(--color-eol-chart-friction)'
-const BAR_HEIGHT = 60
+const ENERGY_MAX = 5
+
+const VIEW_WIDTH = 760
+const VIEW_HEIGHT = 200
+const PAD_X = 30
+const TOP_Y = 20
+const BOTTOM_Y = 180
+const GRIDLINES = [20, 73.33, 126.67, 180]
 
 type VibePoint = { period_start: string; avg: number }
 
@@ -22,14 +30,31 @@ type WeeklyMetricsChartProps = {
   maxWeeks?: number
 }
 
-// One clickable column per week, three small bars inside it (energy, tasks,
-// friction) — replaces three separate charts (the old 1-5 vibe chart plus
-// two WeeklyCountChart instances) with a single picture. The three series
+// One point per week per series, connected into a line — three trend lines
+// (energy, tasks, friction) sharing one x-axis of weeks. The three series
 // don't necessarily share the same weeks (a rollup may not have been
 // generated for every week that had completed tasks, or vice versa), so the
-// x-axis is the union of all three, and a week missing from one series just
-// renders that one bar as an empty placeholder rather than dropping the
-// column.
+// x-axis is the union of all three, and a week missing from a given series
+// just breaks that series' line rather than dropping the week entirely.
+function buildLine(valuesByWeek: (number | null)[], max: number): { path: string; points: { x: number; y: number; idx: number }[] } {
+  const n = valuesByWeek.length
+  const xFor = (i: number) => (n === 1 ? (PAD_X + (VIEW_WIDTH - PAD_X * 2)) / 2 : PAD_X + (i * (VIEW_WIDTH - PAD_X * 2)) / (n - 1))
+  const points = valuesByWeek
+    .map((v, i) => (v == null ? null : { x: xFor(i), y: BOTTOM_Y - (v / max) * (BOTTOM_Y - TOP_Y), idx: i }))
+    .filter((p): p is { x: number; y: number; idx: number } => p !== null)
+
+  // Break the line wherever a week is missing for this series, instead of
+  // drawing a straight (misleading) segment across the gap.
+  const segments: { x: number; y: number; idx: number }[][] = []
+  for (const p of points) {
+    const last = segments.at(-1)
+    if (last && p.idx === last.at(-1)!.idx + 1) last.push(p)
+    else segments.push([p])
+  }
+
+  return { path: segments.map((seg) => seg.map((p) => `${p.x},${p.y}`).join(' ')).join('|'), points }
+}
+
 export function WeeklyMetricsChart({ vibePoints, taskCounts, frictionCounts, selected, onSelect, maxWeeks = 12 }: WeeklyMetricsChartProps) {
   const weeks = [...new Set([...vibePoints.map((p) => p.period_start), ...taskCounts.map((p) => p.period_start), ...frictionCounts.map((p) => p.period_start)])]
     .sort((a, b) => (a < b ? 1 : -1))
@@ -52,38 +77,61 @@ export function WeeklyMetricsChart({ vibePoints, taskCounts, frictionCounts, sel
   const maxTasks = Math.max(...taskCounts.map((p) => p.count), 1)
   const maxFriction = Math.max(...frictionCounts.map((p) => p.count), 1)
 
-  const bar = (value: number | undefined, max: number, color: string) => (
-    <div
-      style={{
-        width: 8,
-        height: value ? `${Math.max((value / max) * BAR_HEIGHT, 4)}px` : '3px',
-        background: value ? color : 'var(--color-eol-border-strong)',
-        borderRadius: 2,
-        opacity: value ? 1 : 0.35,
-      }}
-    />
-  )
+  const series = [
+    { color: ENERGY_COLOR, ...buildLine(weeks.map((w) => vibeByWeek.get(w) ?? null), ENERGY_MAX) },
+    { color: TASKS_COLOR, ...buildLine(weeks.map((w) => tasksByWeek.get(w) ?? null), maxTasks) },
+    { color: FRICTION_COLOR, ...buildLine(weeks.map((w) => frictionByWeek.get(w) ?? null), maxFriction) },
+  ]
+
+  const selectedIdx = selected ? weeks.indexOf(selected) : -1
+  const selectedX = selectedIdx >= 0 ? (weeks.length === 1 ? VIEW_WIDTH / 2 : PAD_X + (selectedIdx * (VIEW_WIDTH - PAD_X * 2)) / (weeks.length - 1)) : null
 
   return (
     <Card>
-      <div className="mb-3 flex items-center gap-4 text-[11px]" style={{ color: 'var(--color-eol-text-muted)' }}>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2 w-2 rounded-full" style={{ background: ENERGY_COLOR }} /> Energy
+      <div className="mb-4 flex flex-wrap items-center gap-[22px] text-[13px] font-medium" style={{ color: 'var(--color-eol-text-secondary)' }}>
+        <span className="flex items-center gap-2">
+          <span className="inline-block h-[3px] w-[14px] rounded-[2px]" style={{ background: ENERGY_COLOR }} /> Energy
         </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2 w-2 rounded-full" style={{ background: TASKS_COLOR }} /> Tasks completed
+        <span className="flex items-center gap-2">
+          <span className="inline-block h-[3px] w-[14px] rounded-[2px]" style={{ background: TASKS_COLOR }} /> Tasks completed
         </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2 w-2 rounded-full" style={{ background: FRICTION_COLOR }} /> Friction processed
+        <span className="flex items-center gap-2">
+          <span className="inline-block h-[3px] w-[14px] rounded-[2px]" style={{ background: FRICTION_COLOR }} /> Friction processed
         </span>
       </div>
-      {/* overflow-x-auto here forces overflow-y to auto too (a CSS quirk —
-          setting only one axis to non-visible clips the other), so the
-          selected week's outline, which is drawn outside its button's own
-          box, was getting clipped flat at the top with no room to render
-          into. pt-2 gives it that room; px-0.5 does the same for the
-          first/last column's sides. */}
-      <div className="flex items-end gap-4 overflow-x-auto px-0.5 pt-2 pb-1">
+
+      <svg width="100%" height={VIEW_HEIGHT} viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`} preserveAspectRatio="none" style={{ display: 'block' }}>
+        {GRIDLINES.map((y) => (
+          <line key={y} x1={0} x2={VIEW_WIDTH} y1={y} y2={y} stroke="rgba(40,25,10,0.07)" />
+        ))}
+        {selectedX != null && <line x1={selectedX} x2={selectedX} y1={TOP_Y} y2={BOTTOM_Y} stroke="var(--color-eol-accent-hover)" strokeWidth={1.5} strokeDasharray="3 3" opacity={0.6} />}
+        {series.map(({ color, path, points }, si) => (
+          <Fragment key={si}>
+            {path
+              .split('|')
+              .filter(Boolean)
+              .map((seg, i) => (
+                <polyline key={i} fill="none" stroke={color} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" points={seg} />
+              ))}
+            {points.map((p) => {
+              const isLatest = p.idx === weeks.length - 1
+              return (
+                <circle
+                  key={p.idx}
+                  cx={p.x}
+                  cy={p.y}
+                  r={isLatest ? 5 : 3.5}
+                  fill={isLatest ? color : 'var(--color-eol-surface)'}
+                  stroke={color}
+                  strokeWidth={2}
+                />
+              )
+            })}
+          </Fragment>
+        ))}
+      </svg>
+
+      <div className="mt-2.5 flex justify-between px-0.5">
         {weeks.map((week) => {
           const isSelected = week === selected
           return (
@@ -91,20 +139,10 @@ export function WeeklyMetricsChart({ vibePoints, taskCounts, frictionCounts, sel
               key={week}
               type="button"
               onClick={() => onSelect(week)}
-              className="flex shrink-0 flex-col items-center gap-1.5 rounded-lg px-1.5 py-1"
-              style={{ background: isSelected ? 'var(--color-eol-surface)' : 'transparent', outline: isSelected ? '1.5px solid var(--color-eol-accent-hover)' : 'none' }}
+              className="text-[12px] whitespace-nowrap"
+              style={{ color: isSelected ? 'var(--color-eol-text)' : 'var(--color-eol-text-muted)', fontWeight: isSelected ? 600 : 400 }}
             >
-              <div className="flex items-end gap-1" style={{ height: BAR_HEIGHT }}>
-                {bar(vibeByWeek.get(week), 5, ENERGY_COLOR)}
-                {bar(tasksByWeek.get(week), maxTasks, TASKS_COLOR)}
-                {bar(frictionByWeek.get(week), maxFriction, FRICTION_COLOR)}
-              </div>
-              <span
-                className="text-[9.5px] whitespace-nowrap"
-                style={{ color: isSelected ? 'var(--color-eol-text)' : 'var(--color-eol-text-faint)', fontWeight: isSelected ? 600 : 400 }}
-              >
-                {formatShortDate(week)}
-              </span>
+              {formatShortDate(week)}
             </button>
           )
         })}
