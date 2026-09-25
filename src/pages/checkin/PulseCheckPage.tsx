@@ -8,6 +8,7 @@ import { getWeekStart } from '../../lib/week'
 import { Button } from '../../components/shared/Button'
 import { Textarea } from '../../components/shared/Input'
 import { Card } from '../../components/shared/Card'
+import { PageHeader } from '../../components/shared/PageHeader'
 import { TierBadge } from '../../components/shared/TierBadge'
 import { LearningPrompt } from '../../components/experiments/LearningPrompt'
 import type { Action, Experiment } from '../../lib/types'
@@ -16,26 +17,20 @@ type PulseDraft = { gave: string; drained: string }
 
 const VIBE_LEVELS = [1, 2, 3, 4, 5]
 
-function BatteryIcon({ level, active, onClick }: { level: number; active: boolean; onClick: () => void }) {
-  const fillColor = `oklch(${0.9 - level * 0.04} ${0.02 + level * 0.03} 78)`
+function EnergyTile({ level, active, onClick }: { level: number; active: boolean; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={`Vibe level ${level}`}
-      className="flex flex-col items-center gap-1 rounded-xl px-2 py-2"
-      style={{
-        background: active ? 'var(--color-tier2-bg)' : 'transparent',
-        border: active ? '1px solid var(--color-tier2-fg)' : '1px solid transparent',
-      }}
+      className="flex h-11 w-11 items-center justify-center rounded-[10px] text-[15px] font-semibold"
+      style={
+        active
+          ? { background: 'var(--gradient-dawn)', border: '1.5px solid var(--color-eol-ink)', color: 'var(--color-eol-north-star-text)' }
+          : { border: '1px solid var(--color-eol-border-strong)', color: 'var(--color-eol-text-muted)' }
+      }
     >
-      <svg width="34" height="18" viewBox="0 0 34 18">
-        <rect x="1" y="1" width="28" height="16" rx="3" fill="none" stroke="var(--color-eol-border-strong)" strokeWidth="1.5" />
-        <rect x="30" y="6" width="3" height="6" rx="1" fill="var(--color-eol-border-strong)" />
-        {[0, 1, 2, 3, 4].map((i) => (
-          <rect key={i} x={4 + i * 5} y={4} width="3.4" height="10" rx="0.8" fill={i < level ? fillColor : 'transparent'} />
-        ))}
-      </svg>
+      {level}
     </button>
   )
 }
@@ -166,16 +161,9 @@ export default function PulseCheckPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-lg flex-col gap-5 px-6 py-10">
-      <div>
-        <div className="mb-1 text-[11px]" style={{ color: 'var(--color-eol-text-muted)' }}>
-          End of week
-        </div>
-        <h1 className="m-0 text-[22px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-          Weekly vibe check
-        </h1>
-      </div>
-
+    <>
+      <PageHeader eyebrow="End of week" title="Weekly vibe check" />
+      <div className="mx-auto flex max-w-lg flex-col gap-5 px-6 py-10">
       {error && (
         <div className="rounded-lg border px-3 py-2 text-[12.5px]" style={{ borderColor: 'var(--color-eol-pink)', color: 'var(--color-eol-pink-strong)' }}>
           {error}
@@ -211,7 +199,7 @@ export default function PulseCheckPage() {
                     className="shrink-0 rounded-full px-2.5 py-1 text-[10.5px] font-medium"
                     style={
                       item.status === status
-                        ? { background: 'var(--color-tier4-bg)', color: 'var(--color-tier4-fg)' }
+                        ? { background: 'var(--color-eol-night)', color: 'var(--color-eol-heading-on-dark)' }
                         : { border: '1px solid var(--color-eol-border-strong)', color: 'var(--color-eol-text-muted)' }
                     }
                   >
@@ -283,7 +271,7 @@ export default function PulseCheckPage() {
         </p>
         <div className="flex items-center justify-between">
           {VIBE_LEVELS.map((level) => (
-            <BatteryIcon key={level} level={level} active={vibe === level} onClick={() => setVibe(level)} />
+            <EnergyTile key={level} level={level} active={vibe === level} onClick={() => setVibe(level)} />
           ))}
         </div>
         <div className="mt-1 flex justify-between text-[10px]" style={{ color: 'var(--color-eol-text-faint)' }}>
@@ -295,6 +283,7 @@ export default function PulseCheckPage() {
       <Button onClick={handleSubmit} loading={submitting} disabled={!vibe} className="w-full">
         Save vibe check
       </Button>
-    </div>
+      </div>
+    </>
   )
 }
