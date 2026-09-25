@@ -10,6 +10,7 @@ import { Textarea } from '../../components/shared/Input'
 import { TierBadge } from '../../components/shared/TierBadge'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
 import { Card } from '../../components/shared/Card'
+import { PageHeader } from '../../components/shared/PageHeader'
 import { FrictionTopicSummary } from '../../components/session/FrictionTopicSummary'
 import { CancelFrictionSessionButton } from '../../components/session/CancelFrictionSessionButton'
 import { useState } from 'react'
@@ -150,17 +151,14 @@ export default function FrictionMitigatorPage() {
     )
   }
 
-  return (
-    <div className="mx-auto flex max-w-lg flex-col gap-5 px-6 py-10">
-      <div>
-        <div className="mb-1 text-[11px]" style={{ color: 'var(--color-eol-text-muted)' }}>
-          Do &middot; Friction Mitigator
-        </div>
-        <h1 className="m-0 text-[22px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-          {stage === 'ground' ? "Let's ground first" : stage === 'reflect' ? 'Reflect' : 'Clarify needs'}
-        </h1>
-      </div>
+  const isGrounding = stage === 'ground'
 
+  // Progress bar + questions + privacy note + buttons are identical for
+  // every stage — only the surrounding chrome (dark full-bleed while
+  // grounding vs. the standard light PageHeader for reflect/clarify)
+  // differs, so that chrome is the only thing duplicated below.
+  const body = (
+    <>
       {sessionId && !topic && otherParticipantNames.length > 0 && (
         <Card>
           <p className="m-0 text-[12.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
@@ -179,39 +177,49 @@ export default function FrictionMitigatorPage() {
           <div
             key={s.id}
             className="h-1 flex-1 rounded-full"
-            style={{ background: i <= stageIndex ? 'var(--color-eol-accent)' : 'var(--color-eol-border-strong)' }}
+            style={{ background: i <= stageIndex ? 'var(--gradient-dawn)' : isGrounding ? 'rgba(255,255,255,0.16)' : 'var(--color-eol-border-strong)' }}
           />
         ))}
       </div>
-      <div className="flex justify-between text-[10.5px]" style={{ color: 'var(--color-eol-text-muted)' }}>
+      <div className="flex justify-between text-[10.5px]" style={{ color: isGrounding ? 'var(--color-eol-on-dark-faint)' : 'var(--color-eol-text-muted)' }}>
         {FRICTION_STAGES.map((s, i) => (
-          <span key={s.id} style={i === stageIndex ? { color: 'var(--color-eol-accent-hover)', fontWeight: 600 } : undefined}>
+          <span key={s.id} style={i === stageIndex ? { color: isGrounding ? 'var(--color-eol-gold-on-dark)' : 'var(--color-eol-accent-hover)', fontWeight: 600 } : undefined}>
             {s.label}
           </span>
         ))}
       </div>
 
-      {stage === 'ground' && (
-        <div className="flex flex-col items-center gap-4 py-3">
-          <div
-            className="h-28 w-28 rounded-full"
-            style={{ background: 'radial-gradient(circle, #fff0c0, #ffb3e6)', animation: 'breathe 4s ease-in-out infinite' }}
-          />
-          <p className="m-0 max-w-xs text-center text-[13.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
+      {isGrounding && (
+        <div className="flex flex-col items-center gap-5 py-4">
+          <div className="flex h-[190px] w-[190px] items-center justify-center rounded-full" style={{ border: '1px solid rgba(255,255,255,0.14)' }}>
+            <div
+              className="h-32 w-32 rounded-full"
+              style={{ background: 'radial-gradient(circle, #fff0c0, #ffb3e6)', boxShadow: '0 0 70px rgba(255,169,248,0.4)', animation: 'breathe 4s ease-in-out infinite' }}
+            />
+          </div>
+          <p className="m-0 max-w-xs text-center text-[13.5px] leading-relaxed" style={{ color: 'var(--color-eol-on-dark-muted)' }}>
             Take three slow breaths before we start. There's no rush — this space is just for you right now.
           </p>
         </div>
       )}
 
-      <div className="flex items-center gap-2">
-        <TierBadge tier={0} />
-      </div>
+      {/* A light card, even on the dark grounding screen — Textarea's label
+          hardcodes dark ink text, which would be unreadable straight on
+          --color-eol-night, and a light "island" for the actual writing is
+          a reasonable pattern anyway (matches the note-card treatment the
+          mockup uses elsewhere on this same dark screen). */}
+      <Card>
+        <div className="mb-3 flex items-center gap-2">
+          <TierBadge tier={0} />
+        </div>
+        <div className="flex flex-col gap-4">
+          {questions.map((q) => (
+            <Textarea key={q.id} label={q.prompt[variant]} value={answers[q.id] ?? ''} onChange={setAnswer(q.id)} />
+          ))}
+        </div>
+      </Card>
 
-      {questions.map((q) => (
-        <Textarea key={q.id} label={q.prompt[variant]} value={answers[q.id] ?? ''} onChange={setAnswer(q.id)} />
-      ))}
-
-      <p className="m-0 text-[11.5px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+      <p className="m-0 text-[11.5px]" style={{ color: isGrounding ? 'var(--color-eol-on-dark-faint)' : 'var(--color-eol-text-faint)' }}>
         This stays on your device. It is never sent anywhere, never saved to any server, and no one — including your
         team or Empire of Light — can ever see it.
       </p>
@@ -220,11 +228,41 @@ export default function FrictionMitigatorPage() {
         <Button onClick={() => void handleNext()} disabled={!stageComplete} loading={finishing} className="w-full">
           {stageIndex < FRICTION_STAGES.length - 1 ? `Next: ${FRICTION_STAGES[stageIndex + 1].label}` : 'Continue'}
         </Button>
-        <button type="button" onClick={handleExit} className="text-center text-[12.5px]" style={{ color: 'var(--color-eol-text-muted)' }}>
+        <button
+          type="button"
+          onClick={handleExit}
+          className="text-center text-[12.5px]"
+          style={{ color: isGrounding ? 'var(--color-eol-on-dark-muted)' : 'var(--color-eol-text-muted)' }}
+        >
           Exit for now
         </button>
         {sessionId && teamId && isInitiator && !topic && <CancelFrictionSessionButton teamId={teamId} sessionId={sessionId} />}
       </div>
-    </div>
+    </>
+  )
+
+  if (isGrounding) {
+    return (
+      <div className="min-h-full px-6 py-10" style={{ background: 'var(--color-eol-night)' }}>
+        <div className="mx-auto flex max-w-lg flex-col gap-5">
+          <div>
+            <div className="mb-1 text-[11px]" style={{ color: 'var(--color-eol-on-dark-faint)' }}>
+              Unlearn · Friction Mitigator
+            </div>
+            <h1 className="m-0 text-[22px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-heading-on-dark)' }}>
+              Let's ground first
+            </h1>
+          </div>
+          {body}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <PageHeader eyebrow="Unlearn · Friction Mitigator" title={stage === 'reflect' ? 'Reflect' : 'Clarify needs'} />
+      <div className="mx-auto flex max-w-lg flex-col gap-5 px-6 py-10">{body}</div>
+    </>
   )
 }
