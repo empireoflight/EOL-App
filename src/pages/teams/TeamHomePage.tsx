@@ -99,7 +99,7 @@ export default function TeamHomePage() {
     const sessionAlreadyInFlight = !!pendingVisionSession || !!openVisionSession
     return (
       <>
-        <PageHeader eyebrow="Overview" title="What are we creating?" />
+        <PageHeader title="Overview" />
         <div className="mx-auto flex max-w-2xl flex-col gap-5 px-6 py-10">
           <div className="flex justify-end">
             <Link to={`/teams/${teamId}/summary`} className="text-[12px] font-medium" style={{ color: 'var(--color-eol-accent-label)' }}>
@@ -130,8 +130,7 @@ export default function TeamHomePage() {
   return (
     <>
       <PageHeader
-        eyebrow="What are we creating?"
-        title={northStar ?? 'Vision in progress'}
+        title="Overview"
         actions={
           <Link to={`/teams/${teamId}/summary`} className="text-[12px] font-medium" style={{ color: 'var(--color-eol-gold-on-dark)' }}>
             Status summary &rarr;
@@ -141,6 +140,17 @@ export default function TeamHomePage() {
       <div className="mx-auto flex max-w-2xl flex-col gap-6 px-6 py-10">
         <OpenVisionSessionBanner teamId={teamId} />
         <PendingFrictionBanners teamId={teamId} />
+
+        <div>
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-accent-label)' }}>
+            North Star
+          </div>
+          <div className="rounded-[18px] border p-6" style={{ background: 'var(--gradient-dawn)', borderColor: 'var(--color-eol-border)' }}>
+            <div className="text-[23px] leading-[1.45]" style={{ fontFamily: 'var(--font-display)', fontWeight: 400, color: 'var(--color-eol-north-star-text)' }}>
+              {northStar ?? 'Vision in progress'}
+            </div>
+          </div>
+        </div>
 
         <div className="flex items-center justify-center gap-2">
           {LOOP.map((step, i) => {
