@@ -226,7 +226,8 @@ export function TeamRollup({ teamId }: { teamId: string }) {
                         className="w-full rounded-md"
                         style={{
                           height: `${(count / maxCount) * 44 + (count > 0 ? 4 : 0)}px`,
-                          background: `oklch(${0.9 - score * 0.04} ${0.02 + score * 0.03} 78)`,
+                          background: 'var(--color-eol-chart-energy)',
+                          opacity: 0.3 + score * 0.14,
                         }}
                       />
                       <div className="text-[10px]" style={{ color: 'var(--color-eol-text-faint)' }}>

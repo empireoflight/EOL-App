@@ -17,20 +17,26 @@ type PulseDraft = { gave: string; drained: string }
 
 const VIBE_LEVELS = [1, 2, 3, 4, 5]
 
-function EnergyTile({ level, active, onClick }: { level: number; active: boolean; onClick: () => void }) {
+function BatteryIcon({ level, active, onClick }: { level: number; active: boolean; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={`Vibe level ${level}`}
-      className="flex h-11 w-11 items-center justify-center rounded-[10px] text-[15px] font-semibold"
+      className="flex flex-col items-center gap-1 rounded-[10px] px-2 py-2"
       style={
         active
-          ? { background: 'var(--gradient-dawn)', border: '1.5px solid var(--color-eol-ink)', color: 'var(--color-eol-north-star-text)' }
-          : { border: '1px solid var(--color-eol-border-strong)', color: 'var(--color-eol-text-muted)' }
+          ? { background: 'var(--gradient-dawn)', border: '1.5px solid var(--color-eol-ink)' }
+          : { background: 'transparent', border: '1px solid transparent' }
       }
     >
-      {level}
+      <svg width="34" height="18" viewBox="0 0 34 18">
+        <rect x="1" y="1" width="28" height="16" rx="3" fill="none" stroke="var(--color-eol-border-strong)" strokeWidth="1.5" />
+        <rect x="30" y="6" width="3" height="6" rx="1" fill="var(--color-eol-border-strong)" />
+        {[0, 1, 2, 3, 4].map((i) => (
+          <rect key={i} x={4 + i * 5} y={4} width="3.4" height="10" rx="0.8" fill={i < level ? 'var(--color-eol-chart-energy)' : 'transparent'} />
+        ))}
+      </svg>
     </button>
   )
 }
@@ -271,7 +277,7 @@ export default function PulseCheckPage() {
         </p>
         <div className="flex items-center justify-between">
           {VIBE_LEVELS.map((level) => (
-            <EnergyTile key={level} level={level} active={vibe === level} onClick={() => setVibe(level)} />
+            <BatteryIcon key={level} level={level} active={vibe === level} onClick={() => setVibe(level)} />
           ))}
         </div>
         <div className="mt-1 flex justify-between text-[10px]" style={{ color: 'var(--color-eol-text-faint)' }}>

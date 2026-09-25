@@ -92,17 +92,17 @@ function TeamSwitcher({ teamId, onClose }: { teamId: string; onClose: () => void
       <div className="fixed inset-0 z-40" onClick={onClose} />
       <div
         className="absolute left-0 top-full z-50 mt-1.5 flex w-full flex-col gap-1 rounded-2xl border p-2 shadow-lg"
-        style={{ background: 'var(--color-eol-surface)', borderColor: 'var(--color-eol-border)' }}
+        style={{ background: 'var(--color-eol-night)', borderColor: 'rgba(255,255,255,0.08)' }}
       >
-        <div className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-text-faint)' }}>
+        <div className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-on-dark-faint)' }}>
           Switch team
         </div>
 
         {pendingInvites && pendingInvites.length > 0 && (
-          <div className="mb-1 flex flex-col gap-1 border-b pb-2" style={{ borderColor: 'var(--color-eol-border)' }}>
+          <div className="mb-1 flex flex-col gap-1 border-b pb-2" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
             {pendingInvites.map((invite) => (
               <div key={invite.id} className="flex items-center justify-between gap-2 rounded-lg px-2.5 py-2">
-                <div className="min-w-0 flex-1 truncate text-[12.5px]" style={{ color: 'var(--color-eol-text)' }}>
+                <div className="min-w-0 flex-1 truncate text-[12.5px]" style={{ color: 'var(--color-eol-heading-on-dark)' }}>
                   Invited to <span className="font-semibold">{invite.team_name}</span>
                 </div>
                 <Button onClick={() => handleAccept(invite.token, invite.team_id)} loading={acceptingId === invite.token}>
@@ -121,12 +121,12 @@ function TeamSwitcher({ teamId, onClose }: { teamId: string; onClose: () => void
               type="button"
               onClick={() => goToTeam(team.id)}
               className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] font-medium"
-              style={{ background: active ? 'var(--color-tier2-bg)' : 'transparent', color: 'var(--color-eol-text)' }}
+              style={{ background: active ? 'var(--color-eol-nav-active-bg)' : 'transparent', color: 'var(--color-eol-heading-on-dark)' }}
             >
               <span className="h-3.5 w-3.5 shrink-0 rounded" style={{ background: teamColorFor(team.id) }} />
               <span className="min-w-0 flex-1 truncate">{team.name}</span>
               {active && (
-                <span className="shrink-0" style={{ color: 'var(--color-tier2-fg)' }}>
+                <span className="shrink-0" style={{ color: 'var(--color-eol-nav-dot)' }}>
                   &#10003;
                 </span>
               )}
@@ -134,12 +134,12 @@ function TeamSwitcher({ teamId, onClose }: { teamId: string; onClose: () => void
           )
         })}
 
-        <div className="mt-1 border-t pt-2" style={{ borderColor: 'var(--color-eol-border)' }}>
+        <div className="mt-1 border-t pt-2" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
           <Link
             to={`/teams/${teamId}/settings`}
             onClick={onClose}
             className="block rounded-lg px-2.5 py-2 text-[13px] font-medium"
-            style={{ color: 'var(--color-eol-text-muted)' }}
+            style={{ color: 'var(--color-eol-on-dark-muted)' }}
           >
             Team settings
           </Link>
@@ -147,7 +147,7 @@ function TeamSwitcher({ teamId, onClose }: { teamId: string; onClose: () => void
             to="/onboarding"
             onClick={onClose}
             className="block rounded-lg px-2.5 py-2 text-[13px] font-medium"
-            style={{ color: 'var(--color-eol-text-muted)' }}
+            style={{ color: 'var(--color-eol-on-dark-muted)' }}
           >
             + Create a team
           </Link>
