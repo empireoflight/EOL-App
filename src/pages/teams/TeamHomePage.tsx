@@ -5,6 +5,7 @@ import { useTeamVision } from '../../hooks/useVision'
 import { useTeamFrictionSessions, useMyPendingVisionSession, useOpenVisionSession } from '../../hooks/useConvergenceSession'
 import { Card } from '../../components/shared/Card'
 import { Button } from '../../components/shared/Button'
+import { PageHeader } from '../../components/shared/PageHeader'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
 import { OpenVisionSessionBanner } from '../../components/session/OpenVisionSessionBanner'
 import { PendingFrictionBanners } from '../../components/session/PendingFrictionBanners'
@@ -97,75 +98,75 @@ export default function TeamHomePage() {
     // already submitted. The banner above already covers both cases.
     const sessionAlreadyInFlight = !!pendingVisionSession || !!openVisionSession
     return (
-      <div className="mx-auto flex max-w-2xl flex-col gap-5 px-6 py-10">
-        <div className="flex justify-end">
-          <Link to={`/teams/${teamId}/summary`} className="text-[12px] font-medium" style={{ color: 'var(--color-eol-accent-label)' }}>
-            Status summary &rarr;
-          </Link>
+      <>
+        <PageHeader eyebrow="Overview" title="What are we creating?" />
+        <div className="mx-auto flex max-w-2xl flex-col gap-5 px-6 py-10">
+          <div className="flex justify-end">
+            <Link to={`/teams/${teamId}/summary`} className="text-[12px] font-medium" style={{ color: 'var(--color-eol-accent-label)' }}>
+              Status summary &rarr;
+            </Link>
+          </div>
+          <OpenVisionSessionBanner teamId={teamId} />
+          <PendingFrictionBanners teamId={teamId} />
+          {!sessionAlreadyInFlight && (
+            <Card>
+              <p className="m-0 mb-4 text-[13.5px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
+                Start a vision session to co-create what this team is building together — everything else in the cycle takes its shape from here.
+              </p>
+              <Button onClick={() => navigate(`/teams/${teamId}/vision/start`)}>Start a vision session</Button>
+            </Card>
+          )}
         </div>
-        <OpenVisionSessionBanner teamId={teamId} />
-        <PendingFrictionBanners teamId={teamId} />
-        {!sessionAlreadyInFlight && (
-          <Card>
-            <h2 className="m-0 mb-2 text-[18px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-              What are we creating?
-            </h2>
-            <p className="m-0 mb-4 text-[13.5px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-              Start a vision session to co-create what this team is building together — everything else in the cycle takes its shape from here.
-            </p>
-            <Button onClick={() => navigate(`/teams/${teamId}/vision/start`)}>Start a vision session</Button>
-          </Card>
-        )}
-      </div>
+      </>
     )
   }
 
   const northStar = vision.layout.nodes.find((n) => n.kind === 'north_star')?.text
 
+  // Segments light up once the team has sent the vision for commitment —
+  // before that, only Reimagine (the step actually in progress) is lit.
+  const cycleLit = vision.status !== 'draft'
+
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6 px-6 py-10">
-      <div className="flex justify-end">
-        <Link to={`/teams/${teamId}/summary`} className="text-[12px] font-medium" style={{ color: 'var(--color-eol-accent-label)' }}>
-          Status summary &rarr;
-        </Link>
-      </div>
-      <OpenVisionSessionBanner teamId={teamId} />
-      <PendingFrictionBanners teamId={teamId} />
+    <>
+      <PageHeader
+        eyebrow="What are we creating?"
+        title={northStar ?? 'Vision in progress'}
+        actions={
+          <Link to={`/teams/${teamId}/summary`} className="text-[12px] font-medium" style={{ color: 'var(--color-eol-gold-on-dark)' }}>
+            Status summary &rarr;
+          </Link>
+        }
+      />
+      <div className="mx-auto flex max-w-2xl flex-col gap-6 px-6 py-10">
+        <OpenVisionSessionBanner teamId={teamId} />
+        <PendingFrictionBanners teamId={teamId} />
 
-      <Link to={`/teams/${teamId}/vision`}>
-        <div
-          className="rounded-2xl border p-5 transition-opacity hover:opacity-90"
-          style={{ background: 'var(--gradient-dawn)', borderColor: 'var(--color-eol-border)' }}
-        >
-          <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-pink-strong)' }}>
-            What are we creating?
-          </div>
-          <div className="text-[18px] leading-snug" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-            {northStar ?? 'Vision in progress'}
-          </div>
+        <div className="flex items-center justify-center gap-2">
+          {LOOP.map((step, i) => {
+            const lit = cycleLit || step.label === 'Reimagine'
+            return (
+              <div key={step.label} className="flex flex-1 items-center gap-2">
+                <Link to={`/teams/${teamId}/${step.segment}`} className="flex-1">
+                  <div className="h-1.5 rounded-full" style={{ background: lit ? 'var(--gradient-dawn)' : 'oklch(0.91 0.012 70)' }} />
+                  <div
+                    className="mt-1.5 text-[13px]"
+                    style={{ color: lit ? 'var(--color-eol-text)' : 'var(--color-eol-text-faint)', fontWeight: lit ? 600 : 500 }}
+                  >
+                    {step.label}
+                  </div>
+                </Link>
+                {i < LOOP.length - 1 && (
+                  <span className="pb-4 text-[13px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+                    &rarr;
+                  </span>
+                )}
+              </div>
+            )
+          })}
         </div>
-      </Link>
 
-      <div className="flex items-center justify-center gap-1.5">
-        {LOOP.map((step, i) => (
-          <div key={step.label} className="flex items-center gap-1.5">
-            <Link
-              to={`/teams/${teamId}/${step.segment}`}
-              className="rounded-full px-2.5 py-1 text-[10.5px] font-medium"
-              style={{ background: 'var(--color-eol-surface)', color: 'var(--color-eol-text-muted)' }}
-            >
-              {step.label}
-            </Link>
-            {i < LOOP.length - 1 && (
-              <span className="text-[11px]" style={{ color: 'var(--color-eol-text-faint)' }}>
-                &rarr;
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap gap-4">
         <Link to={`/teams/${teamId}/experiments`} className="min-w-[150px] flex-1">
           <Card className="transition-opacity hover:opacity-80">
             <div className="text-[22px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
@@ -231,6 +232,7 @@ export default function TeamHomePage() {
           </div>
         )}
       </Card>
-    </div>
+      </div>
+    </>
   )
 }

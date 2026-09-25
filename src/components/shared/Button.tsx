@@ -6,10 +6,10 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 }
 
 export function Button({ variant = 'primary', loading, disabled, className = '', children, ...rest }: ButtonProps) {
-  const base = 'rounded-lg px-4 py-2.5 text-[13px] font-semibold transition-opacity disabled:opacity-60'
+  const base = 'rounded-[10px] px-4 py-2.5 text-[13px] font-semibold transition-opacity disabled:opacity-60'
   const style =
     variant === 'primary'
-      ? { background: 'var(--color-eol-accent)', color: 'var(--color-eol-ink)' }
+      ? { background: 'var(--color-eol-cta)', color: 'var(--color-eol-cta-ink)' }
       : { background: 'transparent', color: 'var(--color-eol-text-secondary)', border: '1px solid var(--color-eol-border-strong)' }
 
   return (

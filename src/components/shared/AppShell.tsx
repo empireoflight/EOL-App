@@ -177,11 +177,11 @@ function SidebarContent({ teamId, teamName, onNavigate }: SidebarContentProps) {
     <div className="flex h-full flex-col overflow-y-auto py-4">
       <div className="flex items-center gap-2.5 px-4 pb-4">
         <Logo size={26} />
-        <span className="text-[14px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
+        <span className="text-[16px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-heading-on-dark)' }}>
           Empire of Light
         </span>
       </div>
-      <div className="h-px shrink-0" style={{ background: 'var(--color-eol-border)' }} />
+      <div className="h-px shrink-0" style={{ background: 'rgba(255,255,255,0.07)' }} />
 
       <div className="relative shrink-0 px-3 py-3">
         <button
@@ -190,17 +190,17 @@ function SidebarContent({ teamId, teamName, onNavigate }: SidebarContentProps) {
           className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left"
         >
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-text-faint)' }}>
+            <div className="text-[10.5px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-on-dark-faint)' }}>
               Team
             </div>
             <div className="mt-0.5 flex items-center gap-2">
-              <span className="h-3.5 w-3.5 shrink-0 rounded" style={{ background: teamColorFor(teamId) }} />
-              <span className="truncate text-[13.5px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
+              <span className="h-3 w-3 shrink-0 rounded-[3px]" style={{ background: teamColorFor(teamId) }} />
+              <span className="truncate text-[13.5px] font-semibold" style={{ color: 'var(--color-eol-heading-on-dark)' }}>
                 {teamName}
               </span>
             </div>
           </div>
-          <span style={{ color: 'var(--color-eol-text-muted)' }}>
+          <span style={{ color: 'var(--color-eol-on-dark-muted)' }}>
             <ChevronIcon />
           </span>
         </button>
@@ -214,7 +214,7 @@ function SidebarContent({ teamId, teamName, onNavigate }: SidebarContentProps) {
           />
         )}
       </div>
-      <div className="mx-3 h-px shrink-0" style={{ background: 'var(--color-eol-border)' }} />
+      <div className="mx-3 h-px shrink-0" style={{ background: 'rgba(255,255,255,0.07)' }} />
 
       <nav className="flex flex-1 flex-col gap-0.5 px-3 py-3">
         {navItemsFor(teamId).map((item) => {
@@ -224,24 +224,25 @@ function SidebarContent({ teamId, teamName, onNavigate }: SidebarContentProps) {
               key={item.label}
               to={item.to}
               onClick={onNavigate}
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-[14px]"
+              className="flex items-center gap-2 rounded-[10px] py-2 text-[14px]"
               style={{
-                background: active ? 'var(--color-tier2-bg)' : 'transparent',
-                color: active ? 'var(--color-tier2-fg)' : 'var(--color-eol-text-muted)',
+                background: active ? 'var(--color-eol-nav-active-bg)' : 'transparent',
+                color: active ? 'var(--color-eol-heading-on-dark)' : 'var(--color-eol-on-dark-muted)',
                 fontWeight: active ? 600 : 500,
+                paddingLeft: active ? 12 : 28,
               }}
             >
-              {active && <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--color-tier2-dot)' }} />}
+              {active && <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--color-eol-nav-dot)' }} />}
               {item.label}
             </Link>
           )
         })}
       </nav>
 
-      <div className="mt-auto shrink-0 border-t px-4 pt-3" style={{ borderColor: 'var(--color-eol-border)' }}>
+      <div className="mt-auto shrink-0 border-t px-4 pt-3" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
         <Link to={`/teams/${teamId}/profile`} onClick={onNavigate} className="flex items-center gap-2.5">
           <Avatar name={profile?.name ?? '?'} avatarUrl={profile?.avatar_url} size={28} />
-          <span className="min-w-0 flex-1 truncate text-[13px] font-medium" style={{ color: 'var(--color-eol-text)' }}>
+          <span className="min-w-0 flex-1 truncate text-[13px] font-medium" style={{ color: 'var(--color-eol-heading-on-dark)' }}>
             {profile?.name}
           </span>
         </Link>
@@ -249,7 +250,7 @@ function SidebarContent({ teamId, teamName, onNavigate }: SidebarContentProps) {
           type="button"
           onClick={() => void signOut()}
           className="mt-1.5 text-[11px]"
-          style={{ color: 'var(--color-eol-text-faint)' }}
+          style={{ color: 'var(--color-eol-on-dark-faint)' }}
         >
           Sign out
         </button>
@@ -276,7 +277,7 @@ export function AppShell({ teamId, teamName, children }: AppShellProps) {
     <div className="flex h-screen overflow-hidden print:block print:h-auto print:overflow-visible">
       <aside
         className="hidden w-[240px] shrink-0 border-r md:block print:hidden"
-        style={{ background: 'var(--color-eol-surface)', borderColor: 'var(--color-eol-border)' }}
+        style={{ background: 'var(--color-eol-sidebar)', borderColor: 'rgba(255,255,255,0.05)' }}
       >
         <SidebarContent teamId={teamId} teamName={teamName} />
       </aside>
@@ -286,14 +287,14 @@ export function AppShell({ teamId, teamName, children }: AppShellProps) {
           <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.4)' }} onClick={() => setMobileNavOpen(false)} />
           <div
             className="relative flex h-full w-[260px] flex-col border-r"
-            style={{ background: 'var(--color-eol-surface)', borderColor: 'var(--color-eol-border)' }}
+            style={{ background: 'var(--color-eol-sidebar)', borderColor: 'rgba(255,255,255,0.05)' }}
           >
             <button
               type="button"
               onClick={() => setMobileNavOpen(false)}
               aria-label="Close menu"
               className="absolute right-3 top-3 rounded-lg p-1.5"
-              style={{ color: 'var(--color-eol-text-muted)' }}
+              style={{ color: 'var(--color-eol-on-dark-muted)' }}
             >
               <CloseIcon />
             </button>
@@ -304,8 +305,8 @@ export function AppShell({ teamId, teamName, children }: AppShellProps) {
 
       <div className="flex min-w-0 flex-1 flex-col print:block">
         <header
-          className="flex h-14 shrink-0 items-center justify-between border-b px-5 print:hidden"
-          style={{ background: 'var(--gradient-dawn)', borderColor: 'var(--color-eol-border)' }}
+          className="flex h-[52px] shrink-0 items-center justify-between border-b px-5 print:hidden"
+          style={{ background: 'var(--gradient-header-glow)', borderColor: 'rgba(255,255,255,0.06)' }}
         >
           <div className="flex items-center gap-2.5">
             <button
@@ -313,17 +314,23 @@ export function AppShell({ teamId, teamName, children }: AppShellProps) {
               onClick={() => setMobileNavOpen(true)}
               aria-label="Open menu"
               className="-ml-1.5 rounded-lg p-1.5 md:hidden"
-              style={{ color: 'var(--color-eol-text)' }}
+              style={{ color: 'var(--color-eol-heading-on-dark)' }}
             >
               <MenuIcon />
             </button>
-            <span className="text-[15px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
+            <span className="text-[13px]" style={{ color: 'var(--color-eol-on-dark-muted)' }}>
               {teamName}
             </span>
           </div>
-          <nav className="flex gap-4 text-[12.5px] font-medium" style={{ color: 'var(--color-eol-text)' }}>
-            <Link to={`/teams/${teamId}/pulse`}>Vibe check</Link>
-            {canInvite && <Link to={`/teams/${teamId}/invite`}>Invite</Link>}
+          <nav className="flex gap-4 text-[13px] font-medium">
+            <Link to={`/teams/${teamId}/pulse`} style={{ color: 'var(--color-eol-heading-on-dark)', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+              Vibe check
+            </Link>
+            {canInvite && (
+              <Link to={`/teams/${teamId}/invite`} style={{ color: 'var(--color-eol-heading-on-dark)', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+                Invite
+              </Link>
+            )}
           </nav>
         </header>
         <main className="min-w-0 flex-1 overflow-auto print:overflow-visible">{children}</main>
