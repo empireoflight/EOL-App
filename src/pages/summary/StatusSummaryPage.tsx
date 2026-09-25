@@ -7,6 +7,7 @@ import { useTeamVision } from '../../hooks/useVision'
 import { useTeamMembers } from '../../hooks/useMyTeams'
 import { Card } from '../../components/shared/Card'
 import { Button } from '../../components/shared/Button'
+import { PageHeader } from '../../components/shared/PageHeader'
 import { TaskTypeBadge } from '../../components/shared/TaskTypeBadge'
 import { Avatar } from '../../components/shared/Avatar'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
@@ -195,28 +196,24 @@ export default function StatusSummaryPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6 px-6 py-10 print:max-w-none print:px-0">
-      <div className="flex items-start justify-between gap-4 print:hidden">
-        <div>
-          <h1 className="m-0 text-[22px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
-            Status summary
-          </h1>
-          <p className="m-0 mt-1 text-[12.5px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-            A snapshot to share — as of {formatDate(new Date().toISOString().slice(0, 10))}.
-          </p>
-        </div>
-        <div className="flex shrink-0 gap-2">
-          <Button variant="secondary" onClick={() => void handleCopy()}>
-            {copied ? 'Copied!' : 'Copy as text'}
-          </Button>
-          <Button variant="secondary" onClick={() => window.print()}>
-            Print / Save as PDF
-          </Button>
-        </div>
-      </div>
-
-      {/* Print-only header — the buttons above are hidden when printing, so
-          the printed page still needs its own title and date. */}
+    <>
+      <PageHeader
+        title="Status summary"
+        subline={`A snapshot to share — as of ${formatDate(new Date().toISOString().slice(0, 10))}.`}
+        actions={
+          <>
+            <Button variant="ghost-on-dark" onClick={() => void handleCopy()}>
+              {copied ? 'Copied!' : 'Copy as text'}
+            </Button>
+            <Button variant="ghost-on-dark" onClick={() => window.print()}>
+              Print / Save as PDF
+            </Button>
+          </>
+        }
+      />
+      <div className="mx-auto flex max-w-2xl flex-col gap-6 px-6 py-10 print:max-w-none print:px-0">
+      {/* Print-only header — PageHeader is print:hidden, so the printed
+          page still needs its own plain title and date. */}
       <div className="hidden print:block">
         <h1 className="m-0 text-[20px] font-semibold">Status summary</h1>
         <p className="m-0 mt-1 text-[12px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
@@ -232,7 +229,7 @@ export default function StatusSummaryPage() {
             </h2>
             <span
               className="rounded-full px-2 py-0.5 text-[10.5px] font-medium"
-              style={{ background: 'var(--color-tier2-bg)', color: 'var(--color-tier2-fg)' }}
+              style={{ background: 'var(--color-eol-lavender-bg)', color: 'var(--color-eol-lavender-fg)' }}
             >
               {vision!.status === 'committed' ? 'Committed' : 'Pending commitment'}
             </span>
@@ -248,7 +245,7 @@ export default function StatusSummaryPage() {
                     <span
                       key={p.id}
                       className="rounded-full px-2.5 py-1 text-[12px] font-medium"
-                      style={{ background: 'var(--color-tier2-bg)', color: 'var(--color-tier2-fg)' }}
+                      style={{ background: 'var(--color-eol-lavender-bg)', color: 'var(--color-eol-lavender-fg)' }}
                     >
                       {p.text}
                     </span>
@@ -404,6 +401,7 @@ export default function StatusSummaryPage() {
           )}
         </Card>
       </div>
-    </div>
+      </div>
+    </>
   )
 }
