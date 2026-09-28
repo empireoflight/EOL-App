@@ -102,14 +102,18 @@ export function TeamRollup({ teamId }: { teamId: string }) {
   const memberName = (id: string | null) => members?.find((m) => m.user_id === id)?.users?.name ?? null
   const memberAvatarUrl = (id: string | null) => members?.find((m) => m.user_id === id)?.users?.avatar_url
 
-  const handleGenerate = async () => {
+  // Shared by the header's "generate this week"/"generate missing weeks"
+  // button and the per-week "Regenerate" action below — the edge function
+  // is idempotent per team+period (delete-then-insert), so re-targeting an
+  // already-processed week picks up anyone who's checked in since without
+  // creating a duplicate.
+  const generateWeeks = async (weeksToGenerate: string[]) => {
     if (!supabase || !teamId) return
     setGenerating(true)
     setNotice('')
     try {
       const { data: authData } = await supabase.auth.getSession()
       const token = authData.session?.access_token
-      const weeksToGenerate = missingWeeks.length > 0 ? missingWeeks : [getWeekStart()]
 
       let succeeded = 0
       let skipped = 0
@@ -133,7 +137,7 @@ export function TeamRollup({ teamId }: { teamId: string }) {
       if (weeksToGenerate.length === 1 && skipped === 1) {
         // Single-week case (the common one) keeps today's exact wording —
         // no visible change for the normal "generate this week" click.
-        setNotice('Needs at least 3 people checked in this week.')
+        setNotice(weeksToGenerate[0] === getWeekStart() ? 'Needs at least 3 people checked in this week.' : 'Needs at least 3 people checked in that week.')
       } else if (skipped > 0 || failed > 0) {
         const parts = [`Generated ${succeeded} rollup${succeeded === 1 ? '' : 's'}.`]
         if (skipped > 0) parts.push(`${skipped} week${skipped === 1 ? '' : 's'} skipped — not enough check-ins.`)
@@ -145,6 +149,11 @@ export function TeamRollup({ teamId }: { teamId: string }) {
     } finally {
       setGenerating(false)
     }
+  }
+
+  const handleGenerate = () => generateWeeks(missingWeeks.length > 0 ? missingWeeks : [getWeekStart()])
+  const handleRegenerateSelected = () => {
+    if (effectiveSelected) generateWeeks([effectiveSelected])
   }
 
   return (
@@ -312,14 +321,34 @@ export function TeamRollup({ teamId }: { teamId: string }) {
 
       {!selectedValue?.pattern ? (
         <Card>
-          <p className="m-0 text-[13px]" style={{ color: 'var(--color-eol-text-faint)' }}>
-            {narratives.length === 0 ? 'Not enough responses to generate a team pattern yet.' : "Not enough responses that week to generate a team pattern."}
+          <p className="m-0 mb-2 text-[13px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+            {narratives.length === 0 ? 'Not enough responses to generate a team pattern yet.' : 'Not enough responses that week to generate a team pattern.'}
           </p>
+          {effectiveSelected && (
+            <button
+              type="button"
+              onClick={handleRegenerateSelected}
+              disabled={generating}
+              className="text-[12px] font-semibold disabled:opacity-60"
+              style={{ color: 'var(--color-eol-accent-label)' }}
+            >
+              {generating ? 'Checking…' : `Try again for the week of ${formatShortDate(effectiveSelected)}`}
+            </button>
+          )}
         </Card>
       ) : (
         <Card>
-          <div className="mb-2 text-[11.5px]" style={{ color: 'var(--color-eol-text-muted)' }}>
-            Week of {selectedNarrative?.period_start}
+          <div className="mb-2 flex items-center justify-between gap-3 text-[11.5px]" style={{ color: 'var(--color-eol-text-muted)' }}>
+            <span>Week of {selectedNarrative?.period_start}</span>
+            <button
+              type="button"
+              onClick={handleRegenerateSelected}
+              disabled={generating}
+              className="shrink-0 font-semibold disabled:opacity-60"
+              style={{ color: 'var(--color-eol-accent-label)' }}
+            >
+              {generating ? 'Regenerating…' : 'Regenerate this week'}
+            </button>
           </div>
           <p className="m-0 text-[13.5px] leading-relaxed" style={{ color: 'var(--color-eol-text)' }}>
             {selectedValue.pattern}
