@@ -45,7 +45,7 @@ export default function CreateOrgPage() {
       if (orgError) throw orgError
 
       const { data: team, error: teamError } = await supabase
-        .rpc('create_team', { p_org_id: org.id, p_name: mode === 'solo' ? spaceName : teamName })
+        .rpc('create_team', { p_org_id: org.id, p_name: mode === 'solo' ? spaceName : teamName, p_is_solo: mode === 'solo' })
         .single<Team>()
       if (teamError) throw teamError
 

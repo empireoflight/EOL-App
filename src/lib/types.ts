@@ -13,6 +13,7 @@ export type Team = {
   id: string
   org_id: string
   name: string
+  is_solo: boolean
   created_at: string
 }
 
