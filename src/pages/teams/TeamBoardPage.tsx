@@ -33,22 +33,6 @@ function hashOf(seed: string) {
 const ghostLinkStyle = { color: 'var(--color-eol-heading-on-dark)', border: '1px solid rgba(255,255,255,0.22)' }
 const ghostLinkClass = 'rounded-[10px] px-4 py-2.5 text-[13px] font-semibold'
 
-function KindChip({ kind }: { kind: ProfileQuestion['kind'] }) {
-  if (kind !== 'offer' && kind !== 'seek') return null
-  return (
-    <span
-      className="rounded-full px-1.5 py-px text-[9.5px] font-semibold uppercase tracking-wide"
-      style={
-        kind === 'offer'
-          ? { background: 'var(--color-eol-status-green)', color: 'var(--color-eol-status-green-fg)' }
-          : { background: 'var(--color-eol-lavender-bg)', color: 'var(--color-eol-lavender-fg)' }
-      }
-    >
-      {kind === 'offer' ? 'Can offer' : 'Looking for'}
-    </span>
-  )
-}
-
 function ProfileNote({
   profile,
   questions,
@@ -131,7 +115,6 @@ function ProfileNote({
             <div key={q.id}>
               <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] font-medium" style={{ color: 'var(--color-eol-text-muted)' }}>
                 {q.prompt}
-                <KindChip kind={q.kind} />
               </div>
               <p className="m-0 mt-0.5 whitespace-pre-line text-[13.5px] leading-relaxed" style={{ color: 'var(--color-eol-text)' }}>
                 {profile.answers[q.id]}
