@@ -20,7 +20,7 @@ export function PageHeader({
   return (
     <div className="print:hidden">
       <div className="px-10 pb-[34px] pt-[30px]" style={{ background: 'var(--gradient-header-glow)' }}>
-        <div className="flex items-end justify-between gap-6">
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
           <div className="max-w-[760px]">
             {eyebrow && (
               <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: 'var(--color-eol-gold-on-dark)' }}>
@@ -39,7 +39,7 @@ export function PageHeader({
               </p>
             )}
           </div>
-          {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+          {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
         </div>
         {children}
       </div>
