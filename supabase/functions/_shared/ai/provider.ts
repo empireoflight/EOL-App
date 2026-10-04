@@ -414,3 +414,86 @@ export async function generateFrictionDiscussionGuide(input: {
     ],
   })
 }
+
+// ------------------------------------------------------------
+// matchTeamProfiles — ranks everyone else on a team by how complementary
+// they are to one viewer, for the Team page's bulletin board. Profile
+// answers are authored knowing the whole team will read them (tier 4), so
+// this is not reading anything private — but the model still gets no names
+// or emails: people are opaque "person_N" aliases, mapped back here, and
+// the reasons it writes are instructed to avoid names too (the card they
+// appear on already shows who it is).
+//
+// "Complementary" here means two things, in this order of weight: (1) one
+// person's "offer" answer genuinely meets the other's "seek" answer, in
+// either direction (mutual is best), and (2) shared interests/values from
+// "interest"/"about" answers, a smaller boost.
+// ------------------------------------------------------------
+export type ProfileQuestionKind = 'about' | 'interest' | 'offer' | 'seek'
+
+export type ProfileMatch = { id: string; score: number; reason: string }
+
+const MATCH_REASON_MAX_CHARS = 160
+
+export async function matchTeamProfiles(input: {
+  questions: { id: string; prompt: string; kind: ProfileQuestionKind }[]
+  viewer: Record<string, string>
+  others: { id: string; answers: Record<string, string> }[]
+}): Promise<ProfileMatch[]> {
+  const describe = (answers: Record<string, string>) =>
+    input.questions
+      .filter((q) => answers[q.id]?.trim())
+      .map((q) => ({ kind: q.kind, question: q.prompt, answer: answers[q.id].trim() }))
+
+  const aliasToId = new Map<string, string>()
+  const people = input.others.map((o, i) => {
+    const alias = `person_${i + 1}`
+    aliasToId.set(alias, o.id)
+    return { id: alias, answers: describe(o.answers) }
+  })
+
+  const result = await callAnthropicForJson<{ matches: { id: string; score: number; reason: string }[] }>({
+    model: MODELS.synthesis,
+    system: FRAMEWORK_SYSTEM_PROMPT,
+    maxTokens: 4096,
+    messages: [
+      {
+        role: 'user',
+        content:
+          `You're helping people on a team find each other on a friendly community bulletin board. ` +
+          `Each answer below is tagged with a kind: "offer" (something they can give), "seek" ` +
+          `(something they're looking for), "interest" (a shared-interest signal), or "about" ` +
+          `(general getting-to-know-you).\n\nTHE VIEWER:\n` +
+          JSON.stringify(describe(input.viewer), null, 2) +
+          `\n\nEVERYONE ELSE:\n` +
+          JSON.stringify(people, null, 2) +
+          `\n\nScore each other person from 0 to 100 on how complementary they are to the viewer. ` +
+          `Weigh, strongest first: (1) an "offer" from one side that genuinely meets a "seek" from ` +
+          `the other, in either direction — mutual is best; (2) shared interests or values, a ` +
+          `smaller boost. Don't reward vague or thin answers; when there's little to compare, score ` +
+          `30-50, not 0. Spread scores out — reserve 80+ for real standouts.\n\n` +
+          `For each person also write one warm sentence (under ${MATCH_REASON_MAX_CHARS} characters) ` +
+          `addressed to the viewer in second person about the single strongest reason, like "You're ` +
+          `looking for help with meals, and they love cooking for a crowd." Never use names, never ` +
+          `mention scores, never quote more than a few words verbatim. If nothing connects, a light ` +
+          `conversation starter drawn from something they'd enjoy chatting about is fine.\n\n` +
+          `Respond as JSON: {"matches": [{"id": "person_1", "score": number, "reason": string}, ...]} ` +
+          `with exactly one entry per person. No other text.`,
+      },
+    ],
+  })
+
+  const byId = new Map<string, ProfileMatch>()
+  for (const m of result.matches ?? []) {
+    const id = aliasToId.get(m.id)
+    if (!id || typeof m.score !== 'number') continue
+    byId.set(id, {
+      id,
+      score: Math.min(100, Math.max(0, Math.round(m.score))),
+      reason: String(m.reason ?? '').trim().slice(0, MATCH_REASON_MAX_CHARS),
+    })
+  }
+  // Anyone the model skipped still gets a row, so the viewer's ranking is
+  // complete and the cache check (one row per person) can't loop forever.
+  return input.others.map((o) => byId.get(o.id) ?? { id: o.id, score: 0, reason: '' })
+}
