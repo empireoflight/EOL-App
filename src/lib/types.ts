@@ -25,6 +25,36 @@ export type TeamMember = {
   users?: { id: string; name: string; email: string; avatar_url: string | null }
 }
 
+// 'about' = just getting to know you; 'interest' = shared interests are a
+// good sign; 'offer'/'seek' = what someone can give / is looking for, matched
+// against each other across people.
+export type ProfileQuestionKind = 'about' | 'interest' | 'offer' | 'seek'
+
+export type ProfileQuestion = { id: string; prompt: string; kind: ProfileQuestionKind; optional?: boolean }
+
+export type TeamProfileQuestions = {
+  team_id: string
+  questions: ProfileQuestion[]
+  updated_at: string
+}
+
+export type TeamProfile = {
+  team_id: string
+  user_id: string
+  answers: Record<string, string>
+  updated_at: string
+  users?: { id: string; name: string; avatar_url: string | null }
+}
+
+export type TeamProfileMatch = {
+  team_id: string
+  viewer_id: string
+  other_id: string
+  score: number
+  reason: string
+  computed_at: string
+}
+
 export type TeamInvite = {
   id: string
   team_id: string

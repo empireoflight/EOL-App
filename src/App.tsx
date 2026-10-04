@@ -16,6 +16,7 @@ import TeamLayout from './pages/teams/TeamLayout'
 import TeamHomePage from './pages/teams/TeamHomePage'
 import InvitePage from './pages/teams/InvitePage'
 import ProfilePage from './pages/teams/ProfilePage'
+import TeamBoardPage from './pages/teams/TeamBoardPage'
 import TeamSettingsPage from './pages/teams/TeamSettingsPage'
 import VisionStartPage from './pages/vision/VisionStartPage'
 import VisionReflectPage from './pages/vision/VisionReflectPage'
@@ -55,6 +56,7 @@ function App() {
           <Route path="invite" element={<InvitePage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="settings" element={<TeamSettingsPage />} />
+          <Route path="team" element={<TeamBoardPage />} />
           <Route path="vision/start" element={<VisionStartPage />} />
           <Route path="vision/sessions/:sessionId/reflect" element={<VisionReflectPage />} />
           <Route path="vision/commit" element={<VisionCommitPage />} />

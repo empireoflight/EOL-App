@@ -1,6 +1,10 @@
 import { useRef, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { useTeam } from '../../hooks/useMyTeams'
+import { useProfileQuestions, useTeamProfiles } from '../../hooks/useTeamProfiles'
+import { TeamProfileForm } from '../../components/team/TeamProfileForm'
 import { Card } from '../../components/shared/Card'
 import { Button } from '../../components/shared/Button'
 import { PageHeader } from '../../components/shared/PageHeader'
@@ -22,7 +26,12 @@ const ALLOWED_AVATAR_TYPES: Record<string, string> = {
 }
 
 export default function ProfilePage() {
+  const { teamId } = useParams<{ teamId: string }>()
   const { user, profile, refreshProfile } = useAuth()
+  const { data: team } = useTeam(teamId)
+  const { questions, isLoading: questionsLoading } = useProfileQuestions(teamId)
+  const { data: teamProfiles, isLoading: profilesLoading } = useTeamProfiles(teamId)
+  const myTeamProfile = teamProfiles?.find((p) => p.user_id === user?.id)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [name, setName] = useState(profile?.name ?? '')
@@ -149,6 +158,27 @@ export default function ProfilePage() {
           </div>
         </div>
       </Card>
+
+      {team && !team.is_solo && user && (
+        <Card>
+          <div className="mb-3 text-[13.5px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
+            About you in {team.name}
+          </div>
+          {questionsLoading || profilesLoading ? (
+            <p className="m-0 text-[12.5px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+              Loading…
+            </p>
+          ) : (
+            <TeamProfileForm
+              teamId={team.id}
+              userId={user.id}
+              questions={questions}
+              savedAnswers={myTeamProfile?.answers ?? {}}
+              hasProfile={!!myTeamProfile}
+            />
+          )}
+        </Card>
+      )}
 
       <Card>
         <button type="button" onClick={() => void handleToggleNotifications()} disabled={savingNotifications} className="flex w-full items-center justify-between gap-4 text-left">

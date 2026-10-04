@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
-import { useMyTeams, useTeamMembers } from '../../hooks/useMyTeams'
+import { useMyTeams, useTeam, useTeamMembers } from '../../hooks/useMyTeams'
 import { useMyPendingInvites } from '../../hooks/useTeamInvites'
 import { Logo } from './Logo'
 import { Button } from './Button'
@@ -15,15 +15,21 @@ type NavItem = {
   /** Overview sits at the team root — every sub-page's path also starts
    *  with that prefix, so it needs an exact match instead of startsWith. */
   exact?: boolean
+  /** Thin rule above this item — sets it apart from the cycle above. */
+  divider?: boolean
 }
 
-function navItemsFor(teamId: string): NavItem[] {
+// Overview + the four stages of the cycle, then Team set apart below them:
+// it's about the people, not a fifth step of Reimagine -> Do -> Unlearn ->
+// Evolve. A solo space has no one to meet, so it gets no Team entry.
+function navItemsFor(teamId: string, isSolo: boolean): NavItem[] {
   return [
     { label: 'Overview', to: `/teams/${teamId}/overview`, exact: true },
     { label: 'Reimagine', to: `/teams/${teamId}/vision` },
     { label: 'Do', to: `/teams/${teamId}/experiments` },
     { label: 'Unlearn', to: `/teams/${teamId}/friction` },
     { label: 'Evolve', to: `/teams/${teamId}/rollup` },
+    ...(isSolo ? [] : [{ label: 'Team', to: `/teams/${teamId}/team`, divider: true }]),
   ]
 }
 
@@ -171,6 +177,7 @@ type SidebarContentProps = {
 function SidebarContent({ teamId, teamName, onNavigate }: SidebarContentProps) {
   const location = useLocation()
   const { signOut, profile } = useAuth()
+  const { data: team } = useTeam(teamId)
   const [switcherOpen, setSwitcherOpen] = useState(false)
 
   return (
@@ -217,24 +224,26 @@ function SidebarContent({ teamId, teamName, onNavigate }: SidebarContentProps) {
       <div className="mx-3 h-px shrink-0" style={{ background: 'rgba(255,255,255,0.07)' }} />
 
       <nav className="flex flex-1 flex-col gap-0.5 px-3 py-3">
-        {navItemsFor(teamId).map((item) => {
+        {navItemsFor(teamId, !team || team.is_solo).map((item) => {
           const active = item.exact ? location.pathname === item.to : location.pathname.startsWith(item.to)
           return (
-            <Link
-              key={item.label}
-              to={item.to}
-              onClick={onNavigate}
-              className="flex items-center gap-2 rounded-[10px] py-2 text-[14px]"
-              style={{
-                background: active ? 'var(--color-eol-nav-active-bg)' : 'transparent',
-                color: active ? 'var(--color-eol-heading-on-dark)' : 'var(--color-eol-on-dark-muted)',
-                fontWeight: active ? 600 : 500,
-                paddingLeft: active ? 12 : 28,
-              }}
-            >
-              {active && <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--color-eol-nav-dot)' }} />}
-              {item.label}
-            </Link>
+            <div key={item.label} className="flex flex-col">
+              {item.divider && <div className="mx-2 my-2 h-px shrink-0" style={{ background: 'rgba(255,255,255,0.07)' }} />}
+              <Link
+                to={item.to}
+                onClick={onNavigate}
+                className="flex items-center gap-2 rounded-[10px] py-2 text-[14px]"
+                style={{
+                  background: active ? 'var(--color-eol-nav-active-bg)' : 'transparent',
+                  color: active ? 'var(--color-eol-heading-on-dark)' : 'var(--color-eol-on-dark-muted)',
+                  fontWeight: active ? 600 : 500,
+                  paddingLeft: active ? 12 : 28,
+                }}
+              >
+                {active && <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--color-eol-nav-dot)' }} />}
+                {item.label}
+              </Link>
+            </div>
           )
         })}
       </nav>

@@ -7,6 +7,7 @@ import { Card } from '../../components/shared/Card'
 import { Button } from '../../components/shared/Button'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
+import { TeamBoardTile } from '../../components/team/TeamBoardTile'
 import { OpenVisionSessionBanner } from '../../components/session/OpenVisionSessionBanner'
 import { PendingFrictionBanners } from '../../components/session/PendingFrictionBanners'
 import type { Action, Experiment, TeamSignal } from '../../lib/types'
@@ -116,6 +117,7 @@ export default function TeamHomePage() {
               <Button onClick={() => navigate(`/teams/${teamId}/vision/start`)}>Start a vision session</Button>
             </Card>
           )}
+          <TeamBoardTile teamId={teamId as string} />
         </div>
       </>
     )
@@ -198,6 +200,8 @@ export default function TeamHomePage() {
           </Card>
         </Link>
       </div>
+
+      <TeamBoardTile teamId={teamId as string} />
 
       <Card>
         <div className="mb-2 text-[15px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>

@@ -8,6 +8,8 @@ import { Card } from '../../components/shared/Card'
 import { Button } from '../../components/shared/Button'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
+import { ProfileQuestionEditor } from '../../components/team/ProfileQuestionEditor'
+import { useProfileQuestions, useSaveProfileQuestions } from '../../hooks/useTeamProfiles'
 
 // Two-step reveal-then-confirm, same shape as
 // CancelFrictionSessionButton.tsx — the one other destructive-confirmation
@@ -68,6 +70,32 @@ function DeleteTeamSection({ teamId, teamName }: { teamId: string; teamName: str
   )
 }
 
+function ProfileQuestionsSection({ teamId }: { teamId: string }) {
+  const { questions, updatedAt, isLoading } = useProfileQuestions(teamId)
+  const save = useSaveProfileQuestions(teamId)
+
+  return (
+    <Card>
+      <div className="mb-3 text-[13px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
+        Profile questions
+      </div>
+      {isLoading ? (
+        <p className="m-0 text-[12.5px]" style={{ color: 'var(--color-eol-text-faint)' }}>
+          Loading…
+        </p>
+      ) : (
+        <ProfileQuestionEditor
+          key={updatedAt ?? 'defaults'}
+          saved={questions}
+          onSave={(next) => save.mutate(next)}
+          saving={save.isPending}
+          error={save.isError ? (save.error instanceof Error ? save.error.message : "Couldn't save the questions.") : undefined}
+        />
+      )}
+    </Card>
+  )
+}
+
 export default function TeamSettingsPage() {
   const { teamId } = useParams<{ teamId: string }>()
   const { user } = useAuth()
@@ -91,7 +119,10 @@ export default function TeamSettingsPage() {
             </p>
           </Card>
         ) : (
-          <DeleteTeamSection teamId={teamId as string} teamName={team?.name ?? 'this team'} />
+          <>
+            {!team?.is_solo && <ProfileQuestionsSection teamId={teamId as string} />}
+            <DeleteTeamSection teamId={teamId as string} teamName={team?.name ?? 'this team'} />
+          </>
         )}
       </div>
     </>
