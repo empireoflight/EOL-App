@@ -16,15 +16,16 @@ export const KIND_HINTS: Record<ProfileQuestionKind, string | null> = {
   seek: 'Helps suggest teammates who might be able to help.',
 }
 
-// Pre-tagged so matching works out of the box: a few interests/about-you
-// prompts for common ground, and one offer + one seek for the "their offer
-// meets my need" side of complementary.
+// Pre-tagged so matching works out of the box: interests/about-you prompts
+// for common ground, and offer + seek questions for the "their offer meets
+// my need" side of complementary.
 export const DEFAULT_PROFILE_QUESTIONS: ProfileQuestion[] = [
-  { id: 'joy', prompt: 'What do you love doing in your free time?', kind: 'interest' },
-  { id: 'fun_fact', prompt: "What's a fun fact about you?", kind: 'about', optional: true },
-  { id: 'offer', prompt: "What's something you'd be happy to share or help others with?", kind: 'offer' },
-  { id: 'seek', prompt: "What's something you'd love some help with, or company for?", kind: 'seek' },
-  { id: 'ask_me', prompt: 'Ask me about…', kind: 'about', optional: true },
+  { id: 'obsession', prompt: 'What are you currently obsessed with?', kind: 'interest' },
+  { id: 'hidden_hobby', prompt: "What's a hobby or talent most people don't know you have?", kind: 'about', optional: true },
+  { id: 'local_spot', prompt: "What's your favorite local spot, and why?", kind: 'interest', optional: true },
+  { id: 'want_more', prompt: "What's something you'd love more of in your life or your village right now?", kind: 'seek' },
+  { id: 'need_help', prompt: "What's something you could use help with?", kind: 'seek' },
+  { id: 'offer', prompt: "What's something you'd be happy to offer or share?", kind: 'offer' },
 ]
 
 // A saved row (even an empty list — a facilitator may want name + photo

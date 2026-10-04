@@ -30,11 +30,12 @@ type Question = { id: string; prompt: string; kind: ProfileQuestionKind }
 // edge functions can't import from src/, and the same duplication exists for
 // vision questions in process-synthesis-job.
 const DEFAULT_QUESTIONS: Question[] = [
-  { id: 'joy', prompt: 'What do you love doing in your free time?', kind: 'interest' },
-  { id: 'fun_fact', prompt: "What's a fun fact about you?", kind: 'about' },
-  { id: 'offer', prompt: "What's something you'd be happy to share or help others with?", kind: 'offer' },
-  { id: 'seek', prompt: "What's something you'd love some help with, or company for?", kind: 'seek' },
-  { id: 'ask_me', prompt: 'Ask me about…', kind: 'about' },
+  { id: 'obsession', prompt: 'What are you currently obsessed with?', kind: 'interest' },
+  { id: 'hidden_hobby', prompt: "What's a hobby or talent most people don't know you have?", kind: 'about' },
+  { id: 'local_spot', prompt: "What's your favorite local spot, and why?", kind: 'interest' },
+  { id: 'want_more', prompt: "What's something you'd love more of in your life or your village right now?", kind: 'seek' },
+  { id: 'need_help', prompt: "What's something you could use help with?", kind: 'seek' },
+  { id: 'offer', prompt: "What's something you'd be happy to offer or share?", kind: 'offer' },
 ]
 
 function json(body: unknown, status = 200) {
