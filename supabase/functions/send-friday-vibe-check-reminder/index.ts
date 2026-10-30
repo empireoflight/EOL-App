@@ -7,7 +7,7 @@
 // a real spam-abuse surface.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-import { sendEmail, envSubjectPrefix } from '../_shared/email/resend.ts'
+import { sendEmailBatch, envSubjectPrefix, type SendEmailInput } from '../_shared/email/resend.ts'
 import { renderEmail } from '../_shared/email/template.ts'
 
 const corsHeaders = {
@@ -47,7 +47,10 @@ Deno.serve(async (req: Request) => {
     })
   }
 
-  let sent = 0
+  // Collected across every team and sent in one pass at the end: a person on
+  // many teams gets one email per team, and sending those one request at a
+  // time tripped Resend's rate limit and silently dropped some of them.
+  const outbox: SendEmailInput[] = []
   for (const team of teams) {
     // A team that hasn't sent a vision for commitment yet doesn't have
     // anything for the pulse to actually measure against — the vibe check
@@ -78,26 +81,26 @@ Deno.serve(async (req: Request) => {
     )
 
     const ctaUrl = `${appBaseUrl}/teams/${team.id}/pulse`
-    const results = await Promise.allSettled(
-      pending.map((m) =>
-        sendEmail({
-          to: m.users.email,
-          subject: `${envSubjectPrefix()}Quick vibe check for ${team.name}`,
-          html: renderEmail({
-            appBaseUrl,
-            preheader: `A minute or two to say how this week went on ${team.name}.`,
-            heading: 'How was your week?',
-            bodyHtml: `<p style="margin:0;">Take a minute to share how this week went on <strong style="color:#271d17;">${team.name}</strong> — what gave you energy, what drained it, and how you're doing overall.</p>`,
-            ctaLabel: 'Do the vibe check',
-            ctaUrl,
-          }),
-        })
-      )
-    )
-    sent += results.filter((r) => r.status === 'fulfilled').length
+    for (const m of pending) {
+      outbox.push({
+        to: m.users.email,
+        subject: `${envSubjectPrefix()}Quick vibe check for ${team.name}`,
+        html: renderEmail({
+          appBaseUrl,
+          preheader: `A minute or two to say how this week went on ${team.name}.`,
+          heading: 'How was your week?',
+          bodyHtml: `<p style="margin:0;">Take a minute to share how this week went on <strong style="color:#271d17;">${team.name}</strong> — what gave you energy, what drained it, and how you're doing overall.</p>`,
+          ctaLabel: 'Do the vibe check',
+          ctaUrl,
+        }),
+      })
+    }
   }
 
-  return new Response(JSON.stringify({ ok: true, sent, weekOf }), {
+  const { sent, failed } = await sendEmailBatch(outbox)
+  for (const f of failed) console.error(`vibe check email to ${f.to} failed: ${f.error}`)
+
+  return new Response(JSON.stringify({ ok: true, sent, failed: failed.length, weekOf }), {
     headers: { ...corsHeaders, 'content-type': 'application/json' },
   })
 })

@@ -70,6 +70,7 @@ async function remindDueItems(
       await db.from(table).update({ reminder_sent_at: new Date().toISOString() }).eq('id', item.id)
     })
   )
+  for (const r of results) if (r.status === 'rejected') console.error(`due-date reminder failed: ${r.reason}`)
   return results.filter((r) => r.status === 'fulfilled').length
 }
 
