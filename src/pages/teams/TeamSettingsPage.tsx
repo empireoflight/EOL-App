@@ -10,6 +10,7 @@ import { PageHeader } from '../../components/shared/PageHeader'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
 import { ProfileQuestionEditor } from '../../components/team/ProfileQuestionEditor'
 import { useProfileQuestions, useSaveProfileQuestions } from '../../hooks/useTeamProfiles'
+import { useSetTeamReminders } from '../../hooks/useTeamReminders'
 
 // Two-step reveal-then-confirm, same shape as
 // CancelFrictionSessionButton.tsx — the one other destructive-confirmation
@@ -70,6 +71,43 @@ function DeleteTeamSection({ teamId, teamName }: { teamId: string; teamName: str
   )
 }
 
+function RemindersSection({ teamId, enabled }: { teamId: string; enabled: boolean }) {
+  const setReminders = useSetTeamReminders(teamId)
+
+  return (
+    <Card>
+      <button
+        type="button"
+        onClick={() => setReminders.mutate(!enabled)}
+        disabled={setReminders.isPending}
+        role="switch"
+        aria-checked={enabled}
+        className="flex w-full items-center justify-between gap-4 text-left"
+      >
+        <div>
+          <div className="text-[13.5px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
+            Reminder emails
+          </div>
+          <p className="m-0 mt-0.5 text-[12px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
+            The Friday vibe check and due-date reminders, for everyone on this team. Turn off to pause them. Invites and other emails aren't affected.
+          </p>
+        </div>
+        <span className="relative h-6 w-11 shrink-0 rounded-full transition-colors" style={{ background: enabled ? 'var(--color-eol-accent)' : 'var(--color-eol-border-strong)' }}>
+          <span
+            className="absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform"
+            style={{ left: 2, transform: enabled ? 'translateX(20px)' : 'translateX(0)' }}
+          />
+        </span>
+      </button>
+      {setReminders.isError && (
+        <p className="m-0 mt-2 text-[12px]" style={{ color: 'var(--color-eol-pink-strong)' }}>
+          {setReminders.error instanceof Error ? setReminders.error.message : "Couldn't update reminder emails."}
+        </p>
+      )}
+    </Card>
+  )
+}
+
 function ProfileQuestionsSection({ teamId }: { teamId: string }) {
   const { questions, updatedAt, isLoading } = useProfileQuestions(teamId)
   const save = useSaveProfileQuestions(teamId)
@@ -120,6 +158,7 @@ export default function TeamSettingsPage() {
           </Card>
         ) : (
           <>
+            <RemindersSection teamId={teamId as string} enabled={team?.reminders_enabled ?? true} />
             {!team?.is_solo && <ProfileQuestionsSection teamId={teamId as string} />}
             <DeleteTeamSection teamId={teamId as string} teamName={team?.name ?? 'this team'} />
           </>

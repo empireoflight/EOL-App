@@ -26,7 +26,8 @@ async function remindDueItems(
   table: 'experiments' | 'actions',
   targetDate: string,
   appBaseUrl: string,
-  teamNames: Map<string, string>
+  teamNames: Map<string, string>,
+  quietTeamIds: Set<string>
 ): Promise<number> {
   const { data: items } = await db
     .from(table)
@@ -35,7 +36,8 @@ async function remindDueItems(
     .not('assignee_id', 'is', null)
     .is('reminder_sent_at', null)
     .not('status', 'in', '(done,dropped)')
-  const dueItems = (items ?? []) as DueItem[]
+  // Teams with reminder emails switched off (Team settings) get none.
+  const dueItems = ((items ?? []) as DueItem[]).filter((i) => !quietTeamIds.has(i.team_id))
   if (dueItems.length === 0) return 0
 
   const { data: assignees } = await db
@@ -92,12 +94,20 @@ Deno.serve(async (req: Request) => {
   targetDate.setUTCDate(targetDate.getUTCDate() + 2)
   const targetDateStr = targetDate.toISOString().slice(0, 10)
 
-  const { data: teams } = await db.from('teams').select('id, name')
+  const { data: teams, error: teamsError } = await db.from('teams').select('id, name, reminders_enabled')
+  if (teamsError) {
+    console.error(`due-date reminder couldn't load teams: ${teamsError.message}`)
+    return new Response(JSON.stringify({ error: 'could not load teams' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'content-type': 'application/json' },
+    })
+  }
   const teamNames = new Map((teams ?? []).map((t) => [t.id, t.name as string]))
+  const quietTeamIds = new Set((teams ?? []).filter((t) => !t.reminders_enabled).map((t) => t.id as string))
 
   const [experiments, actions] = await Promise.all([
-    remindDueItems(db, 'experiments', targetDateStr, appBaseUrl, teamNames),
-    remindDueItems(db, 'actions', targetDateStr, appBaseUrl, teamNames),
+    remindDueItems(db, 'experiments', targetDateStr, appBaseUrl, teamNames, quietTeamIds),
+    remindDueItems(db, 'actions', targetDateStr, appBaseUrl, teamNames, quietTeamIds),
   ])
 
   return new Response(JSON.stringify({ ok: true, sent: { experiments, actions }, targetDate: targetDateStr }), {

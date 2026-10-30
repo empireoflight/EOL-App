@@ -40,7 +40,18 @@ Deno.serve(async (req: Request) => {
   const appBaseUrl = Deno.env.get('APP_BASE_URL') ?? 'http://localhost:5173'
   const weekOf = getWeekStart()
 
-  const { data: teams } = await db.from('teams').select('id, name')
+  // Teams a facilitator has switched reminders off for (Team settings) are
+  // left out entirely. If this query itself fails (e.g. the column's migration
+  // hasn't been applied to this project yet), fail loudly rather than looking
+  // like "no teams to remind" and silently sending nothing.
+  const { data: teams, error: teamsError } = await db.from('teams').select('id, name').eq('reminders_enabled', true)
+  if (teamsError) {
+    console.error(`vibe check reminder couldn't load teams: ${teamsError.message}`)
+    return new Response(JSON.stringify({ error: 'could not load teams' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'content-type': 'application/json' },
+    })
+  }
   if (!teams?.length) {
     return new Response(JSON.stringify({ ok: true, sent: 0 }), {
       headers: { ...corsHeaders, 'content-type': 'application/json' },

@@ -14,6 +14,7 @@ export type Team = {
   org_id: string
   name: string
   is_solo: boolean
+  reminders_enabled: boolean
   created_at: string
 }
 
