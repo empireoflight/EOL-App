@@ -6,7 +6,7 @@ export const DEFAULT_MEDITATION_PROMPT = 'Take a moment to imagine your favorite
 
 export const MEDITATION_STEPS = [
   'Get comfortable. Lie down, or sit and close your eyes.',
-  'Put your feet flat on the floor.',
+  "If you're sitting, put your feet flat on the floor.",
   'Take a few slow, deep breaths.',
 ]
 
