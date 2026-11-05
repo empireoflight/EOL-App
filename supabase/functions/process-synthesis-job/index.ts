@@ -20,7 +20,7 @@ const corsHeaders = {
 // src/lib/visionQuestions.ts — edge functions can't import from src/, and
 // this only ever runs for old sessions, so a duplicate here is simpler than
 // a shared package for one fallback path.
-function defaultVisionQuestions(horizon: string): { id: string; prompt: string; optional?: boolean }[] {
+function defaultVisionQuestions(horizon: string | null): { id: string; prompt: string; optional?: boolean }[] {
   return [
     { id: 'building', prompt: 'What are we building together?' },
     { id: 'who_for', prompt: "Who is it for, and what's different for them because it exists?" },
@@ -28,9 +28,17 @@ function defaultVisionQuestions(horizon: string): { id: string; prompt: string; 
     { id: 'hardest', prompt: "What's the hardest problem we haven't cracked yet?", optional: true },
     { id: 'proud', prompt: 'What would make you proud to put your name on this?' },
     { id: 'not_building', prompt: 'What are we deliberately not building, even if someone asks for it?', optional: true },
-    { id: 'arrival_notice', prompt: `${horizon} from now, you walk in on an ordinary Tuesday. What's the first thing you notice?` },
+    {
+      id: 'arrival_notice',
+      prompt: horizon
+        ? `${horizon} from now, you walk in on an ordinary Tuesday. What's the first thing you notice?`
+        : "Imagine this vision has come true and you walk in on an ordinary Tuesday. What's the first thing you notice?",
+    },
     { id: 'arrival_doing', prompt: 'What are people doing differently than they do today?' },
-    { id: 'arrival_feel', prompt: `What does it feel like to be on this team, ${horizon} from now?` },
+    {
+      id: 'arrival_feel',
+      prompt: horizon ? `What does it feel like to be on this team, ${horizon} from now?` : 'What does it feel like to be on this team, now that this has come true?',
+    },
     { id: 'negative_space', prompt: "What's gone that's here today? (a meeting, a tension, a way of working, a feeling)" },
     { id: 'anchors', prompt: "What matters most about how we get there — what wouldn't you trade away even for a better outcome?" },
   ]
@@ -106,17 +114,20 @@ Deno.serve(async (req: Request) => {
       const participantAnswers = (reflections ?? []).map((r) => r.content as Record<string, string>)
       if (participantAnswers.length === 0) throw new Error('no submitted reflections to synthesize')
 
-      const horizon = (session.framing as Record<string, unknown>)?.horizon as string | undefined
+      // undefined = created before "no time horizon" existed (always had one,
+      // 12 months by default); null/empty = the facilitator chose none.
+      const framingHorizon = (session.framing as Record<string, unknown>)?.horizon as string | null | undefined
+      const horizon = framingHorizon === undefined ? '12 months' : framingHorizon || null
       // Every session's framing carries its resolved question list since
       // VisionStartPage.tsx started writing it (default or facilitator-
       // edited, no distinction here). This fallback only ever applies to
       // sessions created before that shipped.
       const questions =
         ((session.framing as Record<string, unknown>)?.questions as { id: string; prompt: string }[] | undefined) ??
-        defaultVisionQuestions(horizon ?? '12 months')
+        defaultVisionQuestions(horizon)
 
       const [layout, alignmentGuide] = await Promise.all([
-        generateVisionLayout({ teamName: team?.name ?? 'This team', horizon: horizon ?? '12 months', questions, participantAnswers }),
+        generateVisionLayout({ teamName: team?.name ?? 'This team', horizon, questions, participantAnswers }),
         generateVisionAlignmentGuide({ teamName: team?.name ?? 'This team', questions, participantAnswers }),
       ])
 

@@ -267,7 +267,7 @@ function HistorySection({ vision }: { vision: Vision }) {
 function RawAnswers({ sessionId }: { sessionId: string | null }) {
   const { data: answers, isLoading } = useVisionAnswers(sessionId ?? undefined)
   const { data: sessionData } = useConvergenceSession(sessionId ?? undefined)
-  const questions = resolveVisionQuestions(sessionData?.session.framing as { horizon?: string; questions?: VisionQuestion[] } | undefined)
+  const questions = resolveVisionQuestions(sessionData?.session.framing as { horizon?: string | null; questions?: VisionQuestion[] } | undefined)
   if (!sessionId) return null
   if (isLoading) return null
   if (!answers || answers.length === 0) return null

@@ -11,7 +11,7 @@ export function VisionFramingSummary({ sessionId }: { sessionId: string | undefi
   const { data: initiatorName } = useUserName(data?.session.initiator_id)
   if (!data) return null
 
-  const { scope, horizon, whyNow } = data.session.framing as { scope?: string; horizon?: string; whyNow?: string }
+  const { scope, horizon, whyNow } = data.session.framing as { scope?: string; horizon?: string | null; whyNow?: string }
   if (!scope && !whyNow) return null
 
   return (

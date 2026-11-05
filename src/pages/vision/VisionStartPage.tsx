@@ -14,6 +14,8 @@ import { LoadingScreen } from '../../components/shared/LoadingScreen'
 import { DEFAULT_MEDITATION_PROMPT } from '../../lib/meditation'
 
 const HORIZONS = ['6 months', '12 months', '18 months', '3 years']
+// The select's value for "don't mention a time horizon" — stored as null.
+const NO_HORIZON = ''
 
 type Step = 'framing' | 'questions' | 'invite'
 
@@ -126,7 +128,7 @@ export default function VisionStartPage() {
           session_type: 'vision',
           status: 'collecting',
           initiator_id: user.id,
-          framing: { scope, horizon, whyNow, meditationPrompt: meditationPrompt.trim(), questions },
+          framing: { scope, horizon: horizon || null, whyNow, meditationPrompt: meditationPrompt.trim(), questions },
         })
         .select()
         .single()
@@ -174,7 +176,7 @@ export default function VisionStartPage() {
             <form
               onSubmit={(ev) => {
                 ev.preventDefault()
-                setQuestions(getVisionQuestions(horizon))
+                setQuestions(getVisionQuestions(horizon || null))
                 setManualStep('questions')
               }}
               className="flex flex-col gap-4"
@@ -190,6 +192,7 @@ export default function VisionStartPage() {
                   className="rounded-lg border px-3 py-2.5 text-[13px]"
                   style={{ borderColor: 'var(--color-eol-border-strong)', background: 'var(--color-eol-surface-light)', color: 'var(--color-eol-text)' }}
                 >
+                  <option value={NO_HORIZON}>No time horizon</option>
                   {HORIZONS.map((h) => (
                     <option key={h} value={h}>
                       {h}
@@ -264,7 +267,7 @@ export default function VisionStartPage() {
 
             <button
               type="button"
-              onClick={() => setQuestions(getVisionQuestions(horizon))}
+              onClick={() => setQuestions(getVisionQuestions(horizon || null))}
               className="self-start text-[12px] font-semibold"
               style={{ color: 'var(--color-eol-accent-label)' }}
             >

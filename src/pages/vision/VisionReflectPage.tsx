@@ -23,7 +23,7 @@ export default function VisionReflectPage() {
   const [error, setError] = useState('')
 
   const { data: sessionData, isLoading: sessionLoading } = useConvergenceSession(sessionId)
-  const questions = resolveVisionQuestions(sessionData?.session.framing as { horizon?: string; questions?: VisionQuestion[] } | undefined)
+  const questions = resolveVisionQuestions(sessionData?.session.framing as { horizon?: string | null; questions?: VisionQuestion[] } | undefined)
 
   const { value: answers, setValue: setAnswers, saveState, discard } = useDurableForm<Record<string, string>>({
     formKey: `vision-reflect-${sessionId}`,

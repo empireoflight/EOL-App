@@ -8,8 +8,11 @@ export type VisionQuestion = { id: string; prompt: string; optional?: boolean }
 //
 // The two "arrival" questions are anchored to the session's time horizon
 // (set by whoever started the session, in VisionStartPage) rather than a
-// vague "now" — everyone should be picturing the same point in time.
-export function getVisionQuestions(horizon: string = '12 months'): VisionQuestion[] {
+// vague "now" — everyone should be picturing the same point in time. A
+// facilitator can also choose no horizon (null), in which case those two
+// questions are worded without any time reference. undefined is a session
+// created before the choice existed, which always had one: 12 months.
+export function getVisionQuestions(horizon: string | null | undefined = '12 months'): VisionQuestion[] {
   return [
     { id: 'building', prompt: 'What are we building together?' },
     { id: 'who_for', prompt: "Who is it for, and what's different for them because it exists?" },
@@ -17,9 +20,17 @@ export function getVisionQuestions(horizon: string = '12 months'): VisionQuestio
     { id: 'hardest', prompt: "What's the hardest problem we haven't cracked yet?", optional: true },
     { id: 'proud', prompt: 'What would make you proud to put your name on this?' },
     { id: 'not_building', prompt: 'What are we deliberately not building, even if someone asks for it?', optional: true },
-    { id: 'arrival_notice', prompt: `${horizon} from now, you walk in on an ordinary Tuesday. What's the first thing you notice?` },
+    {
+      id: 'arrival_notice',
+      prompt: horizon
+        ? `${horizon} from now, you walk in on an ordinary Tuesday. What's the first thing you notice?`
+        : "Imagine this vision has come true and you walk in on an ordinary Tuesday. What's the first thing you notice?",
+    },
     { id: 'arrival_doing', prompt: 'What are people doing differently than they do today?' },
-    { id: 'arrival_feel', prompt: `What does it feel like to be on this team, ${horizon} from now?` },
+    {
+      id: 'arrival_feel',
+      prompt: horizon ? `What does it feel like to be on this team, ${horizon} from now?` : 'What does it feel like to be on this team, now that this has come true?',
+    },
     { id: 'negative_space', prompt: "What's gone that's here today? (a meeting, a tension, a way of working, a feeling)" },
     { id: 'anchors', prompt: "What matters most about how we get there — what wouldn't you trade away even for a better outcome?" },
   ]
@@ -29,6 +40,6 @@ export function getVisionQuestions(horizon: string = '12 months'): VisionQuestio
 // creation time (VisionStartPage) — default or facilitator-edited, no
 // distinction downstream. This only falls back to the built-in list for
 // sessions created before that existed.
-export function resolveVisionQuestions(framing: { horizon?: string; questions?: VisionQuestion[] } | undefined): VisionQuestion[] {
+export function resolveVisionQuestions(framing: { horizon?: string | null; questions?: VisionQuestion[] } | undefined): VisionQuestion[] {
   return framing?.questions ?? getVisionQuestions(framing?.horizon)
 }

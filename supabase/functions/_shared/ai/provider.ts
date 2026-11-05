@@ -330,7 +330,8 @@ async function withVoiceCheck<T>(generate: (revision?: Revision<T>) => Promise<T
 
 export async function generateVisionLayout(input: {
   teamName: string
-  horizon: string
+  // null = the facilitator chose no time horizon; nothing about one is sent.
+  horizon: string | null
   questions: { id: string; prompt: string }[]
   // One entry per participant — a team synthesis needs everyone's answers,
   // not one person's, to find the shared north star.
@@ -348,7 +349,7 @@ export async function generateVisionLayout(input: {
         {
           role: 'user',
           content:
-            `Team: ${input.teamName}\nHorizon: ${input.horizon}\n\n` +
+            `Team: ${input.teamName}\n${input.horizon ? `Horizon: ${input.horizon}\n` : ''}\n` +
             `Individual vision-session answers, one entry per participant (tier-1, about to be aggregated), ` +
             `keyed by the question each one answers:\n` +
             JSON.stringify(labeledAnswers, null, 2) +
