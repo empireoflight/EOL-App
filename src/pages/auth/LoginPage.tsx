@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../../components/shared/Button'
 import { Input } from '../../components/shared/Input'
@@ -8,8 +8,6 @@ import { Seo } from '../../components/shared/Seo'
 
 export default function LoginPage() {
   const { signIn } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
   const [form, setForm] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -19,9 +17,9 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
     try {
+      // Signing in flips the session, and GuestRoute (which wraps this page)
+      // takes it from there — see its comment for where people land.
       await signIn(form)
-      const from = (location.state as { from?: { pathname: string } })?.from?.pathname ?? '/teams'
-      navigate(from, { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't sign in.")
     } finally {

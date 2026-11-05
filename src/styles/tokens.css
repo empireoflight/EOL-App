@@ -138,3 +138,12 @@ a:hover {
     transform: scale(1.08);
   }
 }
+
+.eol-breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .eol-breathe {
+    animation: none;
+  }
+}

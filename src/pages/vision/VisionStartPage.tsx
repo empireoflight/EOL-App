@@ -11,6 +11,7 @@ import { Textarea } from '../../components/shared/Input'
 import { Card } from '../../components/shared/Card'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
+import { DEFAULT_MEDITATION_PROMPT } from '../../lib/meditation'
 
 const HORIZONS = ['6 months', '12 months', '18 months', '3 years']
 
@@ -88,6 +89,7 @@ export default function VisionStartPage() {
   const [scope, setScope] = useState('')
   const [horizon, setHorizon] = useState(HORIZONS[1])
   const [whyNow, setWhyNow] = useState('')
+  const [meditationPrompt, setMeditationPrompt] = useState(DEFAULT_MEDITATION_PROMPT)
   const [questions, setQuestions] = useState<VisionQuestion[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -124,7 +126,7 @@ export default function VisionStartPage() {
           session_type: 'vision',
           status: 'collecting',
           initiator_id: user.id,
-          framing: { scope, horizon, whyNow, questions },
+          framing: { scope, horizon, whyNow, meditationPrompt: meditationPrompt.trim(), questions },
         })
         .select()
         .single()
@@ -196,6 +198,12 @@ export default function VisionStartPage() {
                 </select>
               </label>
               <Textarea label="Why now" hint="One or two sentences on what prompted this session." required value={whyNow} onChange={(e) => setWhyNow(e.target.value)} />
+              <Textarea
+                label="Meditation prompt"
+                hint="Before the questions, everyone gets a moment to settle: get comfortable, feet on the floor, a few deep breaths, and then this. Clear it to skip the meditation."
+                value={meditationPrompt}
+                onChange={(e) => setMeditationPrompt(e.target.value)}
+              />
               <Button type="submit" className="w-full">
                 Continue
               </Button>

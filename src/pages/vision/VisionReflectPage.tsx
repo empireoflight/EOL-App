@@ -10,6 +10,9 @@ import { Card } from '../../components/shared/Card'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { TierBadge } from '../../components/shared/TierBadge'
 import { VisionFramingSummary } from '../../components/session/VisionFramingSummary'
+import { VisionGroundingStep } from '../../components/session/VisionGroundingStep'
+import { LoadingScreen } from '../../components/shared/LoadingScreen'
+import { resolveMeditationPrompt } from '../../lib/meditation'
 import { resolveVisionQuestions, type VisionQuestion } from '../../lib/visionQuestions'
 
 export default function VisionReflectPage() {
@@ -19,7 +22,7 @@ export default function VisionReflectPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
-  const { data: sessionData } = useConvergenceSession(sessionId)
+  const { data: sessionData, isLoading: sessionLoading } = useConvergenceSession(sessionId)
   const questions = resolveVisionQuestions(sessionData?.session.framing as { horizon?: string; questions?: VisionQuestion[] } | undefined)
 
   const { value: answers, setValue: setAnswers, saveState, discard } = useDurableForm<Record<string, string>>({
@@ -28,6 +31,28 @@ export default function VisionReflectPage() {
     initialValue: {},
     userId: user?.id,
   })
+
+  // The grounding moment shows once per visit, and only before someone has
+  // started writing — a returning draft means they're already in it. Held in
+  // sessionStorage so a refresh mid-meditation doesn't restart it either.
+  const groundedKey = `vision-grounded-${sessionId}`
+  const [grounded, setGrounded] = useState(() => {
+    try {
+      return sessionStorage.getItem(groundedKey) === '1'
+    } catch {
+      return false
+    }
+  })
+  const markGrounded = () => {
+    try {
+      sessionStorage.setItem(groundedKey, '1')
+    } catch {
+      // Private mode / blocked storage: the in-memory flag below still works.
+    }
+    setGrounded(true)
+  }
+  const hasStarted = Object.values(answers).some((a) => a?.trim())
+  const meditationPrompt = resolveMeditationPrompt(sessionData?.session.framing as { meditationPrompt?: string | null } | undefined)
 
   const setAnswer = (id: string) => (ev: React.ChangeEvent<HTMLTextAreaElement>) =>
     setAnswers({ ...answers, [id]: ev.target.value })
@@ -69,6 +94,11 @@ export default function VisionReflectPage() {
       setSubmitting(false)
     }
   }
+
+  // Wait for the session so the facilitator's prompt (or the lack of one) is
+  // known before anything renders, instead of flashing the questions first.
+  if (sessionLoading) return <LoadingScreen />
+  if (meditationPrompt && !grounded && !hasStarted) return <VisionGroundingStep prompt={meditationPrompt} onReady={markGrounded} />
 
   return (
     <>
