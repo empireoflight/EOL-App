@@ -9,6 +9,8 @@
 // from the server-side environment and must never be imported from `src/` —
 // bundling it into the Vite client would ship the key to the browser.
 
+import { VISION_VOICE_RULES, findAiSpeak } from './voice.ts'
+
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages'
 const ANTHROPIC_VERSION = '2023-06-01'
 
@@ -70,7 +72,8 @@ async function callAnthropic({ model, system, messages, maxTokens = 2048 }: Anth
   const data = await response.json()
   const textBlock = data.content?.find((block: { type: string }) => block.type === 'text')
   if (!textBlock) {
-    throw new Error('Anthropic response contained no text block')
+    const blockTypes = (data.content ?? []).map((block: { type: string }) => block.type).join(', ') || 'none'
+    throw new Error(`Anthropic response contained no text block (stop_reason: ${data.stop_reason ?? 'unknown'}, blocks: ${blockTypes})`)
   }
   return textBlock.text as string
 }
@@ -276,6 +279,55 @@ function labelAnswersByQuestion(questions: { id: string; prompt: string }[], par
   return participantAnswers.map((answers) => Object.fromEntries(Object.entries(answers).map(([id, text]) => [promptById.get(id) ?? id, text])))
 }
 
+// Generate, then check the draft against the voice rules (see voice.ts). If
+// banned constructions slipped through, hand the model its own draft plus the
+// exact offending phrases and ask it to fix only those sentences — an edit
+// pass is far more reliable than regenerating from scratch, which tends to
+// bring the same habits straight back. Up to two edit rounds, keeps whichever
+// draft is cleanest, and never fails the job: a failed rewrite just keeps the
+// best draft so far.
+const MAX_VOICE_REWRITES = 2
+
+type Revision<T> = { draft: T; hits: string[] }
+
+function revisionNote<T>(revision: Revision<T> | undefined): string {
+  if (!revision) return ''
+  return (
+    `\n\nREVISION. Here is your previous draft:\n${JSON.stringify(revision.draft)}\n\n` +
+    `It uses phrasing we don't want: ${revision.hits.slice(0, 8).map((h) => `"${h}"`).join('; ')}. ` +
+    `Rewrite the sentences that contain these so they say the thing directly, in plain words from the ` +
+    `answers. Change as little else as you can, keep the same JSON shape (and the same ids and ` +
+    `positions), and don't introduce any other contrast construction ("not X but Y", "X, not Y", ` +
+    `"rather than", "instead of", "less X, more Y") or stock phrase. Respond with the complete JSON ` +
+    `again. No other text.`
+  )
+}
+
+async function withVoiceCheck<T>(generate: (revision?: Revision<T>) => Promise<T>, textsOf: (result: T) => string[]): Promise<T> {
+  const flagged = (result: T) => [...new Set(textsOf(result).flatMap(findAiSpeak))]
+  let best = await generate()
+  let hits = flagged(best)
+  const initial = hits.length
+
+  for (let round = 0; round < MAX_VOICE_REWRITES && hits.length > 0; round++) {
+    try {
+      const next = await generate({ draft: best, hits })
+      const nextHits = flagged(next)
+      if (nextHits.length > hits.length) break
+      best = next
+      hits = nextHits
+    } catch (err) {
+      console.error(`voice check: rewrite failed, keeping the best draft so far (${err instanceof Error ? err.message : String(err)})`)
+      break
+    }
+  }
+
+  // Counts only: the phrases themselves come from team answers, so they stay
+  // out of the logs.
+  if (initial > 0) console.log(`voice check: ${initial} flagged phrase(s) in the first draft, ${hits.length} after rewriting`)
+  return best
+}
+
 export async function generateVisionLayout(input: {
   teamName: string
   horizon: string
@@ -285,36 +337,43 @@ export async function generateVisionLayout(input: {
   participantAnswers: Record<string, string>[]
 }): Promise<VisionLayout> {
   const labeledAnswers = labelAnswersByQuestion(input.questions, input.participantAnswers)
-  return callAnthropicForJson<VisionLayout>({
-    model: MODELS.visionLayout,
-    system: FRAMEWORK_SYSTEM_PROMPT,
-    // Default 2048 truncates mid-JSON once north_star + pillar + practice +
-    // signal nodes are all requested (up to ~14 nodes plus edges).
-    maxTokens: 4096,
-    messages: [
-      {
-        role: 'user',
-        content:
-          `Team: ${input.teamName}\nHorizon: ${input.horizon}\n\n` +
-          `Individual vision-session answers, one entry per participant (tier-1, about to be aggregated), ` +
-          `keyed by the question each one answers:\n` +
-          JSON.stringify(labeledAnswers, null, 2) +
-          `\n\nDraft a vision layout with four kinds of nodes:\n` +
-          `- One "north_star" node: the synthesized north star statement.\n` +
-          `- 3-5 "pillar" nodes: short phrases naming the pillars that support it.\n` +
-          `- 2-4 "practice" nodes answering "what does this look like in practice?" — concrete, ` +
-          `observable behaviors (draw especially on answers about what people are doing differently ` +
-          `and what wouldn't be traded away).\n` +
-          `- 2-4 "signal" nodes answering "how will we know we're becoming this?" — noticeable signs ` +
-          `of progress (draw especially on answers about what someone would notice walking in, and ` +
-          `what's gone that's here today).\n` +
-          `Position all nodes in a 900x480 canvas with the north star near the center, pillars around it, ` +
-          `and practice/signal nodes further out. ` +
-          `Respond as JSON matching {"nodes": [{"id": string, "kind": "north_star"|"pillar"|"practice"|"signal", "text": string, "x": number, "y": number}], ` +
-          `"edges": [{"from": string, "to": string}]}. Every pillar node needs an edge to the north star. No other text.`,
-      },
-    ],
-  })
+  const generate = (revision?: Revision<VisionLayout>) =>
+    callAnthropicForJson<VisionLayout>({
+      model: MODELS.visionLayout,
+      system: FRAMEWORK_SYSTEM_PROMPT,
+      // Default 2048 truncates mid-JSON once north_star + pillar + practice +
+      // signal nodes are all requested (up to ~14 nodes plus edges).
+      maxTokens: 4096,
+      messages: [
+        {
+          role: 'user',
+          content:
+            `Team: ${input.teamName}\nHorizon: ${input.horizon}\n\n` +
+            `Individual vision-session answers, one entry per participant (tier-1, about to be aggregated), ` +
+            `keyed by the question each one answers:\n` +
+            JSON.stringify(labeledAnswers, null, 2) +
+            `\n\n${VISION_VOICE_RULES}\n\n` +
+            `Draft a vision layout with four kinds of nodes:\n` +
+            `- One "north_star" node: one or two full sentences (a subject and a verb in each), 35 words at ` +
+            `most, that this team could say out loud and recognize as theirs. Assemble it from the words and images that came up most, in ` +
+            `the team's own phrasing.\n` +
+            `- 3-5 "pillar" nodes: names of 2-5 words for what holds the north star up. Take them from the ` +
+            `team's own wording wherever you can.\n` +
+            `- 2-4 "practice" nodes answering "what does this look like in practice?": one plain sentence ` +
+            `each, naming specific things people said they would do or want to see (draw especially on ` +
+            `answers about what people are doing differently and what wouldn't be traded away).\n` +
+            `- 2-4 "signal" nodes answering "how will we know we're becoming this?": something a person could ` +
+            `actually notice or hear someone say (draw especially on answers about what someone would notice ` +
+            `walking in, and what's gone that's here today).\n` +
+            `Position all nodes in a 900x480 canvas with the north star near the center, pillars around it, ` +
+            `and practice/signal nodes further out. ` +
+            `Respond as JSON matching {"nodes": [{"id": string, "kind": "north_star"|"pillar"|"practice"|"signal", "text": string, "x": number, "y": number}], ` +
+            `"edges": [{"from": string, "to": string}]}. Every pillar node needs an edge to the north star. No other text.` +
+            revisionNote(revision),
+        },
+      ],
+    })
+  return withVoiceCheck(generate, (layout) => (layout.nodes ?? []).map((n) => n.text))
 }
 
 // ------------------------------------------------------------
@@ -343,29 +402,39 @@ export async function generateVisionAlignmentGuide(input: {
 }): Promise<VisionAlignmentGuide> {
   const labeledAnswers = labelAnswersByQuestion(input.questions, input.participantAnswers)
   const labeled = labeledAnswers.map((answers, i) => ({ participant: `Participant ${i + 1}`, answers }))
-  return callAnthropicForJson<VisionAlignmentGuide>({
-    model: MODELS.synthesis,
-    system: FRAMEWORK_SYSTEM_PROMPT,
-    messages: [
-      {
-        role: 'user',
-        content:
-          `Team: ${input.teamName}\n\nIndividual vision-session answers, one entry per participant:\n` +
-          JSON.stringify(labeled, null, 2) +
-          `\n\nWrite two short paragraphs (2-3 sentences each): where the team's answers ` +
-          `genuinely converge, and where there's a real disconnect worth naming (different ` +
-          `readings of the same idea, tension between priorities, etc.). Be specific, not generic. ` +
-          `\n\nAlso pull out 2-4 unique or unexpected individual points worth the team discussing ` +
-          `directly — something one person raised that doesn't fit neatly into either the alignment ` +
-          `or the disconnect (a distinct idea, a specific concern, an angle nobody else touched on) ` +
-          `and would otherwise get lost once everything's rolled into one shared layout. Paraphrase, ` +
-          `never quote verbatim, and never attribute a point to a specific participant — describe the ` +
-          `point itself, not who raised it. Leave this list empty if nothing genuinely stands out beyond ` +
-          `what alignment/disconnect already cover — don't manufacture points to fill it. ` +
-          `Respond as JSON: {"alignment": string, "disconnect": string, "uniquePerspectives": string[]}. No other text.`,
-      },
-    ],
-  })
+  const generate = (revision?: Revision<VisionAlignmentGuide>) =>
+    callAnthropicForJson<VisionAlignmentGuide>({
+      model: MODELS.synthesis,
+      system: FRAMEWORK_SYSTEM_PROMPT,
+      messages: [
+        {
+          role: 'user',
+          content:
+            `Team: ${input.teamName}\n\nIndividual vision-session answers, one entry per participant:\n` +
+            JSON.stringify(labeled, null, 2) +
+            `\n\n${VISION_VOICE_RULES}\n\n` +
+            `Write two short paragraphs (2-3 sentences each): where the team's answers genuinely converge, ` +
+            `and where there's a real disconnect worth naming (different readings of the same idea, tension ` +
+            `between priorities, and so on). Be specific. Ground each point in the group's actual words: ` +
+            `quote short phrases exactly as written (roughly 3-12 words), set off in curly double quotes ` +
+            `(“like this”) so the JSON stays valid, and use loose counts like "several people" or "a few" ` +
+            `rather than exact numbers. When a phrase or image shows up in more than one answer, say so.\n\n` +
+            `Also pull out 2-4 unique or unexpected individual points worth the team discussing directly: ` +
+            `something one person raised that doesn't fit neatly into either the alignment or the ` +
+            `disconnect (a distinct idea, a specific concern, an angle nobody else touched on) and would ` +
+            `otherwise get lost once everything's rolled into one shared layout. Quote the person's own ` +
+            `words where a short phrase carries it. Leave this list empty if nothing genuinely stands out ` +
+            `beyond what alignment/disconnect already cover; don't manufacture points to fill it.\n\n` +
+            `Two limits on quoting. Never attribute a quote or a point to a specific participant ` +
+            `("Participant 2 said..."): describe the point itself, not who raised it. And paraphrase ` +
+            `instead of quoting anything that reveals a sensitive personal situation (health, ` +
+            `immigration status, money, family conflict) that could point to one person.\n\n` +
+            `Respond as JSON: {"alignment": string, "disconnect": string, "uniquePerspectives": string[]}. No other text.` +
+            revisionNote(revision),
+        },
+      ],
+    })
+  return withVoiceCheck(generate, (guide) => [guide.alignment, guide.disconnect, ...(guide.uniquePerspectives ?? [])].filter((t): t is string => typeof t === 'string'))
 }
 
 // ------------------------------------------------------------
