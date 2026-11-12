@@ -241,4 +241,6 @@ export type PersonalFrictionGuide = {
   answers: { needs?: string; problem_summary?: string; hopes: string; what_matters: string }
   guide: PersonalDiscussionGuide
   created_at: string
+  // Set when they say "I've had this conversation"; the Unlearn page stops pinning it.
+  conversation_had_at?: string | null
 }

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useConvergenceSession, useMyPendingFrictionSessions } from '../../hooks/useConvergenceSession'
 import { useUserName } from '../../hooks/useUserName'
+import { ActionBanner } from '../shared/ActionBanner'
 import type { ConvergenceSession } from '../../lib/types'
 
 // One card per session this person still owes a submission to — see
@@ -15,29 +16,16 @@ function PendingFrictionBanner({ teamId, session }: { teamId: string | undefined
   const { data } = useConvergenceSession(session.id)
 
   return (
-    <Link
-      to={`/teams/${teamId}/friction/sessions/${session.id}/mitigate`}
-      className="flex items-center gap-4 rounded-2xl border p-4"
-      style={{ background: 'var(--color-eol-accent)', borderColor: 'var(--color-eol-border-strong)' }}
-    >
-      <div className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: 'var(--color-eol-accent-hover)' }} />
-      <div className="min-w-0 flex-1">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: 'var(--color-eol-accent-hover)' }}>
-          Waiting on you
-        </div>
-        <div className="truncate text-[15px] font-semibold leading-snug" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-ink)' }}>
-          {topic || (initiatorName ? `Waiting on ${initiatorName} to describe it` : 'Waiting on the initiator to describe it')}
-        </div>
-        {data && (
-          <div className="text-[12.5px]" style={{ color: 'var(--color-eol-ink)', opacity: 0.65 }}>
-            {data.submittedCount} of {data.totalParticipants} collected
-          </div>
-        )}
-      </div>
-      <span className="shrink-0 rounded-full px-4 py-2 text-[13px] font-semibold" style={{ background: 'var(--color-eol-ink)', color: 'var(--color-eol-bg)' }}>
-        Answer it &rarr;
-      </span>
-    </Link>
+    <ActionBanner
+      eyebrow="Waiting on you"
+      title={topic || (initiatorName ? `Waiting on ${initiatorName} to describe it` : 'Waiting on the initiator to describe it')}
+      detail={data ? `${data.submittedCount} of ${data.totalParticipants} collected` : undefined}
+      actions={
+        <Link to={`/teams/${teamId}/friction/sessions/${session.id}/mitigate`} className="text-[13.5px] font-semibold" style={{ color: 'var(--color-eol-accent-label)' }}>
+          Answer it &rarr;
+        </Link>
+      }
+    />
   )
 }
 

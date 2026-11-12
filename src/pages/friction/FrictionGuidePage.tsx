@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { useDeletePersonalGuide, usePersonalGuide } from '../../hooks/usePersonalGuides'
+import { useDeletePersonalGuide, useMarkConversationHad, usePersonalGuide } from '../../hooks/usePersonalGuides'
 import { authoredAnswerRows } from '../../lib/frictionQuestions'
 import { formatPersonalGuideAsText } from '../../../supabase/functions/_shared/ai/personalGuide'
 import { Button } from '../../components/shared/Button'
@@ -27,6 +27,7 @@ export default function FrictionGuidePage() {
   const navigate = useNavigate()
   const { data: saved, isLoading } = usePersonalGuide(guideId)
   const deleteGuide = useDeletePersonalGuide(teamId)
+  const markDone = useMarkConversationHad(teamId)
   const [copied, setCopied] = useState(false)
   const [confirming, setConfirming] = useState(false)
 
@@ -153,6 +154,15 @@ export default function FrictionGuidePage() {
         </Card>
 
         <div className="flex flex-col items-start gap-3">
+          {saved.conversation_had_at ? (
+            <p className="m-0 text-[12.5px]" style={{ color: 'var(--color-eol-text-muted)' }}>
+              You marked this conversation as had.
+            </p>
+          ) : (
+            <Button onClick={() => markDone.mutate(saved.id)} loading={markDone.isPending}>
+              I've had this conversation
+            </Button>
+          )}
           <Link to={`/teams/${teamId}/friction`} className="text-[13px] font-semibold" style={{ color: 'var(--color-eol-accent-label)' }}>
             &larr; Back to Unlearn
           </Link>

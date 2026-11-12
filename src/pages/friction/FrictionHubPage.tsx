@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useConvergenceSession, useMyPendingFrictionSessions, useTeamFrictionSessions } from '../../hooks/useConvergenceSession'
 import { useMyPersonalGuides } from '../../hooks/usePersonalGuides'
 import { PendingFrictionBanners } from '../../components/session/PendingFrictionBanners'
+import { PersonalGuideBanners } from '../../components/session/PersonalGuideBanners'
 import { Card } from '../../components/shared/Card'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
@@ -129,7 +130,7 @@ function PersonalGuideRow({ teamId, guide, isLast }: { teamId: string | undefine
       <div className="min-w-0 flex-1">
         <div className="mb-1.5 flex flex-wrap items-center gap-2">
           <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-text-muted)' }}>
-            Prepared a conversation
+            {guide.conversation_had_at ? 'Had this conversation' : 'Prepared a conversation'}
           </span>
           <span className="h-[3px] w-[3px] rounded-full" style={{ background: 'var(--color-eol-border-strong)' }} />
           <span className="text-[12px]" style={{ color: 'var(--color-eol-text-faint)' }}>
@@ -169,7 +170,12 @@ export default function FrictionHubPage() {
     <>
       <PageHeader eyebrow="Unlearn" title="Unlearn" subline="Unlearning is the art of processing friction and building capacity to try new things." />
       <div className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-10">
-        <PendingFrictionBanners teamId={teamId} />
+        {(pending?.length || guides?.some((g) => !g.conversation_had_at)) ? (
+          <div className="flex flex-col gap-2">
+            <PersonalGuideBanners teamId={teamId} />
+            <PendingFrictionBanners teamId={teamId} />
+          </div>
+        ) : null}
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-end justify-between gap-3">

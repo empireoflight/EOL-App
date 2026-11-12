@@ -48,3 +48,20 @@ export function useDeletePersonalGuide(teamId: string | undefined) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['personal-friction-guides', teamId] }),
   })
 }
+
+// "I've had this conversation": stops the guide being pinned on the Unlearn
+// page. The guide stays in their history.
+export function useMarkConversationHad(teamId: string | undefined) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (guideId: string) => {
+      if (!supabase) throw new Error('Not ready')
+      const { error } = await supabase.from('personal_friction_guides').update({ conversation_had_at: new Date().toISOString() }).eq('id', guideId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['personal-friction-guides', teamId] })
+      void queryClient.invalidateQueries({ queryKey: ['personal-friction-guide'] })
+    },
+  })
+}
