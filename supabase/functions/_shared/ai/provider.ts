@@ -9,7 +9,8 @@
 // from the server-side environment and must never be imported from `src/` —
 // bundling it into the Vite client would ship the key to the browser.
 
-import { VISION_VOICE_RULES, findAiSpeak } from './voice.ts'
+import { GUIDE_VOICE_RULES, VISION_VOICE_RULES, findAiSpeak } from './voice.ts'
+import { normalizePersonalGuide, PERSONAL_GUIDE_STEPS, type PersonalDiscussionGuide } from './personalGuide.ts'
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages'
 const ANTHROPIC_VERSION = '2023-06-01'
@@ -483,6 +484,68 @@ export async function generateFrictionDiscussionGuide(input: {
       },
     ],
   })
+}
+
+// ------------------------------------------------------------
+// generatePersonalDiscussionGuide — a framework for one person to use in a real
+// conversation about something that's bothering them. Built from what that
+// person chose to write for it (the situation plus their three authored
+// answers); their tier-0 grounding answers are never part of this. The five
+// steps are fixed in personalGuide.ts, and normalizePersonalGuide guarantees
+// them whatever the model returns; the model only fills in the guidance and
+// example lines. Same "notice, don't diagnose" stance as the group guide, with
+// one more rule: it never asserts what the other person thinks or intends,
+// because the person using this guide has only told us their own side.
+// ------------------------------------------------------------
+export async function generatePersonalDiscussionGuide(input: {
+  topic: string
+  frictionType: string | null
+  answers: { problem_summary: string; hopes: string; what_matters: string }
+}): Promise<PersonalDiscussionGuide> {
+  const generate = async (revision?: Revision<PersonalDiscussionGuide>): Promise<PersonalDiscussionGuide> => {
+    const raw = await callAnthropicForJson<unknown>({
+      model: MODELS.synthesis,
+      system: FRAMEWORK_SYSTEM_PROMPT,
+      maxTokens: 4096,
+      messages: [
+        {
+          role: 'user',
+          content:
+            `Someone wants to have a conversation with another person (or a few people) about something ` +
+            `that's causing friction, and asked for a guide to it. Here is what they wrote, in their own words.\n\n` +
+            `The situation: ${input.topic}\n` +
+            (input.frictionType ? `The kind of friction they chose: ${input.frictionType}\n` : '') +
+            `How they'd summarize the problem: ${input.answers.problem_summary}\n` +
+            `What they hope the conversation creates: ${input.answers.hopes}\n` +
+            `What matters most to them going forward: ${input.answers.what_matters}\n\n` +
+            `${GUIDE_VOICE_RULES}\n\n` +
+            `Write the guide for them to use. The conversation has this fixed shape, and you fill in each part:\n` +
+            PERSONAL_GUIDE_STEPS.map((step, i) => `${i + 1}. id "${step.id}": ${step.title}`).join('\n') +
+            `\n\nContent for each part:\n` +
+            `- "summary": two or three sentences on what this person wants out of the conversation, in their words.\n` +
+            `- "opener": one or two sentences they could say to ask for the conversation. It asks, it doesn't announce or blame.\n` +
+            `- "share": guidance in one or two sentences, then 3-5 lines they could say, in the first person, drawn from their ` +
+            `situation, hopes, and what matters to them. Describe what they experienced and what they need. No accusations.\n` +
+            `- "reflect_back": guidance, then 2-3 lines for asking the other person to say back what they heard, plus a line for ` +
+            `how to respond (what matches, what to add).\n` +
+            `- "their_turn": guidance on listening, then 3-4 open, curious questions that invite the other person's view.\n` +
+            `- "common_ground": guidance, then 2-3 questions or statements for finding what they both want, drawing on what matters to this person.\n` +
+            `- "resolution": guidance, then 2-4 lines for agreeing on one or two concrete next steps and when to check back in.\n\n` +
+            `Rules. Notice, don't diagnose: never state or guess what the other person thinks, feels, or intends, because you only ` +
+            `have this person's side. Use "I" statements. Refer to the other person as "they" or "them" unless this person used a name, ` +
+            `in which case use it as written. If what they wrote sounds like harassment, discrimination, or a safety concern, say in ` +
+            `"summary" that a direct conversation may not be the right first step and that getting support from someone appropriate ` +
+            `could come first, and keep the rest of the guide gentle.\n\n` +
+            `Respond as JSON: {"summary": string, "opener": string, "steps": [{"id": string, "guidance": string, "prompts": string[]}, ...]} ` +
+            `with one entry per id above, in that order. No other text.` +
+            revisionNote(revision),
+        },
+      ],
+    })
+    return normalizePersonalGuide(raw)
+  }
+
+  return withVoiceCheck(generate, (guide) => [guide.summary, guide.opener, ...guide.steps.flatMap((s) => [s.guidance, ...s.prompts])].filter(Boolean))
 }
 
 // ------------------------------------------------------------

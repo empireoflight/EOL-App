@@ -15,6 +15,8 @@ describe('findAiSpeak', () => {
     ['A journey toward a more vibrant neighborhood.', 'journey'],
     ['Room for kids, not around them.', ', not around them'],
     ['Kids folded into it, not off to the side.', ', not off to the side'],
+    ["This isn't about agreement yet, just making sure it landed.", 'just making sure'],
+    ['No accusations, just your experience.', 'just your experience'],
   ])('flags: %s', (text, expected) => {
     const hits = findAiSpeak(text)
     expect(hits.length).toBeGreaterThan(0)
@@ -27,6 +29,8 @@ describe('findAiSpeak', () => {
     'A standing Tuesday dinner. You show up if you can.',
     'Newcomers feel at home on the first visit.',
     'Most people want something small and regular.',
+    'Say what you noticed, and ask what they saw.',
+    'I just want to understand how decisions get made.',
   ])('leaves plain, specific writing alone: %s', (text) => {
     expect(findAiSpeak(text)).toEqual([])
   })
