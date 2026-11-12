@@ -1,6 +1,5 @@
-import { Link } from 'react-router-dom'
 import { useMarkConversationHad, useMyPersonalGuides } from '../../hooks/usePersonalGuides'
-import { ActionBanner } from '../shared/ActionBanner'
+import { ActionBanner, BannerLink } from '../shared/ActionBanner'
 import { Button } from '../shared/Button'
 import type { PersonalFrictionGuide } from '../../lib/types'
 
@@ -19,9 +18,7 @@ function PersonalGuideBanner({ teamId, guide }: { teamId: string | undefined; gu
       }
       actions={
         <>
-          <Link to={`/teams/${teamId}/friction/guides/${guide.id}`} className="text-[13.5px] font-semibold" style={{ color: 'var(--color-eol-accent-label)' }}>
-            Open guide &rarr;
-          </Link>
+          <BannerLink to={`/teams/${teamId}/friction/guides/${guide.id}`}>Open guide &rarr;</BannerLink>
           <Button variant="secondary" onClick={() => markDone.mutate(guide.id)} loading={markDone.isPending} className="!py-2">
             I've had this conversation
           </Button>

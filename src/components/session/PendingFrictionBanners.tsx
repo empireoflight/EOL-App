@@ -1,7 +1,6 @@
-import { Link } from 'react-router-dom'
 import { useConvergenceSession, useMyPendingFrictionSessions } from '../../hooks/useConvergenceSession'
 import { useUserName } from '../../hooks/useUserName'
-import { ActionBanner } from '../shared/ActionBanner'
+import { ActionBanner, BannerLink } from '../shared/ActionBanner'
 import type { ConvergenceSession } from '../../lib/types'
 
 // One card per session this person still owes a submission to — see
@@ -21,9 +20,7 @@ function PendingFrictionBanner({ teamId, session }: { teamId: string | undefined
       title={topic || (initiatorName ? `Waiting on ${initiatorName} to describe it` : 'Waiting on the initiator to describe it')}
       detail={data ? `${data.submittedCount} of ${data.totalParticipants} collected` : undefined}
       actions={
-        <Link to={`/teams/${teamId}/friction/sessions/${session.id}/mitigate`} className="text-[13.5px] font-semibold" style={{ color: 'var(--color-eol-accent-label)' }}>
-          Answer it &rarr;
-        </Link>
+        <BannerLink to={`/teams/${teamId}/friction/sessions/${session.id}/mitigate`}>Answer it &rarr;</BannerLink>
       }
     />
   )

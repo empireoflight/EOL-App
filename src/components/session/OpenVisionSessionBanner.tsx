@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom'
 import { useMyPendingVisionSession, useOpenVisionSession } from '../../hooks/useConvergenceSession'
+import { ActionBanner, BannerLink } from '../shared/ActionBanner'
 
 // Either "you personally have a reflection to submit" (most actionable, so
 // checked first) or, failing that, "a session is already open" (so nobody
@@ -12,35 +12,21 @@ export function OpenVisionSessionBanner({ teamId }: { teamId: string | undefined
 
   if (pendingSession) {
     return (
-      <Link
-        to={`/teams/${teamId}/vision/sessions/${pendingSession.id}/reflect`}
-        className="flex items-center justify-between gap-3 rounded-2xl border p-4"
-        style={{ background: 'var(--color-tier2-bg)', borderColor: 'var(--color-eol-border)' }}
-      >
-        <div className="text-[13.5px] font-semibold" style={{ color: 'var(--color-tier2-fg)' }}>
-          You have a vision reflection to complete
-        </div>
-        <span className="shrink-0 text-[12.5px] font-semibold" style={{ color: 'var(--color-tier2-fg)' }}>
-          Submit it &rarr;
-        </span>
-      </Link>
+      <ActionBanner
+        eyebrow="Waiting on you"
+        title="You have a vision reflection to complete"
+        actions={<BannerLink to={`/teams/${teamId}/vision/sessions/${pendingSession.id}/reflect`}>Submit it &rarr;</BannerLink>}
+      />
     )
   }
 
   if (openSession) {
     return (
-      <Link
-        to={`/teams/${teamId}/vision`}
-        className="flex items-center justify-between gap-3 rounded-2xl border p-4"
-        style={{ background: 'var(--color-eol-surface)', borderColor: 'var(--color-eol-border)' }}
-      >
-        <div className="text-[13.5px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
-          Vision creation process is in progress
-        </div>
-        <span className="shrink-0 text-[12.5px] font-semibold" style={{ color: 'var(--color-eol-text-muted)' }}>
-          View status &rarr;
-        </span>
-      </Link>
+      <ActionBanner
+        eyebrow="In progress"
+        title="Vision creation process is in progress"
+        actions={<BannerLink to={`/teams/${teamId}/vision`}>View status &rarr;</BannerLink>}
+      />
     )
   }
 
