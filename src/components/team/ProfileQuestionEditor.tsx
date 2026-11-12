@@ -72,13 +72,13 @@ export function ProfileQuestionEditor({
     <div className="flex flex-col gap-3">
       <p className="m-0 text-[12.5px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
         Name and photo are always part of a profile. These questions are shared with the whole team on the Team page. Editing a question's wording keeps people's answers;
-        removing one hides them. Someone appears on the board once they've answered every required question, so new questions start as optional — making one
+        removing one hides them. Someone appears on the board once they've answered every required question, so new questions start as optional. Making one
         required hides anyone who hasn't answered it yet.
       </p>
 
       {questions.length === 0 && (
         <p className="m-0 text-[12.5px]" style={{ color: 'var(--color-eol-text-faint)' }}>
-          No questions — profiles will just be a name and photo.
+          No questions. Profiles will just be a name and photo.
         </p>
       )}
 

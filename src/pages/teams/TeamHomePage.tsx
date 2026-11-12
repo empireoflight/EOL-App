@@ -112,7 +112,7 @@ export default function TeamHomePage() {
           {!sessionAlreadyInFlight && (
             <Card>
               <p className="m-0 mb-4 text-[13.5px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-                Start a vision session to co-create what this team is building together — everything else in the cycle takes its shape from here.
+                Start a vision session to co-create what this team is building together. Everything else in the cycle takes its shape from here.
               </p>
               <Button onClick={() => navigate(`/teams/${teamId}/vision/start`)}>Start a vision session</Button>
             </Card>

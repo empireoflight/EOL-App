@@ -200,7 +200,7 @@ export default function TeamBoardPage() {
                   Pin yourself to the board
                 </div>
                 <p className="m-0 mt-0.5 text-[12.5px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-                  Answer a few questions and your teammates can find you — and you'll see who you're most likely to click with.
+                  Answer a few questions and your teammates can find you. You'll also see who you're most likely to click with.
                 </p>
               </div>
               <Link to={`/teams/${teamId}/profile`} className="rounded-[10px] px-4 py-2.5 text-[13px] font-semibold" style={{ background: 'var(--color-eol-cta)', color: 'var(--color-eol-cta-ink)' }}>
@@ -236,7 +236,7 @@ export default function TeamBoardPage() {
         >
           {ordered.length === 0 ? (
             <p className="m-0 py-10 text-center text-[13.5px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-              The board's empty — be the first to pin something up.
+              The board's empty. Be the first to pin something up.
             </p>
           ) : (
             <div className="grid items-start gap-x-7 gap-y-9 sm:grid-cols-2 xl:grid-cols-3">
@@ -257,9 +257,9 @@ export default function TeamBoardPage() {
 
         {complete.length === 1 && iAmOnBoard && (
           <p className="m-0 text-center text-[12.5px]" style={{ color: 'var(--color-eol-text-faint)' }}>
-            You're the first one here —{' '}
+            You're the first one here.{' '}
             <Link to={`/teams/${teamId}/invite`} className="font-semibold" style={{ color: 'var(--color-eol-accent-label)' }}>
-              invite your teammates
+              Invite your teammates
             </Link>{' '}
             to fill up the board.
           </p>

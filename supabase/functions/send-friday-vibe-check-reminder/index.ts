@@ -100,7 +100,7 @@ Deno.serve(async (req: Request) => {
           appBaseUrl,
           preheader: `A minute or two to say how this week went on ${team.name}.`,
           heading: 'How was your week?',
-          bodyHtml: `<p style="margin:0;">Take a minute to share how this week went on <strong style="color:#271d17;">${team.name}</strong> — what gave you energy, what drained it, and how you're doing overall.</p>`,
+          bodyHtml: `<p style="margin:0;">Take a minute to share how this week went on <strong style="color:#271d17;">${team.name}</strong>: what gave you energy, what drained it, and how you're doing overall.</p>`,
           ctaLabel: 'Do the vibe check',
           ctaUrl,
         }),

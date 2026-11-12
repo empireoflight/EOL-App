@@ -64,7 +64,7 @@ Deno.serve(async (req: Request) => {
     <p style="margin:0 0 4px 0;"><strong style="color:#271d17;">${initiatorName}</strong> raised something about:</p>
     <p style="margin:0 0 10px 0;color:#271d17;">${topic ?? 'something on their mind'}</p>
     ${frictionType ? renderChip(frictionType) : ''}
-    <p style="margin:16px 0 0 0;">This starts private for each person — nothing is shared until everyone's processed it on their own.</p>
+    <p style="margin:16px 0 0 0;">This starts private for each person. Nothing is shared until everyone's processed it on their own.</p>
   `
 
   const results = await Promise.allSettled(

@@ -30,7 +30,7 @@ export function TeamBoardTile({ teamId }: { teamId: string }) {
       ? 'Be the first to pin a profile to the board.'
       : iAmOnBoard
         ? `${complete.length} of ${members.length} teammates are on the board.`
-        : `${complete.length} of ${members.length} teammates are on the board — add yours.`
+        : `${complete.length} of ${members.length} teammates are on the board. Add yours.`
 
   return (
     <ActionBanner

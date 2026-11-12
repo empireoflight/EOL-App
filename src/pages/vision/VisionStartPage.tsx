@@ -181,7 +181,7 @@ export default function VisionStartPage() {
               }}
               className="flex flex-col gap-4"
             >
-              <Input label="Scope — this team / project / product" required value={scope} onChange={(e) => setScope(e.target.value)} placeholder="This team" />
+              <Input label="Scope (this team / project / product)" required value={scope} onChange={(e) => setScope(e.target.value)} placeholder="This team" />
               <label className="flex flex-col gap-1.5 text-left">
                 <span className="text-[11px] font-medium" style={{ color: 'var(--color-eol-text-muted)' }}>
                   Time horizon
@@ -223,7 +223,7 @@ export default function VisionStartPage() {
         <PageHeader
           eyebrow="Reimagine · Start a vision"
           title="Review the questions"
-          subline="These are what everyone will answer. Edit, reorder, remove, or add your own — this set is locked in once the session starts."
+          subline="These are what everyone will answer. Edit, reorder, remove, or add your own. This set is locked in once the session starts."
         />
         <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
           {error && (
@@ -288,7 +288,7 @@ export default function VisionStartPage() {
       <PageHeader
         eyebrow="Reimagine · Start a vision"
         title="Who's doing this with you?"
-        subline="The session's set up. Invite the people you're building with, or continue on your own for now — you can always invite people later."
+        subline="The session's set up. Invite the people you're building with, or continue on your own for now. You can always invite people later."
       />
       <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
         <TeamInvitePanel teamId={teamId} />

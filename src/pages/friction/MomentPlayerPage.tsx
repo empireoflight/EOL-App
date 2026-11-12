@@ -287,7 +287,7 @@ function BinauralBeatsMoment({ durationSec, onClose }: { durationSec: number; on
         Deep focus
       </div>
       <div className="text-[14.5px]" style={{ color: 'rgba(253,250,244,.6)' }}>
-        Headphones needed — the effect depends on two ears
+        Headphones needed. The effect depends on two ears
       </div>
       <div className="flex items-center gap-2.5">
         {(Object.keys(BEATS) as (keyof typeof BEATS)[]).map((key) => (
@@ -342,6 +342,27 @@ function DanceMomentMoment({ onClose }: { onClose: () => void }) {
       </div>
       <div className="max-w-[420px] text-[14.5px] leading-relaxed" style={{ color: 'rgba(253,250,244,.6)' }}>
         Start playing it wherever you like and dance however you want. Nobody is watching. Nobody is scoring this.
+      </div>
+    </DarkTimedShell>
+  )
+}
+
+function ScreamItOutMoment({ onClose }: { onClose: () => void }) {
+  return (
+    <DarkTimedShell
+      title="Scream it out"
+      onClose={onClose}
+      footer={
+        <button type="button" style={darkPillButton('solid')} onClick={onClose}>
+          I'm done
+        </button>
+      }
+    >
+      <div className="text-[26px] font-semibold" style={{ color: '#FBF7F2', fontFamily: 'var(--font-display)' }}>
+        Get in your car
+      </div>
+      <div className="max-w-[420px] text-[14.5px] leading-relaxed" style={{ color: 'rgba(253,250,244,.6)' }}>
+        Start driving somewhere, and scream as loud as you can.
       </div>
     </DarkTimedShell>
   )
@@ -426,7 +447,7 @@ function FreeFormArtMoment({ onClose }: { onClose: () => void }) {
             Grab a piece of paper and something to draw with.
           </div>
           <p className="m-0 mt-2 text-[14.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
-            A pen, a marker, a pencil — whatever is closest. Then make some art.
+            A pen, a marker, a pencil, whatever is closest. Then make some art.
           </p>
         </div>
         <div className="flex flex-col gap-1.5">
@@ -472,6 +493,8 @@ export default function MomentPlayerPage() {
       return <BinauralBeatsMoment durationSec={moment.durationSec as number} onClose={onClose} />
     case 'dance-moment':
       return <DanceMomentMoment onClose={onClose} />
+    case 'scream-it-out':
+      return <ScreamItOutMoment onClose={onClose} />
     case 'shake-it-off':
       return <ShakeItOffMoment durationSec={moment.durationSec as number} onClose={onClose} />
     case 'forest-bathing':

@@ -32,7 +32,7 @@ export function getVisionQuestions(horizon: string | null | undefined = '12 mont
       prompt: horizon ? `What does it feel like to be on this team, ${horizon} from now?` : 'What does it feel like to be on this team, now that this has come true?',
     },
     { id: 'negative_space', prompt: "What's gone that's here today? (a meeting, a tension, a way of working, a feeling)" },
-    { id: 'anchors', prompt: "What matters most about how we get there — what wouldn't you trade away even for a better outcome?" },
+    { id: 'anchors', prompt: "What matters most about how we get there? What wouldn't you trade away even for a better outcome?" },
   ]
 }
 

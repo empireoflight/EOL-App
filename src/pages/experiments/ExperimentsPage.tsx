@@ -300,7 +300,7 @@ export default function ExperimentsPage() {
       <PageHeader
         eyebrow="Do · Tasks & experiments"
         title="Bring the vision to life"
-        subline="Track what's moving the vision forward — quick actions, and experiments that trace back to a pillar."
+        subline="Track what's moving the vision forward: quick actions, and experiments that trace back to a pillar."
       />
       <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-6 py-10">
       <div className="flex gap-2">

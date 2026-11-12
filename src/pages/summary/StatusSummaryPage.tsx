@@ -146,7 +146,7 @@ export default function StatusSummaryPage() {
   const vibeAvgValue = vibeAvg?.value as { avg?: number } | undefined
 
   const handleCopy = async () => {
-    const lines: string[] = [`Status summary — ${formatDate(new Date().toISOString().slice(0, 10))}`]
+    const lines: string[] = [`Status summary: ${formatDate(new Date().toISOString().slice(0, 10))}`]
 
     if (showVision) {
       lines.push('', 'VISION' + (vision!.status === 'pending_commitment' ? ' (pending commitment)' : ' (committed)'))
@@ -199,7 +199,7 @@ export default function StatusSummaryPage() {
     <>
       <PageHeader
         title="Status summary"
-        subline={`A snapshot to share — as of ${formatDate(new Date().toISOString().slice(0, 10))}.`}
+        subline={`A snapshot to share, as of ${formatDate(new Date().toISOString().slice(0, 10))}.`}
         actions={
           <>
             <Button variant="ghost-on-dark" onClick={() => void handleCopy()}>
@@ -378,7 +378,7 @@ export default function StatusSummaryPage() {
         <Card>
           {!vibeNarrative && !vibeAvg ? (
             <p className="m-0 text-[13px]" style={{ color: 'var(--color-eol-text-faint)' }}>
-              No rollup generated yet — visit Evolve to generate one.
+              No rollup generated yet. Visit Evolve to generate one.
             </p>
           ) : (
             <div className="flex flex-col gap-2">

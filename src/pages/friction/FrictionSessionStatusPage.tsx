@@ -241,7 +241,7 @@ export default function FrictionSessionStatusPage() {
             <TierBadge tier={4} />
           </div>
           <p className="m-0 text-[12px]" style={{ color: 'var(--color-eol-text-faint)' }}>
-            Everyone else: just listen for now — hold your response until it's your turn.
+            Everyone else: just listen for now. Hold your response until it's your turn.
           </p>
           {initiatorResponse ? (
             <ResponseCard response={initiatorResponse} name={nameFor(initiatorResponse.user_id)} />
@@ -323,7 +323,7 @@ export default function FrictionSessionStatusPage() {
               </div>
             ) : session.status === 'discussed' ? (
               <p className="m-0 text-[13px] font-medium" style={{ color: 'var(--color-eol-text)' }}>
-                This has been talked through — nice work.
+                This has been talked through. Nice work.
               </p>
             ) : (
               <div className="flex flex-col gap-3">

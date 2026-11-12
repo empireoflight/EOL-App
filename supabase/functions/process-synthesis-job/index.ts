@@ -40,7 +40,7 @@ function defaultVisionQuestions(horizon: string | null): { id: string; prompt: s
       prompt: horizon ? `What does it feel like to be on this team, ${horizon} from now?` : 'What does it feel like to be on this team, now that this has come true?',
     },
     { id: 'negative_space', prompt: "What's gone that's here today? (a meeting, a tension, a way of working, a feeling)" },
-    { id: 'anchors', prompt: "What matters most about how we get there — what wouldn't you trade away even for a better outcome?" },
+    { id: 'anchors', prompt: "What matters most about how we get there? What wouldn't you trade away even for a better outcome?" },
   ]
 }
 
@@ -141,7 +141,7 @@ Deno.serve(async (req: Request) => {
       // overwrite it just because a late reflection or a re-triggered job
       // came in. Revising a committed vision means starting a new session.
       if (existingVision?.status === 'committed') {
-        throw new Error('this vision has already been committed — start a new vision session to revise it')
+        throw new Error('this vision has already been committed. Start a new vision session to revise it')
       }
 
       if (existingVision) {

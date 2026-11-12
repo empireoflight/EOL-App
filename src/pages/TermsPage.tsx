@@ -13,8 +13,8 @@ const SECTIONS: { heading: string; body: string[] }[] = [
   {
     heading: '2. What the Service Is',
     body: [
-      'Empire of Light is a collaboration platform that helps teams build a shared vision, take action toward it, process friction and disagreement, and reflect on progress together — a four-part cycle we call Reimagine, Do, Unlearn, and Evolve. The Service includes features for vision co-creation, task tracking, friction processing, weekly check-ins, and AI-assisted synthesis of team input.',
-      'How we handle the content you and your team create — including which content is private, which is shared, and which is anonymized — is governed by our Privacy Policy, not these Terms. Read that policy; it’s the more important document for understanding what happens to what you write.',
+      'Empire of Light is a collaboration platform that helps teams build a shared vision, take action toward it, process friction and disagreement, and reflect on progress together. This is a four-part cycle we call Reimagine, Do, Unlearn, and Evolve. The Service includes features for vision co-creation, task tracking, friction processing, weekly check-ins, and AI-assisted synthesis of team input.',
+      'How we handle the content you and your team create, including which content is private, which is shared, and which is anonymized, is governed by our Privacy Policy, not these Terms. Read that policy; it’s the more important document for understanding what happens to what you write.',
     ],
   },
   {
@@ -41,20 +41,20 @@ const SECTIONS: { heading: string; body: string[] }[] = [
   {
     heading: '6. Your Content',
     body: [
-      'You retain ownership of the content you create in the Service — your vision reflections, friction descriptions, task updates, and everything else you write. By submitting content, you grant us a limited license to store, process, and display that content as necessary to operate the Service, exactly as described in our Privacy Policy, including, where applicable, using it to generate anonymized aggregates or AI-assisted synthesis.',
+      'You retain ownership of the content you create in the Service. That includes your vision reflections, friction descriptions, task updates, and everything else you write. By submitting content, you grant us a limited license to store, process, and display that content as necessary to operate the Service, exactly as described in our Privacy Policy, including, where applicable, using it to generate anonymized aggregates or AI-assisted synthesis.',
       "You're responsible for the content you submit. Don't submit anything you don't have the right to share, or that violates someone else's privacy or intellectual property rights.",
     ],
   },
   {
     heading: '7. AI-Generated Content',
     body: [
-      'Some features of the Service use AI (currently, models provided by Anthropic) to synthesize input from you and your team — for example, generating a draft vision layout, an alignment summary, or a friction discussion guide. AI-generated content is a starting point for your team to review, edit, and discuss, not a final or authoritative output. We don’t guarantee the accuracy, completeness, or appropriateness of AI-generated content, and you’re responsible for reviewing it before relying on it.',
+      'Some features of the Service use AI (currently, models provided by Anthropic) to synthesize input from you and your team. Examples include generating a draft vision layout, an alignment summary, or a friction discussion guide. AI-generated content is a starting point for your team to review, edit, and discuss, not a final or authoritative output. We don’t guarantee the accuracy, completeness, or appropriateness of AI-generated content, and you’re responsible for reviewing it before relying on it.',
     ],
   },
   {
     heading: '8. Intellectual Property',
     body: [
-      'The Service itself — including its design, features, and underlying software — is owned by us or our licensors and is protected by intellectual property law. These Terms don’t grant you any rights to our trademarks, logos, or branding beyond what’s necessary to use the Service as intended.',
+      'The Service itself, including its design, features, and underlying software, is owned by us or our licensors and is protected by intellectual property law. These Terms don’t grant you any rights to our trademarks, logos, or branding beyond what’s necessary to use the Service as intended.',
     ],
   },
   {

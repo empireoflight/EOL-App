@@ -37,7 +37,7 @@ export function SoloRollup({ teamId }: { teamId: string }) {
       <PageHeader
         eyebrow="Evolve"
         title="What are you learning?"
-        subline="Your own weekly rhythm — vibe, tasks completed, and friction processed. All of it worth celebrating."
+        subline="Your own weekly rhythm: vibe, tasks completed, and friction processed. All of it worth celebrating."
       />
       <div className="mx-auto flex max-w-2xl flex-col gap-5 px-6 py-10">
       <WeeklyMetricsChart

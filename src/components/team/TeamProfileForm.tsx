@@ -55,7 +55,7 @@ export function TeamProfileForm({
 
       {questions.length === 0 ? (
         <p className="m-0 text-[12.5px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-          Your team's profile is just a name and photo — no questions to answer.
+          Your team's profile is just a name and photo. No questions to answer.
         </p>
       ) : (
         questions.map((q) => (
@@ -81,7 +81,7 @@ export function TeamProfileForm({
         </Button>
         {save.isSuccess && (
           <Link to={`/teams/${teamId}/team`} className="text-[12.5px] font-semibold" style={{ color: 'var(--color-eol-accent-label)' }}>
-            Saved — see the Team board &rarr;
+            Saved. See the Team board &rarr;
           </Link>
         )}
         {!complete && (

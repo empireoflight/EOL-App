@@ -99,7 +99,7 @@ export default function FrictionStartPage() {
       <PageHeader
         eyebrow="Unlearn · Raise something"
         title="Who's this affecting?"
-        subline="Ground yourself first either way — bring in specific people, the whole team, or just process this on your own."
+        subline="Ground yourself first either way. Bring in specific people, the whole team, or just process this on your own."
       />
       <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
       <Card>
@@ -119,7 +119,7 @@ export default function FrictionStartPage() {
             <div className="flex items-center gap-2">
               <TierBadge tier={0} />
               <span className="text-[11px]" style={{ color: 'var(--color-eol-text-faint)' }}>
-                Never sent anywhere — just for you
+                Never sent anywhere. Just for you
               </span>
             </div>
           ) : (

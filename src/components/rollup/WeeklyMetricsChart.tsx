@@ -81,7 +81,7 @@ export function WeeklyMetricsChart({ vibePoints, taskCounts, frictionCounts, sel
     return (
       <Card>
         <p className="m-0 text-[12px]" style={{ color: 'var(--color-eol-text-faint)' }}>
-          No activity yet — energy, tasks, and friction will show up here once there's a week of data.
+          No activity yet. Energy, tasks, and friction will show up here once there's a week of data.
         </p>
       </Card>
     )

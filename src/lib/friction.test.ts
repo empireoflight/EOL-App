@@ -28,6 +28,7 @@ describe('grounding moments', () => {
     expect(GROUNDING_MOMENTS.map((m) => m.id)).toEqual([
       'breathing',
       'dance-moment',
+      'scream-it-out',
       'free-form-art',
       'forest-bathing',
       'walk-no-goal',
@@ -52,6 +53,13 @@ describe('grounding moments', () => {
     const dance = findMoment('dance-moment')
     expect(dance?.durationSec).toBeNull()
     expect(dance?.shell).toBe('untimed-dark')
+  })
+
+  it('has a Scream it out tile that is untimed and about driving', () => {
+    const scream = findMoment('scream-it-out')
+    expect(scream?.name).toBe('Scream it out')
+    expect(scream?.blurb).toBe('Get in your car. Start driving somewhere, and scream as loud as you can.')
+    expect(scream?.durationSec).toBeNull()
   })
 
   it('keeps untimed moments out of the time filters but in "any time"', () => {

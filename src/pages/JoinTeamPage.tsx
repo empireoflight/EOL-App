@@ -62,7 +62,7 @@ export default function JoinTeamPage() {
         {!preview ? (
           <Card>
             <p className="m-0 text-[13.5px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-              This invite link isn't valid — it may have been revoked or replaced.
+              This invite link isn't valid. It may have been revoked or replaced.
             </p>
           </Card>
         ) : (

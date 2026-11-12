@@ -60,7 +60,7 @@ export default function InviteLandingPage() {
         {!invite ? (
           <Card>
             <p className="m-0 text-[13.5px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-              This invite link isn't valid — it may have already been used.
+              This invite link isn't valid. It may have already been used.
             </p>
           </Card>
         ) : (

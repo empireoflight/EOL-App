@@ -140,7 +140,7 @@ export function TeamRollup({ teamId }: { teamId: string }) {
         setNotice(weeksToGenerate[0] === getWeekStart() ? 'Needs at least 3 people checked in this week.' : 'Needs at least 3 people checked in that week.')
       } else if (skipped > 0 || failed > 0) {
         const parts = [`Generated ${succeeded} rollup${succeeded === 1 ? '' : 's'}.`]
-        if (skipped > 0) parts.push(`${skipped} week${skipped === 1 ? '' : 's'} skipped — not enough check-ins.`)
+        if (skipped > 0) parts.push(`${skipped} week${skipped === 1 ? '' : 's'} skipped. Not enough check-ins.`)
         if (failed > 0) parts.push(`${failed} week${failed === 1 ? '' : 's'} failed to generate.`)
         setNotice(parts.join(' '))
       }

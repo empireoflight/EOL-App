@@ -92,7 +92,7 @@ export function TeamInvitePanel({ teamId }: { teamId: string }) {
             Or share an invite link
           </div>
           <p className="m-0 mb-3 text-[12.5px]" style={{ color: 'var(--color-eol-text-faint)' }}>
-            Anyone with this link can join the team — no need to know their email up front.
+            Anyone with this link can join the team. No need to know their email up front.
           </p>
           {inviteLink ? (
             <div className="flex items-center gap-2">

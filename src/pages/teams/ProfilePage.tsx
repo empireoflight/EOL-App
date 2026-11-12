@@ -62,13 +62,13 @@ export default function ProfilePage() {
     e.target.value = ''
     if (!file || !supabase || !user) return
     if (file.size > MAX_AVATAR_BYTES) {
-      setError('That image is too large — please pick one under 5MB.')
+      setError('That image is too large. Please pick one under 5MB.')
       return
     }
     const ext = ALLOWED_AVATAR_TYPES[file.type]
     if (!ext) {
       setError(
-        "That photo format isn't supported here — please use a JPG or PNG. (HEIC photos from iPhone or Mac need to be converted first — most photo apps have an \"Export as JPEG\" option.)"
+        "That photo format isn't supported here. Please use a JPG or PNG. (HEIC photos from iPhone or Mac need to be converted first. Most photo apps have an \"Export as JPEG\" option.)"
       )
       return
     }
@@ -187,7 +187,7 @@ export default function ProfilePage() {
               Email notifications
             </div>
             <p className="m-0 mt-0.5 text-[12px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-              Reminders and status updates — you'll always be emailed about a direct invite regardless of this setting.
+              Reminders and status updates. You'll always be emailed about a direct invite regardless of this setting.
             </p>
           </div>
           <span

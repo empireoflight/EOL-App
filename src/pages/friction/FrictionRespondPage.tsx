@@ -111,7 +111,7 @@ export default function FrictionRespondPage() {
       <PageHeader
         eyebrow="Unlearn · Your point of view"
         title="Your point of view"
-        subline="These answers will be shared, once everyone has submitted theirs — never before."
+        subline="These answers will be shared, once everyone has submitted theirs, never before."
       />
       <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
       <FrictionTopicSummary sessionId={sessionId} />
@@ -127,7 +127,7 @@ export default function FrictionRespondPage() {
           <div className="flex flex-col gap-4">
             <Textarea
               label="Describe the situation"
-              hint="Describe the situation neutrally — e.g. 'how we make decisions in standup,' not who did what. Naming someone here colors every answer that follows."
+              hint="Describe the situation neutrally, e.g. 'how we make decisions in standup,' not who did what. Naming someone here colors every answer that follows."
               required
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
@@ -137,7 +137,7 @@ export default function FrictionRespondPage() {
                 className="rounded-lg border px-3 py-2 text-[12px]"
                 style={{ borderColor: 'var(--color-tier2-dot)', color: 'var(--color-tier2-fg)', background: 'var(--color-tier2-bg)' }}
               >
-                This mentions a teammate by name — consider rephrasing around the situation instead, so their answers
+                This mentions a teammate by name. Consider rephrasing around the situation instead, so their answers
                 aren't shaped by feeling called out.
               </div>
             )}

@@ -105,7 +105,7 @@ export default function VisionReflectPage() {
       <PageHeader
         eyebrow="Reimagine · Your reflection"
         title="Your reflection"
-        subline="Your answers will be visible to your teammates once submitted, alongside the synthesized summary — that's what gives the vision its texture."
+        subline="Your answers will be visible to your teammates once submitted, alongside the synthesized summary. That's what gives the vision its texture."
       />
       <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
         <VisionFramingSummary sessionId={sessionId} />

@@ -1,5 +1,5 @@
-// The nine "Create space" moments (Unlearn hub redesign, Turn 3 of the
-// design file). Collapse into three reusable shells rather than nine
+// The "Create space" moments (Unlearn hub redesign, Turn 3 of the
+// design file). Collapse into three reusable shells rather than
 // bespoke pages — `shell` picks which one renders; everything else is
 // per-moment content the shell doesn't need to know about.
 export type MomentCategory = 'timed-dark' | 'untimed-dark' | 'timed-paper' | 'untimed-paper'
@@ -33,6 +33,15 @@ export const GROUNDING_MOMENTS: GroundingMoment[] = [
     durationSec: null,
     meta: 'Any time',
     blurb: 'Put on a song you love and dance it out',
+    outside: false,
+  },
+  {
+    id: 'scream-it-out',
+    name: 'Scream it out',
+    shell: 'untimed-dark',
+    durationSec: null,
+    meta: 'Any time',
+    blurb: 'Get in your car. Start driving somewhere, and scream as loud as you can.',
     outside: false,
   },
   {

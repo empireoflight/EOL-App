@@ -80,7 +80,7 @@ export function ArtifactsSection({ teamId, visionId, experimentId }: { teamId: s
     e.target.value = ''
     if (!file || !supabase || !user) return
     if (file.size > MAX_ARTIFACT_BYTES) {
-      setError('That file is too large — please pick one under 25MB.')
+      setError('That file is too large. Please pick one under 25MB.')
       return
     }
     setUploading(true)

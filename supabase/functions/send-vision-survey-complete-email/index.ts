@@ -56,7 +56,7 @@ Deno.serve(async (req: Request) => {
 
   await sendEmail({
     to: facilitator.email,
-    subject: `${envSubjectPrefix()}Everyone's answered — ${teamName}'s vision guide is ready to generate`,
+    subject: `${envSubjectPrefix()}Everyone's answered. ${teamName}'s vision guide is ready to generate`,
     html: renderEmail({
       appBaseUrl,
       preheader: `Everyone on ${teamName} has submitted their vision reflection.`,

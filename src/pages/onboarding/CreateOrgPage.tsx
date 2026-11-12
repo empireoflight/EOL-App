@@ -53,7 +53,7 @@ export default function CreateOrgPage() {
     } catch (err) {
       if (isStaleSessionError(err)) {
         setStaleSession(true)
-        setError('Your session is out of date — sign out and sign back in to fix this.')
+        setError('Your session is out of date. Sign out and sign back in to fix this.')
       } else {
         setError(err instanceof Error ? err.message : "Couldn't create your team.")
       }
@@ -68,7 +68,7 @@ export default function CreateOrgPage() {
       titleSize={26}
       subline={
         mode === 'solo'
-          ? 'A private space just for you — clarify your own vision, run your own tasks and weekly check-ins, and process friction on your own terms. You can invite others any time.'
+          ? 'A private space just for you. Clarify your own vision, run your own tasks and weekly check-ins, and process friction on your own terms. You can invite others any time.'
           : 'This creates your organization and your first pilot team together.'
       }
     >

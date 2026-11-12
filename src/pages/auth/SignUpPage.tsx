@@ -49,7 +49,7 @@ export default function SignUpPage() {
         <div className="rounded-2xl border p-6 text-center" style={{ background: 'var(--color-eol-surface)', borderColor: 'var(--color-eol-border)' }}>
           <p className="m-0 text-[13.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
             We sent a confirmation link to <strong>{form.email}</strong>. Click it to finish setting up your
-            account — you'll land right back here, signed in.
+            account. You'll land right back here, signed in.
           </p>
         </div>
       </AuthShell>

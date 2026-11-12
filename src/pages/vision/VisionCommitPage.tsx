@@ -27,7 +27,7 @@ export default function VisionCommitPage() {
         <div className="mx-auto flex max-w-xl flex-col gap-4 px-6 py-10">
           <Card>
             <p className="m-0 text-[13.5px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-              This vision hasn't been sent for approval yet — it's still an editable draft on the Reimagine tab.
+              This vision hasn't been sent for approval yet. It's still an editable draft on the Reimagine tab.
             </p>
           </Card>
         </div>
@@ -47,7 +47,7 @@ export default function VisionCommitPage() {
         title={isCommitted ? 'This vision is committed' : "Here's what we're committing to"}
         subline={
           isCommitted
-            ? "Everyone signed on — it's now the shared reference point for tasks, check-ins, and the cycle ahead."
+            ? "Everyone signed on. It's now the shared reference point for tasks, check-ins, and the cycle ahead."
             : 'Once everyone commits, this vision becomes the shared reference point for tasks, check-ins, and the cycle ahead.'
         }
         actions={<TierBadge tier={4} />}

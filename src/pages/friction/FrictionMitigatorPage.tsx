@@ -120,7 +120,7 @@ export default function FrictionMitigatorPage() {
           </h1>
           <p className="m-0 mt-1.5 text-[13.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
             Whoever brought you into this is still grounding themselves and describing what it's about. Check back in
-            a bit — there's nothing for you to do here until they have.
+            a bit. There's nothing for you to do here until they have.
           </p>
         </div>
         <Button onClick={handleExit} variant="secondary" className="w-full">
@@ -171,7 +171,7 @@ export default function FrictionMitigatorPage() {
             Nice work
           </h1>
           <p className="m-0 mt-1.5 text-[13.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
-            That's counted toward this week's friction processed — the answers themselves were never sent anywhere.
+            That's counted toward this week's friction processed. The answers themselves were never sent anywhere.
           </p>
         </div>
         <Button onClick={() => navigate(`/teams/${teamId}/friction`)} className="w-full">
@@ -196,7 +196,7 @@ export default function FrictionMitigatorPage() {
             <span className="font-semibold" style={{ color: 'var(--color-eol-text)' }}>
               {otherParticipantNames.join(', ')}
             </span>
-            . Ground yourself first — you'll describe what it's about next.
+            . Ground yourself first. You'll describe what it's about next.
           </p>
         </Card>
       )}
@@ -228,7 +228,7 @@ export default function FrictionMitigatorPage() {
             />
           </div>
           <p className="m-0 max-w-xs text-center text-[13.5px] leading-relaxed" style={{ color: 'var(--color-eol-on-dark-muted)' }}>
-            Take three slow breaths before we start. There's no rush — this space is just for you right now.
+            Take three slow breaths before we start. There's no rush. This space is just for you right now.
           </p>
         </div>
       )}
@@ -250,8 +250,8 @@ export default function FrictionMitigatorPage() {
       </Card>
 
       <p className="m-0 text-[11.5px]" style={{ color: isGrounding ? 'var(--color-eol-on-dark-faint)' : 'var(--color-eol-text-faint)' }}>
-        This stays on your device. It is never sent anywhere, never saved to any server, and no one — including your
-        team or Empire of Light — can ever see it.
+        This stays on your device. It is never sent anywhere, never saved to any server, and no one, including your
+        team or Empire of Light, can ever see it.
       </p>
 
       <div className="mt-auto flex flex-col gap-2.5">

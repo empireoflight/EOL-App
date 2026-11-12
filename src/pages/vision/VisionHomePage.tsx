@@ -183,7 +183,7 @@ function AlignmentGuideCard({ vision }: { vision: Vision }) {
   if (!vision.alignment_guide) {
     return (
       <p className="m-0 text-[13px]" style={{ color: 'var(--color-eol-text-faint)' }}>
-        No alignment guide generated yet — individual answers stay private until it's ready.
+        No alignment guide generated yet. Individual answers stay private until it's ready.
       </p>
     )
   }
@@ -503,7 +503,7 @@ function VisionStatusPanel({
 
           {guideStale && (
             <div className="rounded-lg border px-3 py-2 text-[12.5px]" style={{ borderColor: 'var(--color-tier2-dot)', color: 'var(--color-tier2-fg)', background: 'var(--color-tier2-bg)' }}>
-              Someone submitted a reflection after this guide was generated — it's still here to read, but regenerating will bring it up to date.
+              Someone submitted a reflection after this guide was generated. It's still here to read, but regenerating will bring it up to date.
             </div>
           )}
 
@@ -593,7 +593,7 @@ function CommitmentPanel({ teamId, vision, canManage }: { teamId: string | undef
           </div>
           <div className="text-[12.5px]" style={{ color: 'var(--color-eol-text-muted)' }}>
             {vision.status === 'committed'
-              ? `${committedCount} committed — it's the shared reference point for the cycle ahead.`
+              ? `${committedCount} committed. It's the shared reference point for the cycle ahead.`
               : `${committedCount} committed so far.`}
             {vision.status === 'pending_commitment' && !iveCommitted && ' Your commitment is still needed.'}
           </div>
@@ -677,7 +677,7 @@ export default function VisionHomePage() {
   if (!vision) {
     return (
       <>
-        <PageHeader eyebrow="Reimagine" title="What are we creating?" subline="No vision yet — everything else in this cycle takes its shape from here." />
+        <PageHeader eyebrow="Reimagine" title="What are we creating?" subline="No vision yet. Everything else in this cycle takes its shape from here." />
         <div className="mx-auto flex max-w-xl flex-col gap-5 px-6 py-10">
           <Card>
             <div className="flex items-center justify-between gap-4">
@@ -749,8 +749,8 @@ export default function VisionHomePage() {
               <path d="M4.5 6.5V4.5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
             </svg>
             {vision.status === 'committed'
-              ? "This vision has been committed — it's read-only now."
-              : "This vision is pending everyone's commitment — it's read-only until that's resolved."}
+              ? "This vision has been committed. It's read-only now."
+              : "This vision is pending everyone's commitment. It's read-only until that's resolved."}
           </div>
         )}
       </div>
