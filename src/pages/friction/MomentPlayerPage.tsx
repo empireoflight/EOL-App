@@ -39,7 +39,17 @@ function BreathingMoment({ durationSec, onClose }: { durationSec: number; onClos
   // rest. A CSS transition (not a fixed keyframe loop) does the animating —
   // set a new target only at each phase boundary (in/out), and hold phases
   // simply repeat the previous target so nothing moves.
-  const expanded = phaseIndex === 0 || phaseIndex === 1
+  //
+  // The circle has to *start* at rest and then grow: on the first render the
+  // first phase is already "breathe in", so without this it would mount at
+  // full size, have nothing to transition from, and sit still for the whole
+  // first inhale.
+  const [started, setStarted] = useState(false)
+  useEffect(() => {
+    const id = setTimeout(() => setStarted(true), 50)
+    return () => clearTimeout(id)
+  }, [])
+  const expanded = started && (phaseIndex === 0 || phaseIndex === 1)
   const scale = expanded ? 1.3 : 0.82
   const transitionMs = running ? 4000 : 0
 
