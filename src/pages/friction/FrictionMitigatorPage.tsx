@@ -23,6 +23,7 @@ export default function FrictionMitigatorPage() {
   const { data: members } = useTeamMembers(teamId)
   const [stageIndex, setStageIndex] = useState(0)
   const [finishing, setFinishing] = useState(false)
+  const [soloChoice, setSoloChoice] = useState(false)
   const [soloDone, setSoloDone] = useState(false)
   const stage: FrictionStage = FRICTION_STAGES[stageIndex].id
 
@@ -68,10 +69,10 @@ export default function FrictionMitigatorPage() {
       await supabase.from('friction_grounding_completions').insert({ user_id: user.id, team_id: teamId })
       setFinishing(false)
     }
-    // A brief confirmation here rather than dropping someone straight into
-    // another moment — grounding just finished, it shouldn't feel like the
-    // app is pushing the next thing on them.
-    setSoloDone(true)
+    // Grounding is done and counted. What happens next is their choice: stop
+    // here, or turn this into a plan for an actual conversation. Neither is
+    // pushed on them.
+    setSoloChoice(true)
   }
 
   const handleExit = () => {
@@ -129,6 +130,35 @@ export default function FrictionMitigatorPage() {
     )
   }
 
+  if (soloChoice && !soloDone) {
+    return (
+      <div className="mx-auto flex max-w-lg flex-col items-center gap-5 px-6 py-16 text-center">
+        <div className="h-16 w-16 rounded-full" style={{ background: 'radial-gradient(circle, #fff0c0, #ffb3e6)' }} />
+        <div>
+          <h1 className="m-0 text-[20px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
+            Where would you like to go from here?
+          </h1>
+          <p className="m-0 mt-1.5 text-[13.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
+            If there's a conversation you'd like to have, we can help you prepare a discussion guide: how to share your point of view, ask them to reflect
+            it back, hear theirs, and find common ground. You don't have to invite anyone. Or, if giving yourself this space was enough, you're done.
+          </p>
+        </div>
+        <div className="flex w-full flex-col gap-2.5">
+          <Button onClick={() => navigate(`/teams/${teamId}/friction/prepare`)} className="w-full">
+            Prepare a discussion guide
+          </Button>
+          <Button variant="secondary" onClick={() => setSoloDone(true)} className="w-full">
+            I'm good, that was enough
+          </Button>
+        </div>
+        <p className="m-0 max-w-sm text-[11.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-faint)' }}>
+          What you just wrote stays on this device. Preparing a guide asks a few new questions; those go to the AI to build it and are saved privately, for
+          you only.
+        </p>
+      </div>
+    )
+  }
+
   if (soloDone) {
     return (
       <div className="mx-auto flex max-w-lg flex-col items-center gap-5 px-6 py-16 text-center">
@@ -155,7 +185,7 @@ export default function FrictionMitigatorPage() {
 
   // Progress bar + questions + privacy note + buttons are identical for
   // every stage — only the surrounding chrome (dark full-bleed while
-  // grounding vs. the standard light PageHeader for reflect/clarify)
+  // grounding vs. the standard light PageHeader for reflect/relate)
   // differs, so that chrome is the only thing duplicated below.
   const body = (
     <>
@@ -261,7 +291,7 @@ export default function FrictionMitigatorPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Unlearn · Friction Mitigator" title={stage === 'reflect' ? 'Reflect' : 'Clarify needs'} />
+      <PageHeader eyebrow="Unlearn · Friction Mitigator" title={stage === 'reflect' ? 'Reflect' : 'Relate'} />
       <div className="mx-auto flex max-w-lg flex-col gap-5 px-6 py-10">{body}</div>
     </>
   )

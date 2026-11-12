@@ -2,6 +2,8 @@
 // than generated for now — small enough surface area that generation isn't
 // pulling its weight yet.
 import type { SessionStatus } from './sessionStateMachine'
+import type { TeamType } from './teamType'
+import type { PersonalDiscussionGuide } from '../../supabase/functions/_shared/ai/personalGuide'
 
 export type Organization = {
   id: string
@@ -15,6 +17,7 @@ export type Team = {
   name: string
   is_solo: boolean
   reminders_enabled: boolean
+  team_type: TeamType
   created_at: string
 }
 
@@ -223,5 +226,18 @@ export type AppNotification = {
   session_id: string | null
   message: string
   read_at: string | null
+  created_at: string
+}
+
+// A person's own prepared conversation (see personal_friction_guides): the
+// situation, their point of view, and the guide built from them. Owner-only.
+export type PersonalFrictionGuide = {
+  id: string
+  user_id: string
+  team_id: string
+  topic: string
+  friction_type: string | null
+  answers: { problem_summary: string; hopes: string; what_matters: string }
+  guide: PersonalDiscussionGuide
   created_at: string
 }

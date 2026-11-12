@@ -28,6 +28,8 @@ import RollupPage from './pages/rollup/RollupPage'
 import StatusSummaryPage from './pages/summary/StatusSummaryPage'
 import MomentPlayerPage from './pages/friction/MomentPlayerPage'
 import FrictionHubPage from './pages/friction/FrictionHubPage'
+import FrictionPreparePage from './pages/friction/FrictionPreparePage'
+import FrictionGuidePage from './pages/friction/FrictionGuidePage'
 import FrictionStartPage from './pages/friction/FrictionStartPage'
 import FrictionMitigatorPage from './pages/friction/FrictionMitigatorPage'
 import FrictionRespondPage from './pages/friction/FrictionRespondPage'
@@ -68,6 +70,8 @@ function App() {
           <Route path="friction" element={<FrictionHubPage />} />
           <Route path="friction/tools/:momentId" element={<MomentPlayerPage />} />
           <Route path="friction/start" element={<FrictionStartPage />} />
+          <Route path="friction/prepare" element={<FrictionPreparePage />} />
+          <Route path="friction/guides/:guideId" element={<FrictionGuidePage />} />
           <Route path="friction/mitigate" element={<FrictionMitigatorPage />} />
           <Route path="friction/sessions/:sessionId/mitigate" element={<FrictionMitigatorPage />} />
           <Route path="friction/sessions/:sessionId/respond" element={<FrictionRespondPage />} />

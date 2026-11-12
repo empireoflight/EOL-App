@@ -6,13 +6,14 @@ import { useTeamVision } from '../../hooks/useVision'
 import { useDurableForm } from '../../hooks/useDurableForm'
 import { useConvergenceSession } from '../../hooks/useConvergenceSession'
 import { useTeamMembers } from '../../hooks/useMyTeams'
-import { FRICTION_AUTHORED_QUESTIONS, FRICTION_TYPES } from '../../lib/frictionQuestions'
+import { FRICTION_AUTHORED_QUESTIONS } from '../../lib/frictionQuestions'
 import { Button } from '../../components/shared/Button'
 import { Textarea } from '../../components/shared/Input'
 import { Card } from '../../components/shared/Card'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { TierBadge } from '../../components/shared/TierBadge'
 import { FrictionTopicSummary } from '../../components/session/FrictionTopicSummary'
+import { FrictionTypeChips } from '../../components/session/FrictionTypeChips'
 import { CancelFrictionSessionButton } from '../../components/session/CancelFrictionSessionButton'
 
 type AuthoredAnswers = { problem_summary: string; hopes: string; what_matters: string }
@@ -142,28 +143,7 @@ export default function FrictionRespondPage() {
                 aren't shaped by feeling called out.
               </div>
             )}
-            <div className="flex flex-col gap-2">
-              <span className="text-[13px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
-                What kind of friction is this?
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {FRICTION_TYPES.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setFrictionType(frictionType === t ? null : t)}
-                    className="rounded-full px-3.5 py-1.5 text-[12px] font-medium"
-                    style={
-                      frictionType === t
-                        ? { background: 'var(--color-eol-night)', color: 'var(--color-eol-heading-on-dark)' }
-                        : { border: '1px solid var(--color-eol-border-strong)', color: 'var(--color-eol-text-secondary)' }
-                    }
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <FrictionTypeChips value={frictionType} onChange={setFrictionType} />
           </div>
         </Card>
       )}

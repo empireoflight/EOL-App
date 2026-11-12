@@ -1,12 +1,14 @@
 import { useState } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
-import { useTeamMembers } from '../../hooks/useMyTeams'
+import { useTeam, useTeamMembers } from '../../hooks/useMyTeams'
 import { Button } from '../../components/shared/Button'
 import { Card } from '../../components/shared/Card'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { TierBadge } from '../../components/shared/TierBadge'
+import { LoadingScreen } from '../../components/shared/LoadingScreen'
+import { canInviteIntoFriction } from '../../lib/teamType'
 
 type Selection = { kind: 'just_me' } | { kind: 'whole_team' } | { kind: 'people'; userIds: string[] }
 
@@ -20,6 +22,7 @@ export default function FrictionStartPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { data: members } = useTeamMembers(teamId)
+  const { data: team, isLoading: teamLoading } = useTeam(teamId)
 
   const prefillTopic = (location.state as { prefillTopic?: string } | null)?.prefillTopic
 
@@ -85,6 +88,11 @@ export default function FrictionStartPage() {
       setLoading(false)
     }
   }
+
+  // An individual cohort has nobody to bring in, so there's no one to choose
+  // between: straight to grounding on your own.
+  if (teamLoading) return <LoadingScreen />
+  if (team && !canInviteIntoFriction(team.team_type)) return <Navigate to={`/teams/${teamId}/friction/mitigate`} replace />
 
   return (
     <>

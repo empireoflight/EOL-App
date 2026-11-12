@@ -11,7 +11,8 @@ import {
   useReviseVision,
 } from '../../hooks/useVision'
 import { useConvergenceSession, useOpenVisionSession, useSynthesisJobPolling, useLatestGuideCompletion } from '../../hooks/useConvergenceSession'
-import { useTeamMembers } from '../../hooks/useMyTeams'
+import { useTeam, useTeamMembers } from '../../hooks/useMyTeams'
+import { alignmentLabels } from '../../lib/teamType'
 import { useAuth } from '../../hooks/useAuth'
 import { resolveVisionQuestions, type VisionQuestion } from '../../lib/visionQuestions'
 import { Card } from '../../components/shared/Card'
@@ -177,6 +178,8 @@ function EditableNodeList({
 }
 
 function AlignmentGuideCard({ vision }: { vision: Vision }) {
+  const { data: team } = useTeam(vision.team_id)
+  const labels = alignmentLabels(team?.team_type)
   if (!vision.alignment_guide) {
     return (
       <p className="m-0 text-[13px]" style={{ color: 'var(--color-eol-text-faint)' }}>
@@ -190,7 +193,7 @@ function AlignmentGuideCard({ vision }: { vision: Vision }) {
         <div>
           <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-accent-label)' }}>
             <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--color-eol-alignment-dot)' }} />
-            Where there's alignment
+            {labels.common}
           </div>
           <p className="m-0 text-[12.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
             {vision.alignment_guide.alignment}
@@ -199,7 +202,7 @@ function AlignmentGuideCard({ vision }: { vision: Vision }) {
         <div>
           <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-pink-strong)' }}>
             <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--color-eol-disconnect-dot)' }} />
-            Where there's disconnect
+            {labels.differences}
           </div>
           <p className="m-0 text-[12.5px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
             {vision.alignment_guide.disconnect}

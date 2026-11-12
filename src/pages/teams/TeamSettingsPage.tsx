@@ -11,6 +11,8 @@ import { LoadingScreen } from '../../components/shared/LoadingScreen'
 import { ProfileQuestionEditor } from '../../components/team/ProfileQuestionEditor'
 import { useProfileQuestions, useSaveProfileQuestions } from '../../hooks/useTeamProfiles'
 import { useSetTeamReminders } from '../../hooks/useTeamReminders'
+import { useSetTeamType } from '../../hooks/useTeamType'
+import { TEAM_TYPE_OPTIONS, type TeamType } from '../../lib/teamType'
 
 // Two-step reveal-then-confirm, same shape as
 // CancelFrictionSessionButton.tsx — the one other destructive-confirmation
@@ -108,6 +110,58 @@ function RemindersSection({ teamId, enabled }: { teamId: string; enabled: boolea
   )
 }
 
+function TeamTypeSection({ teamId, value }: { teamId: string; value: TeamType }) {
+  const setType = useSetTeamType(teamId)
+
+  return (
+    <Card>
+      <div className="mb-1 text-[13.5px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
+        What kind of group is this?
+      </div>
+      <p className="m-0 mb-3 text-[12px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
+        This sets whether people can bring each other into friction sessions, and softens a little of the wording for cohorts.
+      </p>
+      <div role="radiogroup" aria-label="What kind of group is this?" className="flex flex-col gap-2">
+        {TEAM_TYPE_OPTIONS.map((option) => {
+          const selected = option.value === value
+          return (
+            <button
+              key={option.value}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              disabled={setType.isPending}
+              onClick={() => !selected && setType.mutate(option.value)}
+              className="flex items-start gap-3 rounded-xl border px-3.5 py-3 text-left"
+              style={{ borderColor: selected ? 'var(--color-eol-accent)' : 'var(--color-eol-border-strong)', background: selected ? 'var(--color-eol-surface-light)' : 'transparent' }}
+            >
+              <span
+                className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border"
+                style={{ borderColor: selected ? 'var(--color-eol-accent)' : 'var(--color-eol-border-strong)' }}
+              >
+                {selected && <span className="h-2 w-2 rounded-full" style={{ background: 'var(--color-eol-accent)' }} />}
+              </span>
+              <span>
+                <span className="block text-[13px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
+                  {option.title}
+                </span>
+                <span className="mt-0.5 block text-[12px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
+                  {option.description}
+                </span>
+              </span>
+            </button>
+          )
+        })}
+      </div>
+      {setType.isError && (
+        <p className="m-0 mt-2 text-[12px]" style={{ color: 'var(--color-eol-pink-strong)' }}>
+          {setType.error instanceof Error ? setType.error.message : "Couldn't change the group type."}
+        </p>
+      )}
+    </Card>
+  )
+}
+
 function ProfileQuestionsSection({ teamId }: { teamId: string }) {
   const { questions, updatedAt, isLoading } = useProfileQuestions(teamId)
   const save = useSaveProfileQuestions(teamId)
@@ -159,6 +213,7 @@ export default function TeamSettingsPage() {
         ) : (
           <>
             <RemindersSection teamId={teamId as string} enabled={team?.reminders_enabled ?? true} />
+            {!team?.is_solo && <TeamTypeSection teamId={teamId as string} value={team?.team_type ?? 'team'} />}
             {!team?.is_solo && <ProfileQuestionsSection teamId={teamId as string} />}
             <DeleteTeamSection teamId={teamId as string} teamName={team?.name ?? 'this team'} />
           </>
