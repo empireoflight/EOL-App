@@ -297,19 +297,19 @@ function BinauralBeatsMoment({ durationSec, onClose }: { durationSec: number; on
           </button>
         ))}
       </div>
+      <div className="text-[14.5px]" style={{ color: 'rgba(253,250,244,.6)' }}>
+        Keeps playing while you work or rest
+      </div>
       {playing && (
         <div className="text-[13.5px]" style={{ color: 'rgba(253,250,244,.48)' }}>
-          Keeps playing while you work · {formatClock(remaining)} left
+          {formatClock(remaining)} left
         </div>
       )}
     </DarkTimedShell>
   )
 }
 
-function DanceMomentMoment({ durationSec, onClose }: { durationSec: number; onClose: () => void }) {
-  const [playing, setPlaying] = useState(false)
-  const elapsed = useElapsedSeconds(playing)
-  const remaining = Math.max(0, durationSec - elapsed)
+function DanceMomentMoment({ onClose }: { onClose: () => void }) {
   const bars = [22, 44, 14, 56, 30, 48, 18, 38]
 
   return (
@@ -317,38 +317,22 @@ function DanceMomentMoment({ durationSec, onClose }: { durationSec: number; onCl
       title="Dance moment"
       onClose={onClose}
       footer={
-        remaining > 0 ? (
-          <button type="button" style={darkPillButton('solid')} onClick={() => setPlaying((p) => !p)}>
-            {playing ? 'Pause' : 'Start'}
-          </button>
-        ) : (
-          <button type="button" style={darkPillButton('solid')} onClick={onClose}>
-            Nice — I'm done
-          </button>
-        )
+        <button type="button" style={darkPillButton('solid')} onClick={onClose}>
+          I'm done
+        </button>
       }
     >
       <div className="flex h-[56px] items-end gap-[5px]">
         {bars.map((h, i) => (
-          <div
-            key={i}
-            className="w-[5px] rounded-[3px]"
-            style={{ height: h, background: i % 2 === 0 ? 'var(--color-eol-accent)' : 'var(--color-eol-pink)', opacity: playing ? 1 : 0.4 }}
-          />
+          <div key={i} className="w-[5px] rounded-[3px]" style={{ height: h, background: i % 2 === 0 ? 'var(--color-eol-accent)' : 'var(--color-eol-pink)' }} />
         ))}
       </div>
       <div className="text-[26px] font-semibold" style={{ color: '#FBF7F2', fontFamily: 'var(--font-display)' }}>
         Put on a song you love
       </div>
       <div className="max-w-[420px] text-[14.5px] leading-relaxed" style={{ color: 'rgba(253,250,244,.6)' }}>
-        Start it playing wherever you like, then hit start here. Nobody is watching and nobody is scoring this — put it
-        on the big screen if you're together.
+        Start playing it wherever you like and dance however you want. Nobody is watching. Nobody is scoring this.
       </div>
-      {playing && (
-        <div className="text-[15px]" style={{ color: 'rgba(253,250,244,.72)' }}>
-          {formatClock(remaining)} left
-        </div>
-      )}
     </DarkTimedShell>
   )
 }
@@ -374,7 +358,7 @@ function ForestBathingMoment({ onClose }: { onClose: () => void }) {
     <PaperUntimedShell eyebrow="About 6 min · Outside" title="Forest bathing lite" ctaLabel="I'm back" onDone={onClose}>
       <div className="flex flex-col gap-3">
         <p className="m-0 text-[15px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
-          Go outside, or find one tree. Nothing to log, nothing to finish.
+          Go outside, or find a tree and sit at the roots. Take some time to notice each of these things.
         </p>
         <div className="h-px" style={{ background: 'var(--color-eol-border)' }} />
         <div className="text-[11.5px] font-semibold uppercase tracking-[0.14em]" style={{ color: 'var(--color-eol-text-muted)' }}>
@@ -440,7 +424,7 @@ function FreeFormArtMoment({ onClose }: { onClose: () => void }) {
             The whole brief
           </div>
           <p className="m-0 text-[15px] leading-relaxed" style={{ color: 'var(--color-eol-text)' }}>
-            No subject. No skill required. Nobody sees it, so it doesn't have to be of anything.
+            Just start drawing. Don't think about whether it is good or whether you like it or what you want to make. Just start drawing, reflect on what it reminds you of, and keep going.
           </p>
         </div>
       </div>
@@ -477,7 +461,7 @@ export default function MomentPlayerPage() {
     case 'binaural-beats':
       return <BinauralBeatsMoment durationSec={moment.durationSec as number} onClose={onClose} />
     case 'dance-moment':
-      return <DanceMomentMoment durationSec={moment.durationSec as number} onClose={onClose} />
+      return <DanceMomentMoment onClose={onClose} />
     case 'shake-it-off':
       return <ShakeItOffMoment durationSec={moment.durationSec as number} onClose={onClose} />
     case 'forest-bathing':

@@ -14,7 +14,7 @@ export const FRICTION_TYPES = ['Vision', 'Relationship', 'Trust', 'Capacity', 'P
 
 export type FrictionVariant = 'two_person' | 'team'
 
-export type FrictionStage = 'ground' | 'reflect' | 'clarify_needs'
+export type FrictionStage = 'ground' | 'reflect' | 'relate'
 
 export type FrictionQuestion = {
   id: string
@@ -25,7 +25,7 @@ export type FrictionQuestion = {
 export const FRICTION_STAGES: { id: FrictionStage; label: string }[] = [
   { id: 'ground', label: 'Ground' },
   { id: 'reflect', label: 'Reflect' },
-  { id: 'clarify_needs', label: 'Clarify needs' },
+  { id: 'relate', label: 'Relate' },
 ]
 
 export const FRICTION_QUESTIONS: FrictionQuestion[] = [
@@ -71,7 +71,7 @@ export const FRICTION_QUESTIONS: FrictionQuestion[] = [
   },
   {
     id: 'ownership',
-    stage: 'clarify_needs',
+    stage: 'relate',
     prompt: {
       two_person: 'What are you willing to take responsibility for?',
       team: 'What are you willing to take responsibility for?',
@@ -79,10 +79,10 @@ export const FRICTION_QUESTIONS: FrictionQuestion[] = [
   },
   {
     id: 'appreciation',
-    stage: 'clarify_needs',
+    stage: 'relate',
     prompt: {
-      two_person: 'What do you genuinely appreciate about this person?',
-      team: 'What do you genuinely appreciate about the people involved?',
+      two_person: 'What do you genuinely appreciate about the other people involved?',
+      team: 'What do you genuinely appreciate about the other people involved?',
     },
   },
 ]

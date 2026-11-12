@@ -2,7 +2,7 @@
 // design file). Collapse into three reusable shells rather than nine
 // bespoke pages — `shell` picks which one renders; everything else is
 // per-moment content the shell doesn't need to know about.
-export type MomentCategory = 'timed-dark' | 'timed-paper' | 'untimed-paper'
+export type MomentCategory = 'timed-dark' | 'untimed-dark' | 'timed-paper' | 'untimed-paper'
 
 export type GroundingMoment = {
   id: string
@@ -14,6 +14,8 @@ export type GroundingMoment = {
   outside: boolean
 }
 
+// Display order is the order on the Unlearn page (Process friction is its own
+// tile, always ahead of these).
 export const GROUNDING_MOMENTS: GroundingMoment[] = [
   {
     id: 'breathing',
@@ -25,48 +27,21 @@ export const GROUNDING_MOMENTS: GroundingMoment[] = [
     outside: false,
   },
   {
-    id: 'silent-minute',
-    name: 'A silent minute',
-    shell: 'timed-dark',
-    durationSec: 60,
-    meta: '1 min',
-    blurb: 'Open a session and say nothing for sixty seconds.',
-    outside: false,
-  },
-  {
-    id: 'guided-meditation',
-    name: 'Guided meditation',
-    shell: 'timed-dark',
-    durationSec: 223, // matches public/audio/guided-meditation.mp3's actual length (3:42)
-    meta: '4 min',
-    blurb: 'Voice-led, eyes closed. Nothing to do but stay.',
-    outside: false,
-  },
-  {
-    id: 'binaural-beats',
-    name: 'Binaural beats',
-    shell: 'timed-dark',
-    durationSec: 1200,
-    meta: '20 min',
-    blurb: 'Headphones on, work continues underneath it.',
-    outside: false,
-  },
-  {
     id: 'dance-moment',
     name: 'Dance moment',
-    shell: 'timed-dark',
-    durationSec: 180,
-    meta: '3 min',
-    blurb: 'Put on a song you love, cameras off, everyone moving at once.',
+    shell: 'untimed-dark',
+    durationSec: null,
+    meta: 'Any time',
+    blurb: 'Put on a song you love and dance it out',
     outside: false,
   },
   {
-    id: 'shake-it-off',
-    name: 'Shake it off',
-    shell: 'timed-paper',
-    durationSec: 60,
-    meta: '1 min',
-    blurb: 'Stand up and shake out your hands until it feels silly.',
+    id: 'free-form-art',
+    name: 'Free-form art',
+    shell: 'untimed-paper',
+    durationSec: null,
+    meta: 'Any time',
+    blurb: 'Real paper, a real pen. No subject, no one sees it.',
     outside: false,
   },
   {
@@ -88,12 +63,39 @@ export const GROUNDING_MOMENTS: GroundingMoment[] = [
     outside: true,
   },
   {
-    id: 'free-form-art',
-    name: 'Free-form art',
-    shell: 'untimed-paper',
-    durationSec: null,
-    meta: 'Any time',
-    blurb: 'Real paper, a real pen. No subject, no one sees it.',
+    id: 'silent-minute',
+    name: 'A silent minute',
+    shell: 'timed-dark',
+    durationSec: 60,
+    meta: '1 min',
+    blurb: 'Open a session and say nothing for sixty seconds.',
+    outside: false,
+  },
+  {
+    id: 'guided-meditation',
+    name: 'Guided meditation',
+    shell: 'timed-dark',
+    durationSec: 223, // matches public/audio/guided-meditation.mp3's actual length (3:42)
+    meta: '4 min',
+    blurb: 'Voice-led, eyes closed. Nothing to do but stay.',
+    outside: false,
+  },
+  {
+    id: 'shake-it-off',
+    name: 'Shake it off',
+    shell: 'timed-paper',
+    durationSec: 60,
+    meta: '1 min',
+    blurb: 'Stand up and shake out your hands until it feels silly.',
+    outside: false,
+  },
+  {
+    id: 'binaural-beats',
+    name: 'Binaural beats',
+    shell: 'timed-dark',
+    durationSec: 1200,
+    meta: '20 min',
+    blurb: 'Headphones on. Rest or work while you listen.',
     outside: false,
   },
 ]
