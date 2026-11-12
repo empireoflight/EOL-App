@@ -183,9 +183,6 @@ export default function FrictionHubPage() {
               <div className="text-[18px] font-semibold" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-eol-text)' }}>
                 Pick what fits the moment
               </div>
-              <p className="m-0 mt-0.5 text-[12.5px]" style={{ color: 'var(--color-eol-text-secondary)' }}>
-                No tracking, no streaks.
-              </p>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {FILTERS.map((f) => (
