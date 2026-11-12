@@ -237,7 +237,8 @@ export type PersonalFrictionGuide = {
   team_id: string
   topic: string
   friction_type: string | null
-  answers: { problem_summary: string; hopes: string; what_matters: string }
+  // `needs` on current guides; older ones have `problem_summary` instead.
+  answers: { needs?: string; problem_summary?: string; hopes: string; what_matters: string }
   guide: PersonalDiscussionGuide
   created_at: string
 }

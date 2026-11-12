@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FRICTION_QUESTIONS, FRICTION_STAGES, frictionQuestionsForStage } from './frictionQuestions'
+import { authoredAnswerRows, FRICTION_AUTHORED_QUESTIONS, FRICTION_QUESTIONS, FRICTION_STAGES, frictionQuestionsForStage } from './frictionQuestions'
 import { filterMoments, findMoment, GROUNDING_MOMENTS } from './groundingMoments'
 
 describe('friction stages', () => {
@@ -60,5 +60,28 @@ describe('grounding moments', () => {
     expect(ids('1min')).toEqual(['silent-minute', 'shake-it-off'])
     expect(ids('5min')).not.toContain('dance-moment')
     expect(ids('outside')).toEqual(['forest-bathing', 'walk-no-goal'])
+  })
+})
+
+describe('point-of-view questions', () => {
+  it('asks what you need first, with a hint to keep it to I statements', () => {
+    expect(FRICTION_AUTHORED_QUESTIONS.map((q) => q.id)).toEqual(['needs', 'hopes', 'what_matters'])
+    expect(FRICTION_AUTHORED_QUESTIONS[0].prompt).toBe('What do you desire or need in this situation? Why is that important to you?')
+    expect(FRICTION_AUTHORED_QUESTIONS[0].hint).toBe('Keep this focused on your needs. I statements are best.')
+  })
+
+  it('shows current answers under the current questions, in order', () => {
+    const rows = authoredAnswerRows({ needs: 'I need clear handoffs.', hopes: 'Calm.', what_matters: 'Trust.' })
+    expect(rows.map((r) => r.id)).toEqual(['needs', 'hopes', 'what_matters'])
+    expect(rows[0].prompt).toBe(FRICTION_AUTHORED_QUESTIONS[0].prompt)
+  })
+
+  it('keeps an answer saved before the change under the question it was actually asked', () => {
+    const rows = authoredAnswerRows({ problem_summary: 'Decisions get remade.', hopes: 'Clarity.', what_matters: 'Speed.' })
+    expect(rows[0]).toEqual({ id: 'problem_summary', prompt: 'How would you summarize the problem for your discussion?', answer: 'Decisions get remade.' })
+  })
+
+  it('skips blank or missing answers', () => {
+    expect(authoredAnswerRows({ needs: '  ', problem_summary: null, hopes: 'Clarity.', what_matters: '' }).map((r) => r.id)).toEqual(['hopes'])
   })
 })

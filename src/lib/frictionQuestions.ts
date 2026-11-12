@@ -7,11 +7,6 @@
 // local-only path, never sent to the server. Q8-10 are tier 4, authored
 // knowing they'll be shared, submitted by FrictionRespondPage.
 
-// Shared between FrictionRespondPage (where the initiator picks one while
-// describing the situation) and, previously, FrictionStartPage before the
-// situation-description step moved there.
-export const FRICTION_TYPES = ['Vision', 'Relationship', 'Trust', 'Capacity', 'Process', 'Power', 'Unclear direction', 'Something else']
-
 export type FrictionVariant = 'two_person' | 'team'
 
 export type FrictionStage = 'ground' | 'reflect' | 'relate'
@@ -93,8 +88,33 @@ export function frictionQuestionsForStage(stage: FrictionStage): FrictionQuestio
 
 // Q8-10, tier 4 — authored, shared verbatim (spec §16). One variant; these
 // are written knowing exactly who will read them either way.
-export const FRICTION_AUTHORED_QUESTIONS: { id: 'problem_summary' | 'hopes' | 'what_matters'; prompt: string }[] = [
-  { id: 'problem_summary', prompt: 'How would you summarize the problem for your discussion?' },
+export const FRICTION_AUTHORED_QUESTIONS: { id: 'needs' | 'hopes' | 'what_matters'; prompt: string; hint?: string }[] = [
+  {
+    id: 'needs',
+    prompt: 'What do you desire or need in this situation? Why is that important to you?',
+    hint: 'Keep this focused on your needs. I statements are best.',
+  },
   { id: 'hopes', prompt: 'What do you hope this conversation creates?' },
   { id: 'what_matters', prompt: 'What matters most to you moving forward?' },
 ]
+
+// Before "needs" existed, the first authored question was this one, and
+// responses saved then still hold their answer under `problem_summary`. They
+// keep being shown under the question they were actually asked.
+const LEGACY_FIRST_QUESTION = 'How would you summarize the problem for your discussion?'
+
+export type AuthoredAnswers = { needs?: string | null; problem_summary?: string | null; hopes?: string | null; what_matters?: string | null }
+
+// The answers worth showing for one saved response, in order, each paired with
+// the prompt it answered. Works for shared friction responses and for saved
+// personal guides, new shape or old.
+export function authoredAnswerRows(answers: AuthoredAnswers): { id: string; prompt: string; answer: string }[] {
+  const rows: { id: string; prompt: string; answer: string | null | undefined }[] = [
+    answers.needs
+      ? { id: 'needs', prompt: FRICTION_AUTHORED_QUESTIONS[0].prompt, answer: answers.needs }
+      : { id: 'problem_summary', prompt: LEGACY_FIRST_QUESTION, answer: answers.problem_summary },
+    { id: 'hopes', prompt: FRICTION_AUTHORED_QUESTIONS[1].prompt, answer: answers.hopes },
+    { id: 'what_matters', prompt: FRICTION_AUTHORED_QUESTIONS[2].prompt, answer: answers.what_matters },
+  ]
+  return rows.filter((r): r is { id: string; prompt: string; answer: string } => !!r.answer?.trim())
+}

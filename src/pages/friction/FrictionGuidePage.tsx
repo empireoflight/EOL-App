@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useDeletePersonalGuide, usePersonalGuide } from '../../hooks/usePersonalGuides'
-import { FRICTION_AUTHORED_QUESTIONS } from '../../lib/frictionQuestions'
+import { authoredAnswerRows } from '../../lib/frictionQuestions'
 import { formatPersonalGuideAsText } from '../../../supabase/functions/_shared/ai/personalGuide'
 import { Button } from '../../components/shared/Button'
 import { Card } from '../../components/shared/Card'
@@ -139,13 +139,13 @@ export default function FrictionGuidePage() {
             What you wrote
           </div>
           <div className="flex flex-col gap-3">
-            {FRICTION_AUTHORED_QUESTIONS.map((q) => (
+            {authoredAnswerRows(saved.answers).map((q) => (
               <div key={q.id}>
                 <div className="text-[11.5px] font-medium" style={{ color: 'var(--color-eol-text-muted)' }}>
                   {q.prompt}
                 </div>
                 <p className="m-0 mt-0.5 whitespace-pre-line text-[13px] leading-relaxed" style={{ color: 'var(--color-eol-text-secondary)' }}>
-                  {saved.answers[q.id]}
+                  {q.answer}
                 </p>
               </div>
             ))}

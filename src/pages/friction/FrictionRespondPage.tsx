@@ -13,10 +13,9 @@ import { Card } from '../../components/shared/Card'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { TierBadge } from '../../components/shared/TierBadge'
 import { FrictionTopicSummary } from '../../components/session/FrictionTopicSummary'
-import { FrictionTypeChips } from '../../components/session/FrictionTypeChips'
 import { CancelFrictionSessionButton } from '../../components/session/CancelFrictionSessionButton'
 
-type AuthoredAnswers = { problem_summary: string; hopes: string; what_matters: string }
+type AuthoredAnswers = { needs: string; hopes: string; what_matters: string }
 
 export default function FrictionRespondPage() {
   const { teamId, sessionId } = useParams<{ teamId: string; sessionId: string }>()
@@ -37,7 +36,6 @@ export default function FrictionRespondPage() {
   const needsSituationDescription = isInitiator && !existingTopic
 
   const [topic, setTopic] = useState('')
-  const [frictionType, setFrictionType] = useState<string | null>(null)
   const otherMembers = (members ?? []).filter((m) => m.user_id !== user?.id)
   const mentionsName = useMemo(() => {
     const lower = topic.toLowerCase()
@@ -45,9 +43,9 @@ export default function FrictionRespondPage() {
   }, [topic, otherMembers])
 
   const { value: answers, setValue: setAnswers, discard } = useDurableForm<AuthoredAnswers>({
-    formKey: `friction-respond-${sessionId}`,
+    formKey: `friction-respond-v2-${sessionId}`,
     tier: 4,
-    initialValue: { problem_summary: '', hopes: '', what_matters: '' },
+    initialValue: { needs: '', hopes: '', what_matters: '' },
     userId: user?.id,
   })
 
@@ -66,7 +64,7 @@ export default function FrictionRespondPage() {
       if (needsSituationDescription) {
         const { error: framingError } = await supabase
           .from('convergence_sessions')
-          .update({ framing: { ...(sessionData?.session.framing ?? {}), topic: topic.trim(), frictionType } })
+          .update({ framing: { ...(sessionData?.session.framing ?? {}), topic: topic.trim() } })
           .eq('id', sessionId)
         if (framingError) throw framingError
 
@@ -143,7 +141,6 @@ export default function FrictionRespondPage() {
                 aren't shaped by feeling called out.
               </div>
             )}
-            <FrictionTypeChips value={frictionType} onChange={setFrictionType} />
           </div>
         </Card>
       )}
@@ -170,7 +167,7 @@ export default function FrictionRespondPage() {
       </div>
 
       {FRICTION_AUTHORED_QUESTIONS.map((q) => (
-        <Textarea key={q.id} label={q.prompt} value={answers[q.id]} onChange={setAnswer(q.id)} />
+        <Textarea key={q.id} label={q.prompt} hint={q.hint} value={answers[q.id]} onChange={setAnswer(q.id)} />
       ))}
 
       <Button onClick={handleSubmit} loading={submitting} disabled={!allAnswered} className="w-full">

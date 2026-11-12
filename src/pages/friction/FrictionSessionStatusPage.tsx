@@ -11,14 +11,11 @@ import { PageHeader } from '../../components/shared/PageHeader'
 import { Textarea } from '../../components/shared/Input'
 import { TierBadge } from '../../components/shared/TierBadge'
 import { LoadingScreen } from '../../components/shared/LoadingScreen'
-import { FRICTION_AUTHORED_QUESTIONS } from '../../lib/frictionQuestions'
+import { authoredAnswerRows, type AuthoredAnswers } from '../../lib/frictionQuestions'
 
-type FrictionResponse = {
+type FrictionResponse = AuthoredAnswers & {
   id: string
   user_id: string
-  problem_summary: string
-  hopes: string
-  what_matters: string
 }
 
 function useFrictionResponses(sessionId: string | undefined, enabled: boolean) {
@@ -93,13 +90,13 @@ function ResponseCard({ response, name }: { response: FrictionResponse; name: st
       <div className="mb-3 text-[12.5px] font-semibold" style={{ color: 'var(--color-eol-text)' }}>
         {name}
       </div>
-      {FRICTION_AUTHORED_QUESTIONS.map((q) => (
+      {authoredAnswerRows(response).map((q) => (
         <div key={q.id} className="mb-3 last:mb-0">
           <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--color-eol-accent-label)' }}>
             {q.prompt}
           </div>
           <p className="m-0 text-[13px] leading-relaxed" style={{ color: 'var(--color-eol-text)' }}>
-            {response[q.id]}
+            {q.answer}
           </p>
         </div>
       ))}
@@ -204,7 +201,7 @@ export default function FrictionSessionStatusPage() {
       lines.push('', 'What was shared:')
       responses.forEach((r, i) => {
         if (i > 0) lines.push('---')
-        FRICTION_AUTHORED_QUESTIONS.forEach((q) => lines.push(`${q.prompt} ${r[q.id]}`))
+        authoredAnswerRows(r).forEach((q) => lines.push(`${q.prompt} ${q.answer}`))
       })
     }
     await navigator.clipboard.writeText(lines.join('\n'))

@@ -167,7 +167,7 @@ Deno.serve(async (req: Request) => {
 
       const { data: responses } = await db
         .from('friction_session_responses')
-        .select('problem_summary, hopes, what_matters')
+        .select('needs, problem_summary, hopes, what_matters')
         .eq('session_id', session.id)
       if (!responses?.length) throw new Error('no submitted responses to synthesize')
 
@@ -176,7 +176,9 @@ Deno.serve(async (req: Request) => {
       const discussionGuide = await generateFrictionDiscussionGuide({
         teamName: team?.name ?? 'This team',
         topic: topic ?? 'something the team wanted to talk through',
-        responses,
+        // Each row has `needs` (current) or `problem_summary` (saved before it
+        // was replaced); only the answers that exist go to the model.
+        responses: responses.map((r) => Object.fromEntries(Object.entries(r).filter(([, v]) => typeof v === 'string' && v.trim()))),
       })
 
       await db.from('convergence_sessions').update({ discussion_guide: discussionGuide }).eq('id', session.id)

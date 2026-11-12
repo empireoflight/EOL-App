@@ -10,17 +10,15 @@ import { Textarea } from '../../components/shared/Input'
 import { Card } from '../../components/shared/Card'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { TierBadge } from '../../components/shared/TierBadge'
-import { FrictionTypeChips } from '../../components/session/FrictionTypeChips'
 
 type PrepareDraft = {
   topic: string
-  frictionType: string | null
-  problem_summary: string
+  needs: string
   hopes: string
   what_matters: string
 }
 
-const EMPTY: PrepareDraft = { topic: '', frictionType: null, problem_summary: '', hopes: '', what_matters: '' }
+const EMPTY: PrepareDraft = { topic: '', needs: '', hopes: '', what_matters: '' }
 
 // After grounding, one person getting ready for a conversation: the same
 // situation + point-of-view questions a shared friction session asks, minus
@@ -36,7 +34,7 @@ export default function FrictionPreparePage() {
   const [error, setError] = useState('')
 
   const { value: draft, setValue: setDraft, discard } = useDurableForm<PrepareDraft>({
-    formKey: `friction-prepare-${teamId}`,
+    formKey: `friction-prepare-v2-${teamId}`,
     tier: 2,
     initialValue: EMPTY,
     userId: user?.id,
@@ -54,8 +52,7 @@ export default function FrictionPreparePage() {
         body: {
           teamId,
           topic: draft.topic.trim(),
-          frictionType: draft.frictionType,
-          answers: { problem_summary: draft.problem_summary.trim(), hopes: draft.hopes.trim(), what_matters: draft.what_matters.trim() },
+          answers: { needs: draft.needs.trim(), hopes: draft.hopes.trim(), what_matters: draft.what_matters.trim() },
         },
         headers: { Authorization: `Bearer ${authData.session?.access_token}` },
       })
@@ -96,20 +93,17 @@ export default function FrictionPreparePage() {
               Sent to the AI to build your guide, then saved for you only
             </span>
           </div>
-          <div className="flex flex-col gap-4">
-            <Textarea
-              label="Describe the situation"
-              hint="What's going on, in a few sentences. Include who it involves if that helps."
-              required
-              value={draft.topic}
-              onChange={(e) => setDraft({ ...draft, topic: e.target.value })}
-            />
-            <FrictionTypeChips value={draft.frictionType} onChange={(frictionType) => setDraft({ ...draft, frictionType })} />
-          </div>
+          <Textarea
+            label="Describe the situation"
+            hint="What's going on, in a few sentences. Include who it involves if that helps."
+            required
+            value={draft.topic}
+            onChange={(e) => setDraft({ ...draft, topic: e.target.value })}
+          />
         </Card>
 
         {FRICTION_AUTHORED_QUESTIONS.map((q) => (
-          <Textarea key={q.id} label={q.prompt} value={draft[q.id]} onChange={(e) => setDraft({ ...draft, [q.id]: e.target.value })} />
+          <Textarea key={q.id} label={q.prompt} hint={q.hint} value={draft[q.id]} onChange={(e) => setDraft({ ...draft, [q.id]: e.target.value })} />
         ))}
 
         <Button onClick={handleSubmit} loading={submitting} disabled={!ready} className="w-full">

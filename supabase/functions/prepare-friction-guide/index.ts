@@ -33,7 +33,7 @@ function field(value: unknown): string {
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
-  let body: { teamId?: unknown; topic?: unknown; frictionType?: unknown; answers?: Record<string, unknown> }
+  let body: { teamId?: unknown; topic?: unknown; answers?: Record<string, unknown> }
   try {
     body = await req.json()
   } catch {
@@ -42,13 +42,14 @@ Deno.serve(async (req: Request) => {
 
   const teamId = field(body.teamId)
   const topic = field(body.topic)
-  const frictionType = field(body.frictionType) || null
   const answers = {
-    problem_summary: field(body.answers?.problem_summary),
+    // problem_summary is what this question was called before it became "needs"; accepted so a
+    // page loaded before the change doesn't fail while the new version rolls out.
+    needs: field(body.answers?.needs) || field(body.answers?.problem_summary),
     hopes: field(body.answers?.hopes),
     what_matters: field(body.answers?.what_matters),
   }
-  if (!teamId || !topic || !answers.problem_summary || !answers.hopes || !answers.what_matters) {
+  if (!teamId || !topic || !answers.needs || !answers.hopes || !answers.what_matters) {
     return json({ error: 'teamId, topic, and all three answers are required' }, 400)
   }
   if ([topic, ...Object.values(answers)].some((text) => text.length > MAX_FIELD_CHARS)) {
@@ -69,7 +70,7 @@ Deno.serve(async (req: Request) => {
 
   let guide
   try {
-    guide = await generatePersonalDiscussionGuide({ topic, frictionType, answers })
+    guide = await generatePersonalDiscussionGuide({ topic, answers })
   } catch (err) {
     console.error(`prepare-friction-guide: generation failed (${err instanceof Error ? err.message : String(err)})`)
     return json({ error: "Couldn't build the guide right now" }, 502)
@@ -77,7 +78,7 @@ Deno.serve(async (req: Request) => {
 
   const { data: saved, error: saveError } = await callerClient
     .from('personal_friction_guides')
-    .insert({ user_id: userId, team_id: teamId, topic, friction_type: frictionType, answers, guide })
+    .insert({ user_id: userId, team_id: teamId, topic, answers, guide })
     .select('id')
     .single()
 
